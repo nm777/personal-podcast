@@ -1,0 +1,95 @@
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { router } from '@inertiajs/react';
+import { Eye, EyeOff, Rss, Trash2 } from 'lucide-react';
+
+interface Feed {
+    id: number;
+    title: string;
+    description?: string;
+    is_public: boolean;
+    slug: string;
+    user_guid: string;
+    created_at: string;
+    updated_at: string;
+}
+
+interface FeedListProps {
+    feeds: Feed[];
+}
+
+export default function FeedList({ feeds }: FeedListProps) {
+    const handleDelete = (feedId: number) => {
+        if (confirm('Are you sure you want to delete this feed?')) {
+            router.delete(`/feeds/${feedId}`, {
+                onSuccess: () => {
+                    // Feed deleted successfully
+                },
+                onError: (errors) => {
+                    console.error('Error deleting feed:', errors);
+                },
+            });
+        }
+    };
+
+    const getFeedUrl = (feed: Feed) => {
+        return `/rss/${feed.user_guid}/${feed.slug}`;
+    };
+
+    if (feeds.length === 0) {
+        return (
+            <Card>
+                <CardContent className="flex flex-col items-center justify-center py-8">
+                    <Rss className="mb-4 h-12 w-12 text-muted-foreground" />
+                    <h3 className="mb-2 text-lg font-semibold">No feeds yet</h3>
+                    <p className="text-center text-muted-foreground">Create your first feed to get started with your podcast.</p>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {feeds.map((feed) => (
+                <Card key={feed.id}>
+                    <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <CardTitle className="text-lg">{feed.title}</CardTitle>
+                                <CardDescription className="mt-1 line-clamp-2">{feed.description || 'No description provided'}</CardDescription>
+                            </div>
+                            <div className="ml-4 flex items-center gap-2">
+                                <Badge variant={feed.is_public ? 'default' : 'secondary'}>
+                                    {feed.is_public ? (
+                                        <>
+                                            <Eye className="mr-1 h-3 w-3" />
+                                            Public
+                                        </>
+                                    ) : (
+                                        <>
+                                            <EyeOff className="mr-1 h-3 w-3" />
+                                            Private
+                                        </>
+                                    )}
+                                </Badge>
+                            </div>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                        <div className="flex items-center justify-between">
+                            <div className="text-sm text-muted-foreground">
+                                <a href={getFeedUrl(feed)} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+                                    {getFeedUrl(feed)}
+                                </a>
+                            </div>
+                            <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)} className="ml-4">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+    );
+}

@@ -34,7 +34,15 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Get the feeds for the user.
+     */
+    public function feeds()
+    {
+        return $this->hasMany(Feed::class);
+    }
+
+    /**
+     * Get attributes that should be cast.
      *
      * @return array<string, string>
      */

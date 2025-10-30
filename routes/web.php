@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FeedController;
 use App\Http\Controllers\RssController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -12,8 +13,14 @@ Route::get('/rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
+        $feeds = auth()->user()->feeds()->latest()->get();
+
+        return Inertia::render('dashboard', [
+            'feeds' => $feeds,
+        ]);
     })->name('dashboard');
+
+    Route::resource('feeds', FeedController::class)->only(['index', 'store', 'destroy']);
 });
 
 require __DIR__.'/settings.php';
