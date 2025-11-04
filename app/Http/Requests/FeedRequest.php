@@ -25,6 +25,9 @@ class FeedRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'is_public' => ['boolean'],
+            'items' => ['nullable', 'array'],
+            'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id'],
+            'items.*.sequence' => ['required', 'integer', 'min:0'],
         ];
     }
 }

@@ -7,6 +7,7 @@ use App\Models\Feed;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 
 class FeedController extends Controller
 {
@@ -41,6 +42,53 @@ class FeedController extends Controller
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Feed created successfully!');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(Feed $feed)
+    {
+        Gate::authorize('update', $feed);
+
+        $feed->load(['items.libraryItem', 'items.libraryItem.mediaFile']);
+
+        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->get();
+
+        return Inertia::render('feeds/edit', [
+            'feed' => $feed,
+            'userLibraryItems' => $userLibraryItems,
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(FeedRequest $request, Feed $feed)
+    {
+        Gate::authorize('update', $feed);
+
+        $validated = $request->validated();
+
+        $feed->update([
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'slug' => Str::slug($validated['title']),
+            'is_public' => $validated['is_public'] ?? false,
+        ]);
+
+        if (isset($validated['items'])) {
+            $feed->items()->delete();
+
+            foreach ($validated['items'] as $index => $item) {
+                $feed->items()->create([
+                    'library_item_id' => $item['library_item_id'],
+                    'sequence' => $index,
+                ]);
+            }
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Feed updated successfully!');
     }
 
     /**

@@ -2,7 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { router } from '@inertiajs/react';
-import { Eye, EyeOff, Rss, Trash2 } from 'lucide-react';
+import { Edit, Eye, EyeOff, Rss, Trash2 } from 'lucide-react';
 
 interface Feed {
     id: number;
@@ -17,9 +17,10 @@ interface Feed {
 
 interface FeedListProps {
     feeds: Feed[];
+    canEdit?: boolean;
 }
 
-export default function FeedList({ feeds }: FeedListProps) {
+export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     const handleDelete = (feedId: number) => {
         if (confirm('Are you sure you want to delete this feed?')) {
             router.delete(`/feeds/${feedId}`, {
@@ -83,9 +84,18 @@ export default function FeedList({ feeds }: FeedListProps) {
                                     {getFeedUrl(feed)}
                                 </a>
                             </div>
-                            <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)} className="ml-4">
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <div className="ml-4 flex items-center gap-2">
+                                {canEdit && (
+                                    <Button variant="outline" size="sm" asChild>
+                                        <a href={`/feeds/${feed.id}/edit`}>
+                                            <Edit className="h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                )}
+                                <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>

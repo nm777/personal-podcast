@@ -21,7 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ]);
     })->name('dashboard');
 
-    Route::resource('feeds', FeedController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('feeds', FeedController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('feeds/{feed}/edit', [FeedController::class, 'edit'])->name('feeds.edit');
 
     Route::resource('library', LibraryController::class)->only(['index', 'store', 'destroy']);
 });

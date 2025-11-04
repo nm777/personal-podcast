@@ -9,7 +9,11 @@ import { useState } from 'react';
 export default function CreateFeedForm() {
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors, reset } = useForm<{
+        title: string;
+        description: string;
+        is_public: boolean;
+    }>({
         title: '',
         description: '',
         is_public: false,
