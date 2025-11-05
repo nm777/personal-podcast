@@ -308,7 +308,7 @@ it('reuses existing media file when same URL is provided', function () {
     ]);
 
     $response->assertRedirect('/library');
-    $response->assertSessionHas('success', 'Media file already exists. Added to your library.');
+    $response->assertSessionHas('success', 'Duplicate URL detected. This file already exists in your library and will be removed automatically in 5 minutes.');
 
     $this->assertDatabaseHas('library_items', [
         'user_id' => $user->id,
@@ -317,8 +317,8 @@ it('reuses existing media file when same URL is provided', function () {
         'media_file_id' => $mediaFile->id,
     ]);
 
-    // No job should be dispatched since file already exists
-    Queue::assertNotPushed(\App\Jobs\ProcessMediaFile::class);
+    // Should schedule cleanup for duplicate
+    Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class);
 });
 
 it('does not reuse files when URLs are different', function () {
@@ -415,7 +415,7 @@ it('multiple users can reuse same file from same URL', function () {
     ]);
 
     $response2->assertRedirect('/library');
-    $response2->assertSessionHas('success', 'Media file already exists. Added to your library.');
+    $response2->assertSessionHas('success', 'Duplicate URL detected. This file already exists in your library and will be removed automatically in 5 minutes.');
 
     // No new job should be dispatched
     Queue::assertNotPushed(\App\Jobs\ProcessMediaFile::class);
@@ -430,4 +430,163 @@ it('multiple users can reuse same file from same URL', function () {
         'user_id' => $user2->id,
         'media_file_id' => $mediaFile->id,
     ]);
+});
+
+it('detects duplicate file uploads by hash', function () {
+    Storage::fake('local');
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    // Create first media file with specific hash
+    $mediaFile = MediaFile::factory()->create([
+        'file_hash' => hash('sha256', 'test audio content'),
+        'file_path' => 'media/existing-file.mp3',
+    ]);
+
+    // Create a fake file with the same content
+    $file = UploadedFile::fake()->createWithContent('duplicate-audio.mp3', 'test audio content');
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Duplicate File',
+        'description' => 'This should be detected as duplicate',
+        'file' => $file,
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHas('success', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
+
+    // Should create library item linked to existing media file and marked as duplicate
+    $this->assertDatabaseHas('library_items', [
+        'user_id' => $user->id,
+        'title' => 'Duplicate File',
+        'source_type' => 'upload',
+        'media_file_id' => $mediaFile->id,
+        'is_duplicate' => true,
+    ]);
+
+    // Should schedule cleanup for duplicate
+    Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class);
+});
+
+it('processes non-duplicate file uploads normally', function () {
+    Storage::fake('local');
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    // Create existing media file with different hash
+    MediaFile::factory()->create([
+        'file_hash' => hash('sha256', 'different content'),
+        'file_path' => 'media/different-file.mp3',
+    ]);
+
+    // Create a fake file with different content
+    $file = UploadedFile::fake()->createWithContent('new-audio.mp3', 'new unique content');
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'New File',
+        'description' => 'This should be processed normally',
+        'file' => $file,
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHas('success', 'Media file uploaded successfully. Processing...');
+
+    // Should create library item without media_file_id initially
+    $this->assertDatabaseHas('library_items', [
+        'user_id' => $user->id,
+        'title' => 'New File',
+        'media_file_id' => null,
+        'source_type' => 'upload',
+    ]);
+
+    // Job should be dispatched for new files
+    Queue::assertPushed(\App\Jobs\ProcessMediaFile::class);
+});
+
+it('MediaFile model can find duplicates by hash', function () {
+    Storage::fake('local');
+
+    // Create a media file with known hash
+    $knownHash = hash('sha256', 'test content');
+    $mediaFile = MediaFile::factory()->create([
+        'file_hash' => $knownHash,
+    ]);
+
+    // Test findByHash method
+    $found = MediaFile::findByHash($knownHash);
+    expect($found)->not->toBeNull();
+    expect($found->id)->toBe($mediaFile->id);
+
+    // Test with non-existent hash
+    $notFound = MediaFile::findByHash('nonexistenthash');
+    expect($notFound)->toBeNull();
+});
+
+it('MediaFile model can check file duplicates', function () {
+    Storage::fake('local');
+
+    // Create a fake file
+    $content = 'test audio content';
+    $tempPath = 'temp/test-file.mp3';
+    Storage::disk('local')->put($tempPath, $content);
+    $fullPath = Storage::disk('local')->path($tempPath);
+
+    // Create media file with same hash
+    $mediaFile = MediaFile::factory()->create([
+        'file_hash' => hash('sha256', $content),
+    ]);
+
+    // Test duplicate detection
+    $duplicate = MediaFile::isDuplicate($fullPath);
+    expect($duplicate)->not->toBeNull();
+    expect($duplicate->id)->toBe($mediaFile->id);
+
+    // Test with non-existent file
+    $nonDuplicate = MediaFile::isDuplicate('/non/existent/file.mp3');
+    expect($nonDuplicate)->toBeNull();
+
+    // Clean up
+    Storage::disk('local')->delete($tempPath);
+});
+
+it('marks duplicate library items and schedules cleanup', function () {
+    Storage::fake('local');
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    // Create existing media file
+    $mediaFile = MediaFile::factory()->create([
+        'file_hash' => hash('sha256', 'duplicate content'),
+        'file_path' => 'media/existing-file.mp3',
+    ]);
+
+    // Create library item for duplicate upload
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Duplicate Upload',
+        'source_type' => 'upload',
+    ]);
+
+    // Create temp file with same content
+    $tempPath = 'temp/duplicate-upload.mp3';
+    Storage::disk('local')->put($tempPath, 'duplicate content');
+
+    // Process the file
+    $job = new \App\Jobs\ProcessMediaFile($libraryItem, null, $tempPath);
+    $job->handle();
+
+    $libraryItem->refresh();
+
+    // Should be marked as duplicate
+    expect($libraryItem->is_duplicate)->toBeTrue();
+    expect($libraryItem->duplicate_detected_at)->not->toBeNull();
+    expect($libraryItem->media_file_id)->toBe($mediaFile->id);
+
+    // Should schedule cleanup job
+    Queue::assertPushed(\App\Jobs\CleanupDuplicateLibraryItem::class, function ($job) use ($libraryItem) {
+        return $job->libraryItem->id === $libraryItem->id;
+    });
 });

@@ -108,18 +108,30 @@ class ProcessMediaFile implements ShouldQueue
                 'filesize' => File::size(Storage::disk('local')->path($finalPath)),
                 'source_url' => $this->sourceUrl,
             ]);
+
+            $this->libraryItem->media_file_id = $mediaFile->id;
+            $this->libraryItem->save();
         } else {
             // File already exists, clean up temp file
             Storage::disk('local')->delete($tempPath);
 
-            // Update source URL if this is the first time we've seen it from a URL
+            // Update source URL if this is first time we've seen it from a URL
             if ($this->sourceUrl && ! $mediaFile->source_url) {
                 $mediaFile->source_url = $this->sourceUrl;
                 $mediaFile->save();
             }
-        }
 
-        $this->libraryItem->media_file_id = $mediaFile->id;
-        $this->libraryItem->save();
+            // Mark this library item as a duplicate
+            $this->libraryItem->media_file_id = $mediaFile->id;
+            $this->libraryItem->is_duplicate = true;
+            $this->libraryItem->duplicate_detected_at = now();
+            $this->libraryItem->save();
+
+            // Schedule cleanup of this duplicate entry
+            CleanupDuplicateLibraryItem::dispatch($this->libraryItem)->delay(now()->addMinutes(5));
+
+            // Store flash message for user notification
+            session()->flash('warning', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
+        }
     }
 }

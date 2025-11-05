@@ -16,6 +16,13 @@ class LibraryItem extends Model
         'description',
         'source_type',
         'source_url',
+        'is_duplicate',
+        'duplicate_detected_at',
+    ];
+
+    protected $casts = [
+        'is_duplicate' => 'boolean',
+        'duplicate_detected_at' => 'datetime',
     ];
 
     public function user()

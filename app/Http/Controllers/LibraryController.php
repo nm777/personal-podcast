@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LibraryItemRequest;
+use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
@@ -36,7 +37,7 @@ class LibraryController extends Controller
 
             if ($existingMediaFile) {
                 $mediaFileId = $existingMediaFile->id;
-                $message = 'Media file already exists. Added to your library.';
+                $message = 'Duplicate URL detected. This file already exists in your library and will be removed automatically in 5 minutes.';
             }
         }
 
@@ -47,15 +48,45 @@ class LibraryController extends Controller
             'source_type' => $request->hasFile('file') ? 'upload' : 'url',
             'source_url' => $request->input('url'),
             'media_file_id' => $mediaFileId,
+            'is_duplicate' => $mediaFileId ? true : false,
+            'duplicate_detected_at' => $mediaFileId ? now() : null,
         ]);
 
         if ($mediaFileId) {
             // File already exists, no processing needed
             $message = $message ?: 'Media file already exists. Added to your library.';
+
+            // Schedule cleanup for duplicate URL entries
+            if ($request->filled('url')) {
+                CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
+            }
         } elseif ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('temp-uploads');
-            ProcessMediaFile::dispatch($libraryItem, null, $filePath);
-            $message = 'Media file uploaded successfully. Processing...';
+            $file = $request->file('file');
+            $tempPath = $file->store('temp-uploads');
+            $fullTempPath = Storage::disk('local')->path($tempPath);
+
+            // Check for duplicate by file hash
+            $existingMediaFile = MediaFile::isDuplicate($fullTempPath);
+
+            if ($existingMediaFile) {
+                // Clean up temp file
+                Storage::disk('local')->delete($tempPath);
+
+                // Link to existing media file and mark as duplicate
+                $libraryItem->media_file_id = $existingMediaFile->id;
+                $libraryItem->is_duplicate = true;
+                $libraryItem->duplicate_detected_at = now();
+                $libraryItem->save();
+
+                $message = 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.';
+
+                // Schedule cleanup
+                CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
+            } else {
+                // Process the new file
+                ProcessMediaFile::dispatch($libraryItem, null, $tempPath);
+                $message = 'Media file uploaded successfully. Processing...';
+            }
         } elseif ($request->filled('url')) {
             ProcessMediaFile::dispatch($libraryItem, $request->input('url'), null);
             $message = 'Media file URL added successfully. Downloading and processing...';

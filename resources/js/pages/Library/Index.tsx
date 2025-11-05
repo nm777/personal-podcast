@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
-import { FileAudio, FileVideo, Trash2 } from 'lucide-react';
+import { AlertCircle, FileAudio, FileVideo, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface MediaFile {
@@ -28,6 +28,8 @@ interface LibraryItem {
     description?: string;
     source_type: string;
     source_url?: string;
+    is_duplicate: boolean;
+    duplicate_detected_at?: string;
     created_at: string;
     updated_at: string;
     media_file?: MediaFile;
@@ -37,6 +39,7 @@ interface LibraryIndexProps {
     libraryItems: LibraryItem[];
     flash?: {
         success?: string;
+        warning?: string;
     };
 }
 
@@ -101,6 +104,12 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                 </Alert>
             )}
 
+            {flash?.warning && (
+                <Alert className="mb-4 border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200">
+                    <AlertDescription>{flash.warning}</AlertDescription>
+                </Alert>
+            )}
+
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Media Library</h1>
@@ -117,7 +126,10 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                 ) : (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         {libraryItems.map((item) => (
-                            <Card key={item.id} className="relative">
+                            <Card
+                                key={item.id}
+                                className={`relative ${item.is_duplicate ? 'border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-900/10' : ''}`}
+                            >
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
                                         <div className="flex items-center gap-3">
@@ -138,6 +150,12 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </div>
+                                    {item.is_duplicate && (
+                                        <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
+                                            <AlertCircle className="h-3 w-3" />
+                                            <span>Duplicate file - will be removed automatically</span>
+                                        </div>
+                                    )}
                                 </CardHeader>
                                 <CardContent>
                                     {item.description && (

@@ -35,4 +35,26 @@ class MediaFile extends Model
     {
         return static::where('source_url', $sourceUrl)->first();
     }
+
+    /**
+     * Find a media file by file hash.
+     */
+    public static function findByHash(string $fileHash): ?static
+    {
+        return static::where('file_hash', $fileHash)->first();
+    }
+
+    /**
+     * Check if a file is a duplicate by calculating its hash.
+     */
+    public static function isDuplicate(string $filePath): ?static
+    {
+        if (! file_exists($filePath)) {
+            return null;
+        }
+
+        $fileHash = hash_file('sha256', $filePath);
+
+        return static::findByHash($fileHash);
+    }
 }

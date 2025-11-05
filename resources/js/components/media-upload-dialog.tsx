@@ -4,8 +4,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/react';
-import { Globe, Plus, Upload } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, Globe, Plus, Upload } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
 interface MediaUploadDialogProps {
     onUploadSuccess?: () => void;
@@ -16,6 +16,9 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
     const [isDragOver, setIsDragOver] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [inputType, setInputType] = useState<'file' | 'url'>('file');
+    const [isCheckingUrl, setIsCheckingUrl] = useState(false);
+    const [urlDuplicateWarning, setUrlDuplicateWarning] = useState<string | null>(null);
+    const [urlCheckTimeout, setUrlCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
     const { data, setData, post, processing, errors, reset, transform } = useForm({
         title: '',
@@ -33,10 +36,53 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
         }
     };
 
+    const checkUrlDuplicate = useCallback(async (url: string) => {
+        if (!url || !url.startsWith('http')) {
+            return;
+        }
+
+        setIsCheckingUrl(true);
+        try {
+            const response = await fetch('/check-url-duplicate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify({ url }),
+                credentials: 'same-origin',
+            });
+
+            const responseText = await response.text();
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${responseText}`);
+            }
+
+            const result = JSON.parse(responseText);
+
+            if (result.is_duplicate) {
+                setUrlDuplicateWarning(
+                    'This URL is a duplicate of a file already in your library. The duplicate will be removed automatically after submission.',
+                );
+            } else {
+                setUrlDuplicateWarning(null);
+            }
+        } catch (error) {
+            // If duplicate check fails, continue without warning
+            console.error('URL duplicate check failed:', error);
+            setUrlDuplicateWarning(null);
+        } finally {
+            setIsCheckingUrl(false);
+        }
+    }, []);
+
     const handleUrlChange = (url: string) => {
         setData('url', url);
         setData('file', null);
         setSelectedFile(null);
+
         if (!data.title && url) {
             try {
                 const filename = new URL(url).pathname.split('/').pop() || '';
@@ -48,6 +94,18 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
                 // Invalid URL, ignore
             }
         }
+
+        // Clear existing timeout
+        if (urlCheckTimeout) {
+            clearTimeout(urlCheckTimeout);
+        }
+
+        // Debounce URL check to avoid too many API calls
+        const timeout = setTimeout(() => {
+            checkUrlDuplicate(url);
+        }, 500);
+
+        setUrlCheckTimeout(timeout);
     };
 
     const handleDrop = (e: React.DragEvent) => {
@@ -170,7 +228,12 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
                                 required
                             />
                             {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url}</p>}
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Enter a direct link to an audio or video file</p>
+                            {urlDuplicateWarning && (
+                                <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                                    <AlertCircle className="h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+                                    <p className="text-sm text-amber-800 dark:text-amber-200">{urlDuplicateWarning}</p>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -179,8 +242,6 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
                             Selected: {selectedFile.name} ({formatFileSize(selectedFile.size)})
                         </div>
                     )}
-
-                    {data.url && inputType === 'url' && <div className="text-sm text-gray-600 dark:text-gray-400">URL: {data.url}</div>}
 
                     <div>
                         <Label htmlFor="title">Title</Label>
@@ -208,12 +269,13 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
                                 setIsUploadDialogOpen(false);
                                 reset();
                                 setSelectedFile(null);
+                                setUrlDuplicateWarning(null);
                             }}
                         >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={processing || (!selectedFile && !data.url)}>
-                            {processing ? 'Processing...' : inputType === 'file' ? 'Upload' : 'Add'}
+                        <Button type="submit" disabled={processing || isCheckingUrl || (!selectedFile && !data.url)}>
+                            {processing ? 'Processing...' : isCheckingUrl ? 'Checking...' : inputType === 'file' ? 'Upload' : 'Add'}
                         </Button>
                     </div>
                 </form>

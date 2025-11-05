@@ -15,6 +15,8 @@ Route::get('/rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name
 
 Route::get('/media/{file_path}', [MediaController::class, 'show'])->name('media.show')->where('file_path', '.*');
 
+Route::post('check-url-duplicate', [App\Http\Controllers\Api\UrlDuplicateCheckController::class, 'check'])->middleware(['auth', 'verified']);
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         $feeds = auth()->user()->feeds()->latest()->get();
