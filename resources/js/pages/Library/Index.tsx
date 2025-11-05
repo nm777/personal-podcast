@@ -1,3 +1,4 @@
+import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
 import MediaUploadDialog from '@/components/media-upload-dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { FileAudio, FileVideo, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface MediaFile {
     id: number;
@@ -46,14 +48,23 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps) {
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+    const { delete: destroyForm } = useForm();
+
     const handleUploadSuccess = () => {
         // Reload the page to show new items
         window.location.reload();
     };
 
-    const handleDelete = (itemId: number) => {
-        if (confirm('Are you sure you want to remove this item from your library?')) {
-            useForm().delete(route('library.destroy', itemId), {
+    const handleDeleteClick = (itemId: number) => {
+        setItemToDelete(itemId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (itemToDelete) {
+            destroyForm(route('library.destroy', itemToDelete), {
                 onSuccess: () => {
                     // Item deleted successfully
                     window.location.reload();
@@ -121,7 +132,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => handleDelete(item.id)}
+                                            onClick={() => handleDeleteClick(item.id)}
                                             className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
                                         >
                                             <Trash2 className="h-4 w-4" />
@@ -150,6 +161,17 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                     </div>
                 )}
             </div>
+
+            <DeleteConfirmDialog
+                isOpen={deleteDialogOpen}
+                onClose={() => setDeleteDialogOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                title="Delete Media Item"
+                description="Are you sure you want to remove this item from your library? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="destructive"
+            />
         </AppLayout>
     );
 }
