@@ -21,4 +21,9 @@ class MediaFile extends Model
     {
         return $this->hasMany(LibraryItem::class);
     }
+
+    public function getPublicUrlAttribute(): string
+    {
+        return url(route('media.show', ['file_path' => $this->file_path]));
+    }
 }

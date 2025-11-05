@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\FeedController;
 use App\Http\Controllers\LibraryController;
+use App\Http\Controllers\MediaController;
 use App\Http\Controllers\RssController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,6 +12,8 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name('rss.show');
+
+Route::get('/media/{file_path}', [MediaController::class, 'show'])->name('media.show')->where('file_path', '.*');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
