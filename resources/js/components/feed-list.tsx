@@ -1,8 +1,9 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { router } from '@inertiajs/react';
-import { Edit, Eye, EyeOff, Rss, Trash2 } from 'lucide-react';
+import { Copy, Edit, Eye, EyeOff, Rss, Trash2 } from 'lucide-react';
 
 interface Feed {
     id: number;
@@ -22,6 +23,8 @@ interface FeedListProps {
 }
 
 export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
+    const { toast } = useToast();
+
     const handleDelete = (feedId: number) => {
         if (confirm('Are you sure you want to delete this feed?')) {
             router.delete(`/feeds/${feedId}`, {
@@ -32,6 +35,53 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                     console.error('Error deleting feed:', errors);
                 },
             });
+        }
+    };
+
+    const handleCopyUrl = async (feed: Feed) => {
+        const fullUrl = window.location.origin + getFeedUrl(feed);
+
+        const fallbackCopyTextToClipboard = (text: string) => {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                toast({
+                    title: 'URL copied!',
+                    description: 'Feed URL has been copied to your clipboard.',
+                });
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                toast({
+                    title: 'Failed to copy',
+                    description: 'Could not copy the URL to clipboard.',
+                    variant: 'destructive',
+                });
+            }
+
+            document.body.removeChild(textArea);
+        };
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(fullUrl);
+                toast({
+                    title: 'URL copied!',
+                    description: 'Feed URL has been copied to your clipboard.',
+                });
+            } else {
+                fallbackCopyTextToClipboard(fullUrl);
+            }
+        } catch (err) {
+            console.error('Failed to copy URL:', err);
+            fallbackCopyTextToClipboard(fullUrl);
         }
     };
 
@@ -89,18 +139,23 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                                     {getFeedUrl(feed)}
                                 </a>
                             </div>
-                            {canEdit && (
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" asChild>
-                                        <a href={`/feeds/${feed.id}/edit`}>
-                                            <Edit className="h-4 w-4" />
-                                        </a>
-                                    </Button>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={() => handleCopyUrl(feed)}>
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                                {canEdit && (
+                                    <>
+                                        <Button variant="outline" size="sm" asChild>
+                                            <a href={`/feeds/${feed.id}/edit`}>
+                                                <Edit className="h-4 w-4" />
+                                            </a>
+                                        </Button>
+                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)}>
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
