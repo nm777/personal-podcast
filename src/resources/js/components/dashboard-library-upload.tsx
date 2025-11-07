@@ -1,8 +1,9 @@
+import MediaUploadButton from '@/components/media-upload-button';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import MediaUploadButton from '@/components/media-upload-button';
-import { FileAudio, FileVideo, Loader2, CheckCircle, XCircle, RefreshCw, Upload } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { router } from '@inertiajs/react';
+import { CheckCircle, FileAudio, FileVideo, Loader2, RefreshCw, Upload, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface MediaFile {
     id: number;
@@ -40,29 +41,23 @@ interface DashboardLibraryUploadProps {
 export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }: DashboardLibraryUploadProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Auto-refresh for processing items
+    // Auto-refresh for processing items using custom polling
     useEffect(() => {
+        const hasProcessingItems = libraryItems.some((item) => item.processing_status === 'pending' || item.processing_status === 'processing');
+
+        if (!hasProcessingItems) return;
+
         const interval = setInterval(() => {
-            const hasProcessingItems = libraryItems.some(item => 
-                item.processing_status === 'pending' || item.processing_status === 'processing'
-            );
-            
-            if (hasProcessingItems) {
-                window.location.reload();
-            }
-        }, 5000); // Check every 5 seconds
+            router.reload({ only: ['libraryItems'] });
+        }, 5000);
 
         return () => clearInterval(interval);
     }, [libraryItems]);
 
     const handleRefresh = () => {
         setIsRefreshing(true);
-        window.location.reload();
+        router.reload({ only: ['libraryItems'] });
     };
-
-
-
-
 
     const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
@@ -85,7 +80,7 @@ export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }
     const getProcessingStatusIcon = (status: string) => {
         switch (status) {
             case 'processing':
-                return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+                return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
             case 'completed':
                 return <CheckCircle className="h-4 w-4 text-green-500" />;
             case 'failed':
@@ -114,12 +109,7 @@ export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Library Items</h2>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                >
+                <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
                     <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                     Refresh
                 </Button>
@@ -147,8 +137,11 @@ export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }
                                             <div className="flex items-center gap-1">
                                                 {getProcessingStatusIcon(item.processing_status)}
                                                 <span className={`text-xs font-medium ${getProcessingStatusColor(item.processing_status)}`}>
-                                                    {item.processing_status === 'processing' ? 'Processing' : 
-                                                     item.processing_status === 'failed' ? 'Failed' : 'Pending'}
+                                                    {item.processing_status === 'processing'
+                                                        ? 'Processing'
+                                                        : item.processing_status === 'failed'
+                                                          ? 'Failed'
+                                                          : 'Pending'}
                                                 </span>
                                             </div>
                                         )}
@@ -156,9 +149,7 @@ export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }
                                     <p className="text-xs text-gray-500 dark:text-gray-400">
                                         {item.media_file && formatFileSize(item.media_file.filesize)} •{' '}
                                         {new Date(item.created_at).toLocaleDateString()}
-                                        {item.processing_error && (
-                                            <span className="text-red-500"> • {item.processing_error}</span>
-                                        )}
+                                        {item.processing_error && <span className="text-red-500"> • {item.processing_error}</span>}
                                     </p>
                                 </div>
                             </div>

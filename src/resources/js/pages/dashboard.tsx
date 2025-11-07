@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -67,6 +67,19 @@ interface DashboardProps {
 
 export default function Dashboard({ feeds, libraryItems, flash }: DashboardProps) {
     const [isCreateFeedExpanded, setIsCreateFeedExpanded] = useState(false);
+
+    // Auto-refresh for processing items using custom polling
+    useEffect(() => {
+        const hasProcessingItems = libraryItems.some((item) => item.processing_status === 'pending' || item.processing_status === 'processing');
+
+        if (!hasProcessingItems) return;
+
+        const interval = setInterval(() => {
+            router.reload({ only: ['libraryItems'] });
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [libraryItems]);
 
     const { data, setData, post, processing, errors, reset } = useForm<{
         title: string;

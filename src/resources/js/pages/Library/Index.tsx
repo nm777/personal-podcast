@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { AlertCircle, FileAudio, FileVideo, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface MediaFile {
     id: number;
@@ -59,9 +59,22 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
     const { delete: destroyForm } = useForm();
 
+    // Auto-refresh for processing items using custom polling
+    useEffect(() => {
+        const hasProcessingItems = libraryItems.some((item) => item.processing_status === 'pending' || item.processing_status === 'processing');
+
+        if (!hasProcessingItems) return;
+
+        const interval = setInterval(() => {
+            router.reload({ only: ['libraryItems'] });
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [libraryItems]);
+
     const handleUploadSuccess = () => {
         // Reload the page to show new items
-        window.location.reload();
+        router.reload({ only: ['libraryItems'] });
     };
 
     const handleDeleteClick = (itemId: number) => {
@@ -74,7 +87,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
             destroyForm(route('library.destroy', itemToDelete), {
                 onSuccess: () => {
                     // Item deleted successfully
-                    window.location.reload();
+                    router.reload({ only: ['libraryItems'] });
                 },
             });
         }
