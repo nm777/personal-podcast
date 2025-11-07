@@ -1,5 +1,5 @@
 import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
-import MediaUploadDialog from '@/components/media-upload-dialog';
+import MediaUploadButton from '@/components/media-upload-button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +30,10 @@ interface LibraryItem {
     source_url?: string;
     is_duplicate: boolean;
     duplicate_detected_at?: string;
+    processing_status: 'pending' | 'processing' | 'completed' | 'failed';
+    processing_started_at?: string;
+    processing_completed_at?: string;
+    processing_error?: string;
     created_at: string;
     updated_at: string;
     media_file?: MediaFile;
@@ -113,7 +117,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Media Library</h1>
-                    <MediaUploadDialog onUploadSuccess={handleUploadSuccess} />
+                    <MediaUploadButton onUploadSuccess={handleUploadSuccess} />
                 </div>
 
                 {libraryItems.length === 0 ? (

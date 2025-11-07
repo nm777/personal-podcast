@@ -4,19 +4,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from '@inertiajs/react';
-import { AlertCircle, Globe, Plus, Upload } from 'lucide-react';
+import { AlertCircle, Globe, Loader2, Plus, Upload, Youtube } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-interface MediaUploadDialogProps {
+interface MediaUploadButtonProps {
     onUploadSuccess?: () => void;
 }
 
-export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialogProps) {
+export default function MediaUploadButton({ onUploadSuccess }: MediaUploadButtonProps) {
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [inputType, setInputType] = useState<'file' | 'url'>('file');
+    const [inputType, setInputType] = useState<'file' | 'url' | 'youtube'>('file');
     const [isCheckingUrl, setIsCheckingUrl] = useState(false);
+    const [isFetchingYouTubeTitle, setIsFetchingYouTubeTitle] = useState(false);
     const [urlDuplicateWarning, setUrlDuplicateWarning] = useState<string | null>(null);
     const [urlCheckTimeout, setUrlCheckTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -25,12 +26,39 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
         description: '',
         file: null as File | null,
         url: '',
+        source_url: '',
     });
+
+    const extractYouTubeVideoId = (url: string): string | null => {
+        const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    };
+
+    const fetchYouTubeVideoTitle = async (videoId: string): Promise<string | null> => {
+        try {
+            setIsFetchingYouTubeTitle(true);
+            const response = await fetch(`/api/youtube/video-info/${videoId}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            return data.title || null;
+        } catch (error) {
+            console.error('Failed to fetch YouTube video title:', error);
+            return null;
+        } finally {
+            setIsFetchingYouTubeTitle(false);
+        }
+    };
 
     const handleFileSelect = (file: File) => {
         setSelectedFile(file);
         setData('file', file);
         setData('url', '');
+        setData('source_url', '');
         if (!data.title) {
             setData('title', file.name.replace(/\.[^/.]+$/, ''));
         }
@@ -78,12 +106,37 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
         }
     }, []);
 
-    const handleUrlChange = (url: string) => {
+    const handleInputTypeChange = (newType: 'file' | 'url' | 'youtube') => {
+        setInputType(newType);
+        // Clear all fields when switching input types
+        setData('file', null);
+        setData('url', '');
+        setData('source_url', '');
+        setData('title', '');
+        setData('description', '');
+        setSelectedFile(null);
+        setUrlDuplicateWarning(null);
+    };
+
+    const handleUrlChange = async (url: string) => {
         setData('url', url);
         setData('file', null);
+        setData('source_url', inputType === 'youtube' ? url : '');
         setSelectedFile(null);
 
-        if (!data.title && url) {
+        // For YouTube URLs, try to fetch the video title
+        if (inputType === 'youtube' && url && !data.title) {
+            const videoId = extractYouTubeVideoId(url);
+            if (videoId) {
+                const title = await fetchYouTubeVideoTitle(videoId);
+                if (title) {
+                    setData('title', title);
+                }
+            }
+        }
+
+        // For non-YouTube URLs or if title fetching fails, use filename fallback
+        if (!data.title && url && inputType !== 'youtube') {
             try {
                 const filename = new URL(url).pathname.split('/').pop() || '';
                 const title = filename.replace(/\.[^/.]+$/, '');
@@ -133,11 +186,27 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
         e.preventDefault();
 
         // Transform data to only include relevant field based on input type
-        transform((data) => ({
-            title: data.title,
-            description: data.description,
-            ...(inputType === 'file' ? { file: data.file } : { url: data.url }),
-        }));
+        transform((data) => {
+            if (inputType === 'file') {
+                return {
+                    title: data.title,
+                    description: data.description,
+                    file: data.file,
+                };
+            } else if (inputType === 'youtube') {
+                return {
+                    title: data.title,
+                    description: data.description,
+                    source_url: data.url,
+                };
+            } else {
+                return {
+                    title: data.title,
+                    description: data.description,
+                    url: data.url,
+                };
+            }
+        });
 
         post(route('library.store'), {
             onSuccess: () => {
@@ -162,32 +231,46 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Upload Media
+                    Add Media
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Add Media File</DialogTitle>
                     <DialogDescription>
-                        Upload a file or provide a URL to add media to your library. Supported formats: MP3, MP4, M4A, WAV, OGG (Max: 500MB)
+                        Upload a file, provide a URL, or add a YouTube video to extract audio. Supported formats: MP3, MP4, M4A, WAV, OGG (Max: 500MB)
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <Label>Source Type</Label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             <Button
                                 type="button"
                                 variant={inputType === 'file' ? 'default' : 'outline'}
                                 size="sm"
-                                onClick={() => setInputType('file')}
+                                onClick={() => handleInputTypeChange('file')}
                             >
                                 <Upload className="mr-2 h-4 w-4" />
                                 Upload File
                             </Button>
-                            <Button type="button" variant={inputType === 'url' ? 'default' : 'outline'} size="sm" onClick={() => setInputType('url')}>
+                            <Button
+                                type="button"
+                                variant={inputType === 'url' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handleInputTypeChange('url')}
+                            >
                                 <Globe className="mr-2 h-4 w-4" />
                                 From URL
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={inputType === 'youtube' ? 'default' : 'outline'}
+                                size="sm"
+                                onClick={() => handleInputTypeChange('youtube')}
+                            >
+                                <Youtube className="mr-2 h-4 w-4" />
+                                YouTube
                             </Button>
                         </div>
                     </div>
@@ -195,8 +278,9 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
                     {inputType === 'file' ? (
                         <div>
                             <div
-                                className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'
-                                    }`}
+                                className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
+                                    isDragOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600'
+                                }`}
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
@@ -215,6 +299,35 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
                                 </Label>
                             </div>
                             {errors.file && <p className="mt-1 text-sm text-red-600">{errors.file}</p>}
+                        </div>
+                    ) : inputType === 'youtube' ? (
+                        <div>
+                            <Label htmlFor="url">YouTube URL</Label>
+                            <Input
+                                id="url"
+                                type="url"
+                                value={data.url}
+                                onChange={(e) => handleUrlChange(e.target.value)}
+                                placeholder="https://youtube.com/watch?v=..."
+                                required
+                            />
+                            {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url}</p>}
+                            {errors.source_url && <p className="mt-1 text-sm text-red-600">{errors.source_url}</p>}
+                            {isFetchingYouTubeTitle && (
+                                <div className="mt-2 flex items-center gap-2 text-sm text-blue-600">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    <span>Fetching video title...</span>
+                                </div>
+                            )}
+                            {urlDuplicateWarning && (
+                                <div className="mt-2 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+                                    <AlertCircle className="h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
+                                    <p className="text-sm text-amber-800 dark:text-amber-200">{urlDuplicateWarning}</p>
+                                </div>
+                            )}
+                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                                Audio will be extracted from the YouTube video and added to your library.
+                            </p>
                         </div>
                     ) : (
                         <div>
@@ -275,7 +388,15 @@ export default function MediaUploadDialog({ onUploadSuccess }: MediaUploadDialog
                             Cancel
                         </Button>
                         <Button type="submit" disabled={processing || isCheckingUrl || (!selectedFile && !data.url)}>
-                            {processing ? 'Processing...' : isCheckingUrl ? 'Checking...' : inputType === 'file' ? 'Upload' : 'Add'}
+                            {processing
+                                ? 'Processing...'
+                                : isCheckingUrl || isFetchingYouTubeTitle
+                                  ? 'Checking...'
+                                  : inputType === 'file'
+                                    ? 'Upload'
+                                    : inputType === 'youtube'
+                                      ? 'Extract Audio'
+                                      : 'Add'}
                         </Button>
                     </div>
                 </form>

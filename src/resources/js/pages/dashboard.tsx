@@ -48,6 +48,10 @@ interface LibraryItem {
     description?: string;
     source_type: string;
     source_url?: string;
+    processing_status: 'pending' | 'processing' | 'completed' | 'failed';
+    processing_started_at?: string;
+    processing_completed_at?: string;
+    processing_error?: string;
     created_at: string;
     updated_at: string;
     media_file?: MediaFile;

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\LibraryItemRequest;
 use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Jobs\ProcessMediaFile;
+use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use App\Services\YouTubeUrlValidator;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -28,12 +30,25 @@ class LibraryController extends Controller
     {
         $validated = $request->validated();
 
+        // Handle backward compatibility for URL field
+        $sourceType = $request->input('source_type', $request->hasFile('file') ? 'upload' : 'url');
+        $sourceUrl = $request->input('source_url', $request->input('url'));
+
+        // Additional validation for YouTube URLs
+        if ($sourceType === 'youtube') {
+            if (! YouTubeUrlValidator::isValidYouTubeUrl($sourceUrl)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['source_url' => 'Invalid YouTube URL']);
+            }
+        }
+
         $mediaFileId = null;
         $message = '';
 
         // Check if URL already exists in our system
-        if ($request->filled('url')) {
-            $existingMediaFile = MediaFile::findBySourceUrl($request->input('url'));
+        if ($sourceUrl) {
+            $existingMediaFile = MediaFile::findBySourceUrl($sourceUrl);
 
             if ($existingMediaFile) {
                 $mediaFileId = $existingMediaFile->id;
@@ -45,11 +60,13 @@ class LibraryController extends Controller
             'user_id' => auth()->id(),
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'source_type' => $request->hasFile('file') ? 'upload' : 'url',
-            'source_url' => $request->input('url'),
+            'source_type' => $sourceType,
+            'source_url' => $sourceUrl,
             'media_file_id' => $mediaFileId,
             'is_duplicate' => $mediaFileId ? true : false,
             'duplicate_detected_at' => $mediaFileId ? now() : null,
+            'processing_status' => $mediaFileId ? 'completed' : 'pending',
+            'processing_completed_at' => $mediaFileId ? now() : null,
         ]);
 
         if ($mediaFileId) {
@@ -57,10 +74,10 @@ class LibraryController extends Controller
             $message = $message ?: 'Media file already exists. Added to your library.';
 
             // Schedule cleanup for duplicate URL entries
-            if ($request->filled('url')) {
+            if ($sourceUrl) {
                 CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
             }
-        } elseif ($request->hasFile('file')) {
+        } elseif ($sourceType === 'upload') {
             $file = $request->file('file');
             $tempPath = $file->store('temp-uploads');
             $fullTempPath = Storage::disk('local')->path($tempPath);
@@ -83,13 +100,16 @@ class LibraryController extends Controller
                 // Schedule cleanup
                 CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
             } else {
-                // Process the new file
+                // Process new file
                 ProcessMediaFile::dispatch($libraryItem, null, $tempPath);
                 $message = 'Media file uploaded successfully. Processing...';
             }
-        } elseif ($request->filled('url')) {
-            ProcessMediaFile::dispatch($libraryItem, $request->input('url'), null);
+        } elseif ($sourceType === 'url') {
+            ProcessMediaFile::dispatch($libraryItem, $sourceUrl, null);
             $message = 'Media file URL added successfully. Downloading and processing...';
+        } elseif ($sourceType === 'youtube') {
+            ProcessYouTubeAudio::dispatch($libraryItem, $sourceUrl);
+            $message = 'YouTube video added successfully. Extracting audio...';
         }
 
         return redirect()->route('library.index')

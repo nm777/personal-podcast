@@ -38,100 +38,141 @@ class ProcessMediaFile implements ShouldQueue
      */
     public function handle(): void
     {
+        // Mark as processing
+        $this->libraryItem->update([
+            'processing_status' => 'processing',
+            'processing_started_at' => now(),
+            'processing_error' => null,
+        ]);
+
         $tempPath = null;
         $mediaFile = null;
 
-        // Check if we already have this file from the same URL
-        if ($this->sourceUrl) {
-            $mediaFile = MediaFile::findBySourceUrl($this->sourceUrl);
+        try {
+            // Check if we already have this file from the same URL
+            if ($this->sourceUrl) {
+                $mediaFile = MediaFile::findBySourceUrl($this->sourceUrl);
 
-            if ($mediaFile) {
-                // File already exists from this URL, just link it
+                if ($mediaFile) {
+                    // File already exists from this URL, just link it
+                    $this->libraryItem->media_file_id = $mediaFile->id;
+                    $this->libraryItem->update([
+                        'processing_status' => 'completed',
+                        'processing_completed_at' => now(),
+                    ]);
+
+                    return;
+                }
+            }
+
+            if ($this->sourceUrl) {
+                try {
+                    $response = Http::timeout(60)->get($this->sourceUrl);
+
+                    if (! $response->successful()) {
+                        $this->libraryItem->update([
+                            'processing_status' => 'failed',
+                            'processing_completed_at' => now(),
+                            'processing_error' => 'Failed to download file: HTTP '.$response->status(),
+                        ]);
+
+                        return;
+                    }
+
+                    $contents = $response->body();
+
+                    if (empty($contents)) {
+                        $this->libraryItem->update([
+                            'processing_status' => 'failed',
+                            'processing_completed_at' => now(),
+                            'processing_error' => 'Downloaded file is empty',
+                        ]);
+
+                        return;
+                    }
+
+                    $tempPath = 'temp-uploads/'.uniqid().'_'.basename(parse_url($this->sourceUrl, PHP_URL_PATH) ?: 'download');
+                    Storage::disk('local')->put($tempPath, $contents);
+                } catch (\Exception $e) {
+                    $this->libraryItem->update([
+                        'processing_status' => 'failed',
+                        'processing_completed_at' => now(),
+                        'processing_error' => 'Download failed: '.$e->getMessage(),
+                    ]);
+
+                    return;
+                }
+            } elseif ($this->filePath) {
+                $tempPath = $this->filePath;
+            }
+
+            if (! $tempPath || ! Storage::disk('local')->exists($tempPath)) {
+                $this->libraryItem->update([
+                    'processing_status' => 'failed',
+                    'processing_completed_at' => now(),
+                    'processing_error' => 'Temp file not found or inaccessible',
+                ]);
+
+                return;
+            }
+
+            $fullPath = Storage::disk('local')->path($tempPath);
+            $fileHash = hash_file('sha256', $fullPath);
+            $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
+            $finalPath = 'media/'.$fileHash.'.'.$extension;
+
+            // Check if file already exists with this hash (but different source)
+            $mediaFile = MediaFile::where('file_hash', $fileHash)->first();
+
+            if (! $mediaFile) {
+                // Move file to final location using hash
+                Storage::disk('local')->move($tempPath, $finalPath);
+
+                $mediaFile = MediaFile::create([
+                    'file_path' => $finalPath,
+                    'file_hash' => $fileHash,
+                    'mime_type' => File::mimeType(Storage::disk('local')->path($finalPath)),
+                    'filesize' => File::size(Storage::disk('local')->path($finalPath)),
+                    'source_url' => $this->sourceUrl,
+                ]);
+
                 $this->libraryItem->media_file_id = $mediaFile->id;
-                $this->libraryItem->save();
+                $this->libraryItem->update([
+                    'processing_status' => 'completed',
+                    'processing_completed_at' => now(),
+                ]);
+            } else {
+                // File already exists, clean up temp file
+                Storage::disk('local')->delete($tempPath);
 
-                return;
-            }
-        }
-
-        if ($this->sourceUrl) {
-            try {
-                $response = Http::timeout(60)->get($this->sourceUrl);
-
-                if (! $response->successful()) {
-                    $this->libraryItem->delete();
-
-                    return;
+                // Update source URL if this is first time we've seen it from a URL
+                if ($this->sourceUrl && ! $mediaFile->source_url) {
+                    $mediaFile->source_url = $this->sourceUrl;
+                    $mediaFile->save();
                 }
 
-                $contents = $response->body();
+                // Mark this library item as a duplicate
+                $this->libraryItem->media_file_id = $mediaFile->id;
+                $this->libraryItem->is_duplicate = true;
+                $this->libraryItem->duplicate_detected_at = now();
+                $this->libraryItem->update([
+                    'processing_status' => 'completed',
+                    'processing_completed_at' => now(),
+                ]);
 
-                if (empty($contents)) {
-                    $this->libraryItem->delete();
+                // Schedule cleanup of this duplicate entry
+                CleanupDuplicateLibraryItem::dispatch($this->libraryItem)->delay(now()->addMinutes(5));
 
-                    return;
-                }
-
-                $tempPath = 'temp-uploads/' . uniqid() . '_' . basename(parse_url($this->sourceUrl, PHP_URL_PATH) ?: 'download');
-                Storage::disk('local')->put($tempPath, $contents);
-            } catch (\Exception $e) {
-                $this->libraryItem->delete();
-
-                return;
+                // Store flash message for user notification
+                session()->flash('warning', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
             }
-        } elseif ($this->filePath) {
-            $tempPath = $this->filePath;
-        }
 
-        if (! $tempPath || ! Storage::disk('local')->exists($tempPath)) {
-            $this->libraryItem->delete();
-
-            return;
-        }
-
-        $fullPath = Storage::disk('local')->path($tempPath);
-        $fileHash = hash_file('sha256', $fullPath);
-        $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
-        $finalPath = 'media/' . $fileHash . '.' . $extension;
-
-        // Check if file already exists with this hash (but different source)
-        $mediaFile = MediaFile::where('file_hash', $fileHash)->first();
-
-        if (! $mediaFile) {
-            // Move file to final location using hash
-            Storage::disk('local')->move($tempPath, $finalPath);
-
-            $mediaFile = MediaFile::create([
-                'file_path' => $finalPath,
-                'file_hash' => $fileHash,
-                'mime_type' => File::mimeType(Storage::disk('local')->path($finalPath)),
-                'filesize' => File::size(Storage::disk('local')->path($finalPath)),
-                'source_url' => $this->sourceUrl,
+        } catch (\Exception $e) {
+            $this->libraryItem->update([
+                'processing_status' => 'failed',
+                'processing_completed_at' => now(),
+                'processing_error' => 'Processing failed: '.$e->getMessage(),
             ]);
-
-            $this->libraryItem->media_file_id = $mediaFile->id;
-            $this->libraryItem->save();
-        } else {
-            // File already exists, clean up temp file
-            Storage::disk('local')->delete($tempPath);
-
-            // Update source URL if this is first time we've seen it from a URL
-            if ($this->sourceUrl && ! $mediaFile->source_url) {
-                $mediaFile->source_url = $this->sourceUrl;
-                $mediaFile->save();
-            }
-
-            // Mark this library item as a duplicate
-            $this->libraryItem->media_file_id = $mediaFile->id;
-            $this->libraryItem->is_duplicate = true;
-            $this->libraryItem->duplicate_detected_at = now();
-            $this->libraryItem->save();
-
-            // Schedule cleanup of this duplicate entry
-            CleanupDuplicateLibraryItem::dispatch($this->libraryItem)->delay(now()->addMinutes(5));
-
-            // Store flash message for user notification
-            session()->flash('warning', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
         }
     }
 }

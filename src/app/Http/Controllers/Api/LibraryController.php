@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessMediaFile;
+use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
-use App\Models\MediaFile;
+use App\Services\YouTubeUrlValidator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -35,6 +36,17 @@ class LibraryController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
+        // Additional validation for YouTube URLs
+        if ($request->source_type === 'youtube') {
+            if (! YouTubeUrlValidator::isValidYouTubeUrl($request->source_url)) {
+                return response()->json(['source_url' => 'Invalid YouTube URL'], 422);
+            }
+        }
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
         $libraryItem = LibraryItem::create([
             'user_id' => auth()->id(),
             'title' => $request->title,
@@ -48,6 +60,8 @@ class LibraryController extends Controller
             ProcessMediaFile::dispatch($libraryItem, null, $filePath);
         } elseif ($request->source_type === 'url') {
             ProcessMediaFile::dispatch($libraryItem, $request->source_url);
+        } elseif ($request->source_type === 'youtube') {
+            ProcessYouTubeAudio::dispatch($libraryItem, $request->source_url);
         }
 
         return response()->json($libraryItem, 201);
