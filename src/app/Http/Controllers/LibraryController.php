@@ -80,14 +80,13 @@ class LibraryController extends Controller
         } elseif ($sourceType === 'upload') {
             $file = $request->file('file');
             $tempPath = $file->store('temp-uploads');
-            $fullTempPath = Storage::disk('local')->path($tempPath);
 
             // Check for duplicate by file hash
-            $existingMediaFile = MediaFile::isDuplicate($fullTempPath);
+            $existingMediaFile = MediaFile::isDuplicate($tempPath);
 
             if ($existingMediaFile) {
                 // Clean up temp file
-                Storage::disk('local')->delete($tempPath);
+                Storage::disk('public')->delete($tempPath);
 
                 // Link to existing media file and mark as duplicate
                 $libraryItem->media_file_id = $existingMediaFile->id;
@@ -130,7 +129,7 @@ class LibraryController extends Controller
 
         // Check if this was the last reference to the media file
         if ($mediaFile && $mediaFile->libraryItems()->count() === 0) {
-            Storage::disk('local')->delete($mediaFile->file_path);
+            Storage::disk('public')->delete($mediaFile->file_path);
             $mediaFile->delete();
         }
 

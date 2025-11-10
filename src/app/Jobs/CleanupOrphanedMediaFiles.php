@@ -24,7 +24,7 @@ class CleanupOrphanedMediaFiles implements ShouldQueue
         foreach ($orphanedFiles as $mediaFile) {
             // Delete the actual file from storage
             if ($mediaFile->file_path) {
-                Storage::disk('local')->delete($mediaFile->file_path);
+                Storage::disk('public')->delete($mediaFile->file_path);
             }
 
             // Delete the database record

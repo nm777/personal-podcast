@@ -1,47 +1,48 @@
-# Use PHP 8.2 FPM as base image
-FROM php:8.2-fpm-alpine
+# Use PHP 8.4 FPM as base image
+FROM php:8.4-fpm-alpine
 
 # Set working directory
 WORKDIR /var/www/html
 
 # Install system dependencies
 RUN apk add --no-cache \
-    libzip-dev \
-    zip \
-    unzip \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    libwebp-dev \
-    freetype-dev \
-    libxml2-dev \
-    oniguruma-dev \
-    sqlite-dev \
-    icu-dev \
-    icu-data-full \
+    autoconf \
     curl \
-    wget \
+    freetype-dev \
+    g++ \
     git \
+    icu-data-full \
+    icu-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    libwebp-dev \
+    libxml2-dev \
+    libzip-dev \
+    make \
     nodejs \
     npm \
+    oniguruma-dev \
     pkgconfig \
-    g++ \
-    make \
-    autoconf
+    sqlite-dev \
+    unzip \
+    wget \
+    yt-dlp \
+    zip
 
 # Install PHP extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-configure intl --enable-intl \
     && docker-php-ext-install -j$(nproc) \
-        gd \
-        pdo \
-        pdo_sqlite \
-        zip \
-        bcmath \
-        xml \
-        ctype \
-        intl \
-        mbstring \
-        opcache
+    bcmath \
+    ctype \
+    gd \
+    intl \
+    mbstring \
+    opcache \
+    pdo \
+    pdo_sqlite \
+    xml \
+    zip
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

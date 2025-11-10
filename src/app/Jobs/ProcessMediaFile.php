@@ -92,7 +92,7 @@ class ProcessMediaFile implements ShouldQueue
                     }
 
                     $tempPath = 'temp-uploads/'.uniqid().'_'.basename(parse_url($this->sourceUrl, PHP_URL_PATH) ?: 'download');
-                    Storage::disk('local')->put($tempPath, $contents);
+                    Storage::disk('public')->put($tempPath, $contents);
                 } catch (\Exception $e) {
                     $this->libraryItem->update([
                         'processing_status' => 'failed',
@@ -106,7 +106,7 @@ class ProcessMediaFile implements ShouldQueue
                 $tempPath = $this->filePath;
             }
 
-            if (! $tempPath || ! Storage::disk('local')->exists($tempPath)) {
+            if (! $tempPath || ! Storage::disk('public')->exists($tempPath)) {
                 $this->libraryItem->update([
                     'processing_status' => 'failed',
                     'processing_completed_at' => now(),
@@ -116,7 +116,7 @@ class ProcessMediaFile implements ShouldQueue
                 return;
             }
 
-            $fullPath = Storage::disk('local')->path($tempPath);
+            $fullPath = Storage::disk('public')->path($tempPath);
             $fileHash = hash_file('sha256', $fullPath);
             $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
             $finalPath = 'media/'.$fileHash.'.'.$extension;
@@ -126,13 +126,13 @@ class ProcessMediaFile implements ShouldQueue
 
             if (! $mediaFile) {
                 // Move file to final location using hash
-                Storage::disk('local')->move($tempPath, $finalPath);
+                Storage::disk('public')->move($tempPath, $finalPath);
 
                 $mediaFile = MediaFile::create([
                     'file_path' => $finalPath,
                     'file_hash' => $fileHash,
-                    'mime_type' => File::mimeType(Storage::disk('local')->path($finalPath)),
-                    'filesize' => File::size(Storage::disk('local')->path($finalPath)),
+                    'mime_type' => File::mimeType(Storage::disk('public')->path($finalPath)),
+                    'filesize' => File::size(Storage::disk('public')->path($finalPath)),
                     'source_url' => $this->sourceUrl,
                 ]);
 
@@ -143,7 +143,7 @@ class ProcessMediaFile implements ShouldQueue
                 ]);
             } else {
                 // File already exists, clean up temp file
-                Storage::disk('local')->delete($tempPath);
+                Storage::disk('public')->delete($tempPath);
 
                 // Update source URL if this is first time we've seen it from a URL
                 if ($this->sourceUrl && ! $mediaFile->source_url) {

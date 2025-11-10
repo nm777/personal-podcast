@@ -15,7 +15,7 @@ it('displays library page for authenticated users', function () {
 
     $response->assertOk();
     $response->assertInertia(
-        fn($page) => $page->component('Library/Index')
+        fn ($page) => $page->component('Library/Index')
     );
 });
 
@@ -40,14 +40,14 @@ it('shows only authenticated user library items', function () {
     $response = $this->actingAs($user)->get('/library');
 
     $response->assertInertia(
-        fn($page) => $page->component('Library/Index')
+        fn ($page) => $page->component('Library/Index')
             ->has('libraryItems', 1)
             ->where('libraryItems.0.title', 'User Item')
     );
 });
 
 it('can upload a media file', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -95,7 +95,7 @@ it('validates file upload requirements', function () {
 });
 
 it('can delete a library item', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create();
@@ -131,14 +131,14 @@ it('cannot delete another user library item', function () {
 });
 
 it('deletes orphaned media files when last library item is removed', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create([
         'file_path' => 'media/test-file.mp3',
     ]);
 
-    Storage::disk('local')->put($mediaFile->file_path, 'fake content');
+    Storage::disk('public')->put($mediaFile->file_path, 'fake content');
 
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
@@ -151,11 +151,11 @@ it('deletes orphaned media files when last library item is removed', function ()
         'id' => $mediaFile->id,
     ]);
 
-    Storage::disk('local')->assertMissing($mediaFile->file_path);
+    Storage::disk('public')->assertMissing($mediaFile->file_path);
 });
 
 it('keeps media files when other users still reference them', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     $user = User::factory()->create();
     $otherUser = User::factory()->create();
@@ -163,7 +163,7 @@ it('keeps media files when other users still reference them', function () {
         'file_path' => 'media/shared-file.mp3',
     ]);
 
-    Storage::disk('local')->put($mediaFile->file_path, 'fake content');
+    Storage::disk('public')->put($mediaFile->file_path, 'fake content');
 
     $userItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
@@ -181,11 +181,11 @@ it('keeps media files when other users still reference them', function () {
         'id' => $mediaFile->id,
     ]);
 
-    Storage::disk('local')->assertExists($mediaFile->file_path);
+    Storage::disk('public')->assertExists($mediaFile->file_path);
 });
 
 it('can add media file from URL', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -238,7 +238,7 @@ it('validates URL requirements', function () {
 });
 
 it('processes media file from URL correctly', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -269,7 +269,7 @@ it('processes media file from URL correctly', function () {
 });
 
 it('handles URL download failures gracefully', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -286,14 +286,15 @@ it('handles URL download failures gracefully', function () {
     $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/not-found.mp3', null);
     $job->handle();
 
-    // Library item should be deleted on failure
-    $this->assertDatabaseMissing('library_items', [
+    // Library item should be marked as failed
+    $this->assertDatabaseHas('library_items', [
         'id' => $libraryItem->id,
+        'processing_status' => 'failed',
     ]);
 });
 
 it('reuses existing media file when same URL is provided', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -322,7 +323,7 @@ it('reuses existing media file when same URL is provided', function () {
 });
 
 it('does not reuse files when URLs are different', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -351,7 +352,7 @@ it('does not reuse files when URLs are different', function () {
 });
 
 it('stores source URL when downloading new file', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
@@ -380,7 +381,7 @@ it('stores source URL when downloading new file', function () {
 });
 
 it('multiple users can reuse same file from same URL', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user1 = User::factory()->create();
@@ -433,7 +434,7 @@ it('multiple users can reuse same file from same URL', function () {
 });
 
 it('detects duplicate file uploads by hash', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -444,8 +445,15 @@ it('detects duplicate file uploads by hash', function () {
         'file_path' => 'media/existing-file.mp3',
     ]);
 
-    // Create a fake file with the same content
+    // Create actual file in storage so duplicate detection works
+    Storage::disk('public')->put($mediaFile->file_path, 'test audio content');
+
+    // Create a fake file with the same content and manually store it
     $file = UploadedFile::fake()->createWithContent('duplicate-audio.mp3', 'test audio content');
+    $tempPath = $file->store('temp-uploads');
+
+    // Manually put the file content in storage since UploadedFile::fake() doesn't work with store()
+    Storage::disk('public')->put($tempPath, 'test audio content');
 
     $response = $this->actingAs($user)->post('/library', [
         'title' => 'Duplicate File',
@@ -470,7 +478,7 @@ it('detects duplicate file uploads by hash', function () {
 });
 
 it('processes non-duplicate file uploads normally', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -506,7 +514,7 @@ it('processes non-duplicate file uploads normally', function () {
 });
 
 it('MediaFile model can find duplicates by hash', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     // Create a media file with known hash
     $knownHash = hash('sha256', 'test content');
@@ -525,13 +533,13 @@ it('MediaFile model can find duplicates by hash', function () {
 });
 
 it('MediaFile model can check file duplicates', function () {
-    Storage::fake('local');
+    Storage::fake('public');
 
     // Create a fake file
     $content = 'test audio content';
     $tempPath = 'temp/test-file.mp3';
-    Storage::disk('local')->put($tempPath, $content);
-    $fullPath = Storage::disk('local')->path($tempPath);
+    Storage::disk('public')->put($tempPath, $content);
+    $fullPath = Storage::disk('public')->path($tempPath);
 
     // Create media file with same hash
     $mediaFile = MediaFile::factory()->create([
@@ -539,7 +547,7 @@ it('MediaFile model can check file duplicates', function () {
     ]);
 
     // Test duplicate detection
-    $duplicate = MediaFile::isDuplicate($fullPath);
+    $duplicate = MediaFile::isDuplicate($tempPath);
     expect($duplicate)->not->toBeNull();
     expect($duplicate->id)->toBe($mediaFile->id);
 
@@ -548,11 +556,11 @@ it('MediaFile model can check file duplicates', function () {
     expect($nonDuplicate)->toBeNull();
 
     // Clean up
-    Storage::disk('local')->delete($tempPath);
+    Storage::disk('public')->delete($tempPath);
 });
 
 it('marks duplicate library items and schedules cleanup', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -572,7 +580,7 @@ it('marks duplicate library items and schedules cleanup', function () {
 
     // Create temp file with same content
     $tempPath = 'temp/duplicate-upload.mp3';
-    Storage::disk('local')->put($tempPath, 'duplicate content');
+    Storage::disk('public')->put($tempPath, 'duplicate content');
 
     // Process the file
     $job = new \App\Jobs\ProcessMediaFile($libraryItem, null, $tempPath);

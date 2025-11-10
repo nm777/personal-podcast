@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 it('shows processing status for media items', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -30,7 +30,7 @@ it('shows processing status for media items', function () {
 });
 
 it('updates processing status when job completes', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
@@ -61,7 +61,7 @@ it('updates processing status when job completes', function () {
 });
 
 it('updates processing status when job fails', function () {
-    Storage::fake('local');
+    Storage::fake('public');
     Queue::fake();
 
     $user = User::factory()->create();
