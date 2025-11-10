@@ -293,6 +293,104 @@ it('handles URL download failures gracefully', function () {
     ]);
 });
 
+it('handles JavaScript redirect pages correctly', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'source_type' => 'url',
+        'source_url' => 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3',
+    ]);
+
+    $htmlRedirectPage = '<!DOCTYPE html><html><head><title>Redirect</title></head><body><script>window.location.replace("https://file-examples.com/storage/fef7fa310369115b497def4/file_example_MP3_700KB.mp3");</script></body></html>';
+    $mp3Content = 'ID3fake audio content';
+
+    // Mock the redirect page and the final MP3 file
+    Http::fake([
+        'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3' => Http::response($htmlRedirectPage, 200),
+        'https://file-examples.com/storage/fef7fa310369115b497def4/file_example_MP3_700KB.mp3' => Http::response($mp3Content, 200, [
+            'Content-Type' => 'audio/mpeg',
+        ]),
+    ]);
+
+    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
+    $job->handle();
+
+    $libraryItem->refresh();
+
+    expect($libraryItem->processing_status)->toBe('completed');
+    expect($libraryItem->media_file_id)->not->toBeNull();
+
+    $mediaFile = $libraryItem->mediaFile;
+    expect($mediaFile->file_hash)->toBe(hash('sha256', $mp3Content));
+});
+
+it('fails when JavaScript redirect cannot be resolved', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'source_type' => 'url',
+        'source_url' => 'https://example.com/redirect.mp3',
+    ]);
+
+    $htmlRedirectPage = '<!DOCTYPE html><html><head><title>Redirect</title></head><body><script>window.location.replace("https://example.com/final.mp3");</script></body></html>';
+
+    // Mock of redirect page but fail to final request
+    Http::fake([
+        'https://example.com/redirect.mp3' => Http::response($htmlRedirectPage, 200),
+        'https://example.com/final.mp3' => Http::response('Not Found', 404),
+    ]);
+
+    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://example.com/redirect.mp3', null);
+    $job->handle();
+
+    $libraryItem->refresh();
+
+    expect($libraryItem->processing_status)->toBe('failed');
+    expect($libraryItem->processing_error)->toContain('Got HTML redirect page instead of media file');
+});
+
+it('handles file-examples.com JavaScript redirect pattern correctly', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->create();
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'source_type' => 'url',
+        'source_url' => 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3',
+    ]);
+
+    // Simulate the exact HTML redirect pattern from file-examples.com
+    $htmlRedirectPage = '<!DOCTYPE html><html><head><title>File Examples | Download redirect...</title></head><body><script>document.addEventListener(\'DOMContentLoaded\', function(){setTimeout(function (){url=window.location.href.replace(\'file-examples.com/wp-content/storage/\',\'file-examples.com/storage/fef7fa310369115b497def4/\'); window.location.replace(url);}, 3000);}, false);</script></body></html>';
+
+    $mp3Content = 'ID3'.str_repeat('x', 100); // Valid MP3 content with ID3 tag
+
+    // Mock the redirect page and final MP3 file
+    Http::fake([
+        'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3' => Http::response($htmlRedirectPage, 200),
+        'https://file-examples.com/storage/fef7fa310369115b497def4/2017/11/file_example_MP3_700KB.mp3' => Http::response($mp3Content, 200, [
+            'Content-Type' => 'audio/mpeg',
+        ]),
+    ]);
+
+    $job = new \App\Jobs\ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
+    $job->handle();
+
+    $libraryItem->refresh();
+
+    expect($libraryItem->processing_status)->toBe('completed');
+    expect($libraryItem->media_file_id)->not->toBeNull();
+
+    $mediaFile = $libraryItem->mediaFile;
+    expect($mediaFile->file_hash)->toBe(hash('sha256', $mp3Content));
+    expect($mediaFile->filesize)->toBe(strlen($mp3Content));
+    // Storage::fake() returns text/plain for all files, so we check that it's not HTML
+    expect($mediaFile->mime_type)->not->toBe('text/html');
+});
+
 it('reuses existing media file when same URL is provided', function () {
     Storage::fake('public');
     Queue::fake();

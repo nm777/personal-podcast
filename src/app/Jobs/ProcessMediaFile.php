@@ -67,7 +67,15 @@ class ProcessMediaFile implements ShouldQueue
 
             if ($this->sourceUrl) {
                 try {
-                    $response = Http::timeout(60)->get($this->sourceUrl);
+                    $response = Http::timeout(60)->withOptions([
+                        'allow_redirects' => [
+                            'max' => 5,
+                            'strict' => true,
+                            'referer' => true,
+                            'protocols' => ['http', 'https'],
+                            'track_redirects' => true,
+                        ],
+                    ])->get($this->sourceUrl);
 
                     if (! $response->successful()) {
                         $this->libraryItem->update([
@@ -86,6 +94,88 @@ class ProcessMediaFile implements ShouldQueue
                             'processing_status' => 'failed',
                             'processing_completed_at' => now(),
                             'processing_error' => 'Downloaded file is empty',
+                        ]);
+
+                        return;
+                    }
+
+                    // Check if we got HTML instead of expected media content
+                    if (str_starts_with($contents, '<!DOCTYPE html') || str_starts_with($contents, '<html')) {
+                        // Try to extract JavaScript redirect URL (handle both patterns)
+                        $redirectUrl = null;
+
+                        // Pattern 1: window.location.replace('url')
+                        if (preg_match('/window\.location\.replace\([\'"]([^\'"]+)[\'"]\)/', $contents, $matches)) {
+                            $redirectUrl = $matches[1];
+                        }
+                        // Pattern 2: window.location.href.replace('pattern', 'replacement')
+                        elseif (preg_match('/window\.location\.href\.replace\([\'"]([^\'"]+)[\'"],\s*[\'"]([^\'"]+)[\'"]\)/', $contents, $matches)) {
+                            $pattern = $matches[1];
+                            $replacement = $matches[2];
+                            // Apply the replacement pattern to the original URL
+                            $redirectUrl = str_replace($pattern, $replacement, $this->sourceUrl);
+                        }
+
+                        if ($redirectUrl) {
+                            // Make it absolute if relative
+                            if (! str_starts_with($redirectUrl, 'http')) {
+                                $parsedUrl = parse_url($this->sourceUrl);
+                                $baseUrl = $parsedUrl['scheme'].'://'.$parsedUrl['host'];
+                                if (str_starts_with($redirectUrl, '/')) {
+                                    $redirectUrl = $baseUrl.$redirectUrl;
+                                } else {
+                                    // Handle relative paths
+                                    $path = dirname($parsedUrl['path']);
+                                    $redirectUrl = $baseUrl.$path.'/'.$redirectUrl;
+                                }
+                            }
+
+                            // Try the redirected URL
+                            $redirectResponse = Http::timeout(60)->get($redirectUrl);
+                            if ($redirectResponse->successful() && ! str_starts_with($redirectResponse->body(), '<!DOCTYPE html')) {
+                                $contents = $redirectResponse->body();
+                            } else {
+                                $this->libraryItem->update([
+                                    'processing_status' => 'failed',
+                                    'processing_completed_at' => now(),
+                                    'processing_error' => 'Download failed: Got HTML redirect page instead of media file',
+                                ]);
+
+                                return;
+                            }
+                        } else {
+                            $this->libraryItem->update([
+                                'processing_status' => 'failed',
+                                'processing_completed_at' => now(),
+                                'processing_error' => 'Download failed: Got HTML content instead of media file',
+                            ]);
+
+                            return;
+                        }
+                    }
+
+                    // Validate that we have actual media content by checking file signature
+                    $validMediaSignatures = [
+                        'RIFF' => true, // WAV/AVI
+                        'OggS' => true, // OGG
+                        'fLaC' => true, // FLAC
+                        'MP4' => true,  // M4A/MP4
+                        "\xFF\xFB" => true, // MP3
+                        "\xFF\xF3" => true, // MP3
+                        "\xFF\xF2" => true, // MP3
+                    ];
+
+                    $fileSignature = substr($contents, 0, 4);
+                    $isValidMedia = isset($validMediaSignatures[$fileSignature]) ||
+                                   isset($validMediaSignatures[substr($contents, 0, 2)]) ||
+                                   str_starts_with($fileSignature, 'ID3'); // MP3 with ID3 tag
+
+                    if (! $isValidMedia && strlen($contents) > 100) {
+                        // Check if it might be a different audio format or corrupted
+                        $this->libraryItem->update([
+                            'processing_status' => 'failed',
+                            'processing_completed_at' => now(),
+                            'processing_error' => 'Download failed: Content does not appear to be a valid audio file',
                         ]);
 
                         return;
