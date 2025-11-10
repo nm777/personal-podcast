@@ -16,7 +16,13 @@ class MediaController extends Controller
             abort(404);
         }
 
-        // Redirect to the public storage URL
-        return redirect($mediaFile->public_url);
+        // Serve the file directly instead of redirecting
+        $file = Storage::disk('public')->get($file_path);
+        $mimeType = $mediaFile->mime_type ?? 'application/octet-stream';
+        
+        return response($file)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Length', (string) strlen($file))
+            ->header('Accept-Ranges', 'bytes');
     }
 }

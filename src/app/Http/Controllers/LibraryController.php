@@ -79,7 +79,7 @@ class LibraryController extends Controller
             }
         } elseif ($sourceType === 'upload') {
             $file = $request->file('file');
-            $tempPath = $file->store('temp-uploads');
+            $tempPath = $file->store('temp-uploads', 'public');
 
             // Check for duplicate by file hash
             $existingMediaFile = MediaFile::isDuplicate($tempPath);

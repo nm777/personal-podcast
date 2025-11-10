@@ -13,7 +13,7 @@ Route::get('/', function () {
 
 Route::get('/rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name('rss.show');
 
-Route::get('/media/{file_path}', [MediaController::class, 'show'])->name('media.show')->where('file_path', '.*');
+Route::get('/files/{file_path}', [MediaController::class, 'show'])->name('files.show')->where('file_path', '.*');
 
 Route::post('check-url-duplicate', [App\Http\Controllers\Api\UrlDuplicateCheckController::class, 'check'])->middleware(['auth', 'verified']);
 

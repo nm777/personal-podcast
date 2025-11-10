@@ -78,7 +78,7 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
                             {/* Audio element */}
                             <audio
                                 ref={audioRef}
-                                src={libraryItem.media_file.public_url || `/${libraryItem.media_file.file_path}`}
+                                src={libraryItem.media_file.public_url || `/files/${libraryItem.media_file.file_path}`}
                                 className="w-full"
                                 controls
                                 preload="metadata"
