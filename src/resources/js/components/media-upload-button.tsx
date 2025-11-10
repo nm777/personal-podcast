@@ -197,12 +197,14 @@ export default function MediaUploadButton({ onUploadSuccess }: MediaUploadButton
                 return {
                     title: data.title,
                     description: data.description,
+                    source_type: 'youtube',
                     source_url: data.url,
                 };
             } else {
                 return {
                     title: data.title,
                     description: data.description,
+                    source_type: 'url',
                     url: data.url,
                 };
             }
