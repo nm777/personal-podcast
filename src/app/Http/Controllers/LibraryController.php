@@ -46,11 +46,11 @@ class LibraryController extends Controller
         $mediaFileId = null;
         $message = '';
 
-        // Check if URL already exists in our system
+        // Check if URL already exists in our system for this user
         if ($sourceUrl) {
             $existingMediaFile = MediaFile::findBySourceUrl($sourceUrl);
 
-            if ($existingMediaFile) {
+            if ($existingMediaFile && $existingMediaFile->user_id === auth()->id()) {
                 $mediaFileId = $existingMediaFile->id;
                 $message = 'Duplicate URL detected. This file already exists in your library and will be removed automatically in 5 minutes.';
             }
@@ -81,10 +81,10 @@ class LibraryController extends Controller
             $file = $request->file('file');
             $tempPath = $file->store('temp-uploads', 'public');
 
-            // Check for duplicate by file hash
+            // Check for duplicate by file hash for this user
             $existingMediaFile = MediaFile::isDuplicate($tempPath);
 
-            if ($existingMediaFile) {
+            if ($existingMediaFile && $existingMediaFile->user_id === auth()->id()) {
                 // Clean up temp file
                 Storage::disk('public')->delete($tempPath);
 
@@ -99,7 +99,7 @@ class LibraryController extends Controller
                 // Schedule cleanup
                 CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
             } else {
-                // Process new file
+                // Process new file (deduplication will be handled in the job)
                 ProcessMediaFile::dispatch($libraryItem, null, $tempPath);
                 $message = 'Media file uploaded successfully. Processing...';
             }

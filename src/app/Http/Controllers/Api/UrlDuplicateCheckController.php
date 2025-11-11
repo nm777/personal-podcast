@@ -22,9 +22,12 @@ class UrlDuplicateCheckController extends Controller
         $url = $request->input('url');
         $existingMediaFile = MediaFile::findBySourceUrl($url);
 
+        // Only consider it a duplicate if it belongs to the current user
+        $isUserDuplicate = $existingMediaFile && $existingMediaFile->user_id === auth()->id();
+
         return response()->json([
-            'is_duplicate' => $existingMediaFile !== null,
-            'existing_file' => $existingMediaFile ? [
+            'is_duplicate' => $isUserDuplicate,
+            'existing_file' => $isUserDuplicate ? [
                 'id' => $existingMediaFile->id,
                 'mime_type' => $existingMediaFile->mime_type,
                 'filesize' => $existingMediaFile->filesize,

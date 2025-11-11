@@ -11,6 +11,7 @@ class MediaFile extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'file_path',
         'file_hash',
         'mime_type',
@@ -18,6 +19,11 @@ class MediaFile extends Model
         'duration',
         'source_url',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function libraryItems()
     {
@@ -43,6 +49,14 @@ class MediaFile extends Model
     public static function findByHash(string $fileHash): ?static
     {
         return static::where('file_hash', $fileHash)->first();
+    }
+
+    /**
+     * Find a media file by file hash for a specific user.
+     */
+    public static function findByHashForUser(string $fileHash, int $userId): ?static
+    {
+        return static::where('file_hash', $fileHash)->where('user_id', $userId)->first();
     }
 
     /**
