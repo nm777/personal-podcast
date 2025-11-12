@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\LibraryItemRequest;
 use App\Jobs\ProcessMediaFile;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
-use App\Services\YouTubeUrlValidator;
+use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 
 class LibraryController extends Controller
 {
@@ -22,47 +22,38 @@ class LibraryController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created library item.
      */
-    public function store(Request $request)
+    public function store(LibraryItemRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'source_type' => 'required|in:upload,url,youtube',
-            'file' => 'required_if:source_type,upload|file|mimes:mp3,mp4,m4a,wav,ogg|max:512000',
-            'source_url' => 'required_if:source_type,url,youtube|url',
-        ]);
+        $validated = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
+        // Additional validation for YouTube URLs using factory
+        $sourceType = $validated['source_type'];
+        $sourceUrl = $validated['source_url'] ?? null;
 
-        // Additional validation for YouTube URLs
-        if ($request->source_type === 'youtube') {
-            if (! YouTubeUrlValidator::isValidYouTubeUrl($request->source_url)) {
-                return response()->json(['source_url' => 'Invalid YouTube URL'], 422);
-            }
-        }
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+        if ($redirectResponse = SourceProcessorFactory::validate($sourceType, $sourceUrl)) {
+            return response()->json(
+                $redirectResponse->getSession()->get('errors', []),
+                422
+            );
         }
 
         $libraryItem = LibraryItem::create([
             'user_id' => Auth::user()->id,
-            'title' => $request->title,
-            'description' => $request->description,
-            'source_type' => $request->source_type,
-            'source_url' => $request->source_url,
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'source_type' => $sourceType,
+            'source_url' => $sourceUrl,
         ]);
 
-        if ($request->source_type === 'upload') {
+        if ($sourceType === 'upload') {
             $filePath = $request->file('file')->store('uploads');
             ProcessMediaFile::dispatch($libraryItem, null, $filePath);
-        } elseif ($request->source_type === 'url') {
-            ProcessMediaFile::dispatch($libraryItem, $request->source_url);
-        } elseif ($request->source_type === 'youtube') {
-            ProcessYouTubeAudio::dispatch($libraryItem, $request->source_url);
+        } elseif ($sourceType === 'url') {
+            ProcessMediaFile::dispatch($libraryItem, $sourceUrl);
+        } elseif ($sourceType === 'youtube') {
+            ProcessYouTubeAudio::dispatch($libraryItem, $sourceUrl);
         }
 
         return response()->json($libraryItem, 201);

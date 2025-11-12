@@ -227,14 +227,77 @@ it('validates URL requirements', function () {
     ]);
 
     $response->assertSessionHasErrors('url');
+});
 
-    // Test URL without supported file extension
+it('uses consolidated validation rules from web form request', function () {
+    $request = new \App\Http\Requests\LibraryItemRequest;
+
+    $rules = $request->rules();
+
+    expect($rules)->toHaveKey('title');
+    expect($rules)->toHaveKey('source_type');
+    expect($rules)->toHaveKey('file');
+    expect($rules)->toHaveKey('url');
+    expect($rules)->toHaveKey('source_url');
+    expect($rules)->toHaveKey('description');
+
+    expect($rules['title'])->toContain('required');
+    expect($rules['source_type'])->toContain('in:upload,url,youtube');
+    expect($rules['file'])->toContain('required_without_all:source_url,url');
+    expect($rules['url'])->toContain('required_without_all:source_url,file');
+    expect($rules['source_url'])->toContain('required_without_all:file,url');
+});
+
+it('validates source_type field for web requests', function () {
+    $user = User::factory()->create();
+
+    // Test invalid source_type
     $response = $this->actingAs($user)->post('/library', [
         'title' => 'Test Audio',
-        'url' => 'https://example.com/test.txt',
+        'source_type' => 'invalid-type',
+        'url' => 'https://example.com/audio.mp3',
     ]);
 
-    $response->assertSessionHasErrors('url');
+    $response->assertSessionHasErrors('source_type');
+});
+
+it('maintains backward compatibility with url field', function () {
+    $user = User::factory()->create();
+
+    // Test old url field still works
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test Audio',
+        'url' => 'https://example.com/audio.mp3',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHas('success');
+
+    $this->assertDatabaseHas('library_items', [
+        'user_id' => $user->id,
+        'title' => 'Test Audio',
+        'source_type' => 'url',
+    ]);
+});
+
+it('processes new source_url field correctly', function () {
+    $user = User::factory()->create();
+
+    // Test new source_url field works
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test Audio',
+        'source_type' => 'url',
+        'source_url' => 'https://example.com/audio.mp3',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHas('success');
+
+    $this->assertDatabaseHas('library_items', [
+        'user_id' => $user->id,
+        'title' => 'Test Audio',
+        'source_type' => 'url',
+    ]);
 });
 
 it('processes media file from URL correctly', function () {
