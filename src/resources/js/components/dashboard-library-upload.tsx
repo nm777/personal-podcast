@@ -2,8 +2,9 @@ import MediaUploadButton from '@/components/media-upload-button';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { router } from '@inertiajs/react';
-import { CheckCircle, FileAudio, FileVideo, Loader2, RefreshCw, Upload, XCircle } from 'lucide-react';
+import { FileAudio, FileVideo, RefreshCw, Upload } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ProcessingStatusHelper, ProcessingStatusType } from '../lib/processing-status';
 
 interface MediaFile {
     id: number;
@@ -24,7 +25,7 @@ interface LibraryItem {
     description?: string;
     source_type: string;
     source_url?: string;
-    processing_status: 'pending' | 'processing' | 'completed' | 'failed';
+    processing_status: ProcessingStatusType;
     processing_started_at?: string;
     processing_completed_at?: string;
     processing_error?: string;
@@ -43,7 +44,10 @@ export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }
 
     // Auto-refresh for processing items using custom polling
     useEffect(() => {
-        const hasProcessingItems = libraryItems.some((item) => item.processing_status === 'pending' || item.processing_status === 'processing');
+        const hasProcessingItems = libraryItems.some(
+            (item) =>
+                ProcessingStatusHelper.from(item.processing_status).isPending() || ProcessingStatusHelper.from(item.processing_status).isProcessing(),
+        );
 
         if (!hasProcessingItems) return;
 
@@ -80,30 +84,12 @@ export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }
         return <FileAudio className="h-6 w-6 text-gray-500" />;
     };
 
-    const getProcessingStatusIcon = (status: string) => {
-        switch (status) {
-            case 'processing':
-                return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
-            case 'completed':
-                return <CheckCircle className="h-4 w-4 text-green-500" />;
-            case 'failed':
-                return <XCircle className="h-4 w-4 text-red-500" />;
-            default:
-                return <Loader2 className="h-4 w-4 text-gray-400" />;
-        }
+    const getProcessingStatusIcon = (status: ProcessingStatus) => {
+        return ProcessingStatusHelper.from(status).getIcon();
     };
 
-    const getProcessingStatusColor = (status: string) => {
-        switch (status) {
-            case 'processing':
-                return 'text-blue-600';
-            case 'completed':
-                return 'text-green-600';
-            case 'failed':
-                return 'text-red-600';
-            default:
-                return 'text-gray-600';
-        }
+    const getProcessingStatusColor = (status: ProcessingStatus) => {
+        return ProcessingStatusHelper.from(status).getColor();
     };
 
     const recentItems = libraryItems.slice(0, 3);
@@ -137,15 +123,11 @@ export default function DashboardLibraryUpload({ libraryItems, onUploadSuccess }
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
                                         <p className="truncate text-sm font-medium">{item.title}</p>
-                                        {item.processing_status !== 'completed' && (
+                                        {!ProcessingStatusHelper.from(item.processing_status).hasCompleted() && (
                                             <div className="flex items-center gap-1">
                                                 {getProcessingStatusIcon(item.processing_status)}
                                                 <span className={`text-xs font-medium ${getProcessingStatusColor(item.processing_status)}`}>
-                                                    {item.processing_status === 'processing'
-                                                        ? 'Processing'
-                                                        : item.processing_status === 'failed'
-                                                          ? 'Failed'
-                                                          : 'Pending'}
+                                                    {ProcessingStatusHelper.from(item.processing_status).getDisplayName()}
                                                 </span>
                                             </div>
                                         )}

@@ -289,7 +289,7 @@ it('handles URL download failures gracefully', function () {
     // Library item should be marked as failed
     $this->assertDatabaseHas('library_items', [
         'id' => $libraryItem->id,
-        'processing_status' => 'failed',
+        'processing_status' => \App\ProcessingStatusType::FAILED->value,
     ]);
 });
 
@@ -319,7 +319,7 @@ it('handles JavaScript redirect pages correctly', function () {
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe('completed');
+    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
     expect($libraryItem->media_file_id)->not->toBeNull();
 
     $mediaFile = $libraryItem->mediaFile;
@@ -349,7 +349,7 @@ it('fails when JavaScript redirect cannot be resolved', function () {
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe('failed');
+    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::FAILED);
     expect($libraryItem->processing_error)->toContain('Got HTML redirect page instead of media file');
 });
 
@@ -381,7 +381,7 @@ it('handles file-examples.com JavaScript redirect pattern correctly', function (
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe('completed');
+    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
     expect($libraryItem->media_file_id)->not->toBeNull();
 
     $mediaFile = $libraryItem->mediaFile;

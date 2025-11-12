@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ProcessingStatusType } from '@/lib/processing-status';
 import { X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -25,7 +26,7 @@ interface LibraryItem {
     description?: string;
     source_type: string;
     source_url?: string;
-    processing_status: 'pending' | 'processing' | 'completed' | 'failed';
+    processing_status: ProcessingStatusType;
     processing_started_at?: string;
     processing_completed_at?: string;
     processing_error?: string;

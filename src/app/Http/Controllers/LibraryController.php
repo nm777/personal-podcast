@@ -8,6 +8,7 @@ use App\Jobs\ProcessMediaFile;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use App\ProcessingStatusType;
 use App\Services\YouTubeUrlValidator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -66,7 +67,7 @@ class LibraryController extends Controller
                     'media_file_id' => $existingMediaFile->id,
                     'is_duplicate' => true,
                     'duplicate_detected_at' => now(),
-                    'processing_status' => 'completed',
+                    'processing_status' => ProcessingStatusType::COMPLETED,
                     'processing_completed_at' => now(),
                 ]);
 
@@ -84,7 +85,7 @@ class LibraryController extends Controller
                     'source_url' => $sourceUrl,
                     'media_file_id' => null,
                     'is_duplicate' => false,
-                    'processing_status' => 'pending',
+                    'processing_status' => ProcessingStatusType::PENDING,
                 ]);
 
                 // Process new file (deduplication will be handled in the job)
@@ -123,7 +124,7 @@ class LibraryController extends Controller
                 'media_file_id' => $mediaFileId,
                 'is_duplicate' => $existingLibraryItem ? true : false, // Only mark as duplicate if same user has URL
                 'duplicate_detected_at' => $existingLibraryItem ? now() : null,
-                'processing_status' => $mediaFileId ? 'completed' : 'pending',
+                'processing_status' => $mediaFileId ? ProcessingStatusType::COMPLETED : ProcessingStatusType::PENDING,
                 'processing_completed_at' => $mediaFileId ? now() : null,
             ]);
 

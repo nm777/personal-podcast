@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use App\ProcessingStatusType;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,7 +42,7 @@ class ProcessMediaFile implements ShouldQueue
     {
         // Mark as processing
         $this->libraryItem->update([
-            'processing_status' => 'processing',
+            'processing_status' => ProcessingStatusType::PROCESSING,
             'processing_started_at' => now(),
             'processing_error' => null,
         ]);
@@ -60,7 +61,7 @@ class ProcessMediaFile implements ShouldQueue
                     // User already has this URL, link to existing media file and mark as completed
                     $this->libraryItem->media_file_id = $existingLibraryItem->media_file_id;
                     $this->libraryItem->update([
-                        'processing_status' => 'completed',
+                        'processing_status' => ProcessingStatusType::COMPLETED,
                         'processing_completed_at' => now(),
                     ]);
 
@@ -80,7 +81,7 @@ class ProcessMediaFile implements ShouldQueue
                     // Link to existing media file from different user (cross-user sharing)
                     $this->libraryItem->media_file_id = $existingMediaFile->id;
                     $this->libraryItem->update([
-                        'processing_status' => 'completed',
+                        'processing_status' => ProcessingStatusType::COMPLETED,
                         'processing_completed_at' => now(),
                     ]);
 
@@ -102,7 +103,7 @@ class ProcessMediaFile implements ShouldQueue
 
                     if (! $response->successful()) {
                         $this->libraryItem->update([
-                            'processing_status' => 'failed',
+                            'processing_status' => ProcessingStatusType::FAILED,
                             'processing_completed_at' => now(),
                             'processing_error' => 'Failed to download file: HTTP '.$response->status(),
                         ]);
@@ -114,7 +115,7 @@ class ProcessMediaFile implements ShouldQueue
 
                     if (empty($contents)) {
                         $this->libraryItem->update([
-                            'processing_status' => 'failed',
+                            'processing_status' => ProcessingStatusType::FAILED,
                             'processing_completed_at' => now(),
                             'processing_error' => 'Downloaded file is empty',
                         ]);
@@ -159,7 +160,7 @@ class ProcessMediaFile implements ShouldQueue
                                 $contents = $redirectResponse->body();
                             } else {
                                 $this->libraryItem->update([
-                                    'processing_status' => 'failed',
+                                    'processing_status' => ProcessingStatusType::FAILED,
                                     'processing_completed_at' => now(),
                                     'processing_error' => 'Download failed: Got HTML redirect page instead of media file',
                                 ]);
@@ -168,7 +169,7 @@ class ProcessMediaFile implements ShouldQueue
                             }
                         } else {
                             $this->libraryItem->update([
-                                'processing_status' => 'failed',
+                                'processing_status' => ProcessingStatusType::FAILED,
                                 'processing_completed_at' => now(),
                                 'processing_error' => 'Download failed: Got HTML content instead of media file',
                             ]);
@@ -196,7 +197,7 @@ class ProcessMediaFile implements ShouldQueue
                     if (! $isValidMedia && strlen($contents) > 100) {
                         // Check if it might be a different audio format or corrupted
                         $this->libraryItem->update([
-                            'processing_status' => 'failed',
+                            'processing_status' => ProcessingStatusType::FAILED,
                             'processing_completed_at' => now(),
                             'processing_error' => 'Download failed: Content does not appear to be a valid audio file',
                         ]);
@@ -208,7 +209,7 @@ class ProcessMediaFile implements ShouldQueue
                     Storage::disk('public')->put($tempPath, $contents);
                 } catch (\Exception $e) {
                     $this->libraryItem->update([
-                        'processing_status' => 'failed',
+                        'processing_status' => ProcessingStatusType::FAILED,
                         'processing_completed_at' => now(),
                         'processing_error' => 'Download failed: '.$e->getMessage(),
                     ]);
@@ -221,7 +222,7 @@ class ProcessMediaFile implements ShouldQueue
 
             if (! $tempPath || ! Storage::disk('public')->exists($tempPath)) {
                 $this->libraryItem->update([
-                    'processing_status' => 'failed',
+                    'processing_status' => ProcessingStatusType::FAILED,
                     'processing_completed_at' => now(),
                     'processing_error' => 'Temp file not found or inaccessible',
                 ]);
@@ -249,7 +250,7 @@ class ProcessMediaFile implements ShouldQueue
                     $this->libraryItem->media_file_id = $globalMediaFile->id;
                     // Don't mark as duplicate since this is a different user's file
                     $this->libraryItem->update([
-                        'processing_status' => 'completed',
+                        'processing_status' => ProcessingStatusType::COMPLETED,
                         'processing_completed_at' => now(),
                     ]);
 
@@ -273,7 +274,7 @@ class ProcessMediaFile implements ShouldQueue
 
                 $this->libraryItem->media_file_id = $mediaFile->id;
                 $this->libraryItem->update([
-                    'processing_status' => 'completed',
+                    'processing_status' => ProcessingStatusType::COMPLETED,
                     'processing_completed_at' => now(),
                 ]);
             } else {
@@ -291,7 +292,7 @@ class ProcessMediaFile implements ShouldQueue
                 $this->libraryItem->is_duplicate = true;
                 $this->libraryItem->duplicate_detected_at = now();
                 $this->libraryItem->update([
-                    'processing_status' => 'completed',
+                    'processing_status' => ProcessingStatusType::COMPLETED,
                     'processing_completed_at' => now(),
                 ]);
 
@@ -304,7 +305,7 @@ class ProcessMediaFile implements ShouldQueue
 
         } catch (\Exception $e) {
             $this->libraryItem->update([
-                'processing_status' => 'failed',
+                'processing_status' => ProcessingStatusType::FAILED,
                 'processing_completed_at' => now(),
                 'processing_error' => 'Processing failed: '.$e->getMessage(),
             ]);

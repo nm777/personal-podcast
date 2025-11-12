@@ -15,7 +15,7 @@ it('shows processing status for media items', function () {
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
         'title' => 'Test Processing Item',
-        'processing_status' => 'processing',
+        'processing_status' => \App\ProcessingStatusType::PROCESSING,
         'processing_started_at' => now(),
     ]);
 
@@ -25,7 +25,7 @@ it('shows processing status for media items', function () {
     $response->assertInertia(
         fn ($page) => $page
             ->has('libraryItems', 1)
-            ->where('libraryItems.0.processing_status', 'processing')
+            ->where('libraryItems.0.processing_status', \App\ProcessingStatusType::PROCESSING->value)
     );
 });
 
@@ -40,7 +40,7 @@ it('updates processing status when job completes', function () {
         'title' => 'Test URL Audio',
         'source_type' => 'url',
         'source_url' => 'https://example.com/test-audio.mp3',
-        'processing_status' => 'pending',
+        'processing_status' => \App\ProcessingStatusType::PENDING,
     ]);
 
     // Mock HTTP response
@@ -55,7 +55,7 @@ it('updates processing status when job completes', function () {
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe('completed');
+    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
     expect($libraryItem->processing_completed_at)->not->toBeNull();
     expect($libraryItem->media_file_id)->not->toBeNull();
 });
@@ -71,7 +71,7 @@ it('updates processing status when job fails', function () {
         'title' => 'Test Failed Item',
         'source_type' => 'url',
         'source_url' => 'https://example.com/missing-file.mp3',
-        'processing_status' => 'pending',
+        'processing_status' => \App\ProcessingStatusType::PENDING,
     ]);
 
     // Mock failed HTTP response
@@ -84,7 +84,7 @@ it('updates processing status when job fails', function () {
 
     $libraryItem->refresh();
 
-    expect($libraryItem->processing_status)->toBe('failed');
+    expect($libraryItem->processing_status)->toBe(\App\ProcessingStatusType::FAILED);
     expect($libraryItem->processing_completed_at)->not->toBeNull();
     expect($libraryItem->processing_error)->toContain('Failed to download file');
 });

@@ -5,6 +5,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
+import { ProcessingStatusHelper, ProcessingStatusType } from '@/lib/processing-status';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { AlertCircle, FileAudio, FileVideo, Play, Trash2 } from 'lucide-react';
@@ -32,7 +33,7 @@ interface LibraryItem {
     source_url?: string;
     is_duplicate: boolean;
     duplicate_detected_at?: string;
-    processing_status: 'pending' | 'processing' | 'completed' | 'failed';
+    processing_status: ProcessingStatusType;
     processing_started_at?: string;
     processing_completed_at?: string;
     processing_error?: string;
@@ -64,7 +65,10 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
 
     // Auto-refresh for processing items using custom polling
     useEffect(() => {
-        const hasProcessingItems = libraryItems.some((item) => item.processing_status === 'pending' || item.processing_status === 'processing');
+        const hasProcessingItems = libraryItems.some(
+            (item) =>
+                ProcessingStatusHelper.from(item.processing_status).isPending() || ProcessingStatusHelper.from(item.processing_status).isProcessing(),
+        );
 
         if (!hasProcessingItems) return;
 

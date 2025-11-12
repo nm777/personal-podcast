@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use App\ProcessingStatusType;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -43,7 +44,7 @@ class ProcessYouTubeAudio implements ShouldQueue
 
         // Mark as processing
         $this->libraryItem->update([
-            'processing_status' => 'processing',
+            'processing_status' => ProcessingStatusType::PROCESSING,
             'processing_started_at' => now(),
             'processing_error' => null,
         ]);
@@ -65,7 +66,7 @@ class ProcessYouTubeAudio implements ShouldQueue
             $this->libraryItem->is_duplicate = true;
             $this->libraryItem->duplicate_detected_at = now();
             $this->libraryItem->update([
-                'processing_status' => 'completed',
+                'processing_status' => ProcessingStatusType::COMPLETED,
                 'processing_completed_at' => now(),
             ]);
 
@@ -91,7 +92,7 @@ class ProcessYouTubeAudio implements ShouldQueue
             // Link to existing media file from different user (cross-user sharing)
             $this->libraryItem->media_file_id = $existingMediaFile->id;
             $this->libraryItem->update([
-                'processing_status' => 'completed',
+                'processing_status' => ProcessingStatusType::COMPLETED,
                 'processing_completed_at' => now(),
             ]);
 
@@ -239,7 +240,7 @@ class ProcessYouTubeAudio implements ShouldQueue
                     $this->libraryItem->media_file_id = $globalMediaFile->id;
                     // Don't mark as duplicate since this is a different user's file
                     $this->libraryItem->update([
-                        'processing_status' => 'completed',
+                        'processing_status' => ProcessingStatusType::COMPLETED,
                         'processing_completed_at' => now(),
                     ]);
 
@@ -327,7 +328,7 @@ class ProcessYouTubeAudio implements ShouldQueue
 
                 $this->libraryItem->media_file_id = $mediaFile->id;
                 $this->libraryItem->update([
-                    'processing_status' => 'completed',
+                    'processing_status' => ProcessingStatusType::COMPLETED,
                     'processing_completed_at' => now(),
                 ]);
             } else {
@@ -345,7 +346,7 @@ class ProcessYouTubeAudio implements ShouldQueue
                 $this->libraryItem->is_duplicate = true;
                 $this->libraryItem->duplicate_detected_at = now();
                 $this->libraryItem->update([
-                    'processing_status' => 'completed',
+                    'processing_status' => ProcessingStatusType::COMPLETED,
                     'processing_completed_at' => now(),
                 ]);
 
@@ -364,7 +365,7 @@ class ProcessYouTubeAudio implements ShouldQueue
             ]);
 
             $this->libraryItem->update([
-                'processing_status' => 'failed',
+                'processing_status' => ProcessingStatusType::FAILED,
                 'processing_completed_at' => now(),
                 'processing_error' => 'YouTube processing failed: '.$e->getMessage(),
             ]);
