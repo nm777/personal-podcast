@@ -265,7 +265,7 @@ it('processes media file from URL correctly', function () {
     expect($mediaFile)->not->toBeNull();
     expect($mediaFile->file_hash)->toBe(hash('sha256', 'fake audio content'));
     // MIME type is detected from file extension by the system
-    expect($mediaFile->mime_type)->toBe('text/plain'); // Storage::fake() returns text/plain for all files
+    expect($mediaFile->mime_type)->toBe('application/octet-stream'); // New validator returns octet-stream for unknown content
 });
 
 it('handles URL download failures gracefully', function () {

@@ -3,7 +3,6 @@
 namespace App\Services\SourceProcessors;
 
 use App\Http\Requests\LibraryItemRequest;
-use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
 use App\ProcessingStatusType;
@@ -41,7 +40,7 @@ class UploadSourceProcessor extends AbstractSourceProcessor
             $message = 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.';
 
             // Schedule cleanup
-            CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
+            \App\Jobs\CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
         } else {
             // Create library item for new file processing
             $libraryItem = $this->createLibraryItem(
