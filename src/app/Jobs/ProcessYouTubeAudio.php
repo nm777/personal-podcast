@@ -4,13 +4,11 @@ namespace App\Jobs;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
-use App\Services\YouTubeUrlValidator;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Exception\ProcessFailedException;
@@ -50,17 +48,47 @@ class ProcessYouTubeAudio implements ShouldQueue
             'processing_error' => null,
         ]);
 
-        // Check if we already have this file from same URL
+        // Check if user already has this YouTube URL in their library
+        $existingLibraryItem = LibraryItem::findBySourceUrlForUser($this->youtubeUrl, $this->libraryItem->user_id);
         $existingMediaFile = MediaFile::findBySourceUrl($this->youtubeUrl);
 
-        if ($existingMediaFile) {
-            Log::info('Found existing media file for URL', [
+        if ($existingLibraryItem) {
+            Log::info('Found existing library item for YouTube URL', [
                 'library_item_id' => $this->libraryItem->id,
-                'existing_media_file_id' => $existingMediaFile->id,
+                'existing_library_item_id' => $existingLibraryItem->id,
+                'existing_media_file_id' => $existingLibraryItem->media_file_id,
                 'youtube_url' => $this->youtubeUrl,
             ]);
 
-            // File already exists from this URL, just link it
+            // User already has this YouTube URL, link to existing media file and mark as duplicate
+            $this->libraryItem->media_file_id = $existingLibraryItem->media_file_id;
+            $this->libraryItem->is_duplicate = true;
+            $this->libraryItem->duplicate_detected_at = now();
+            $this->libraryItem->update([
+                'processing_status' => 'completed',
+                'processing_completed_at' => now(),
+            ]);
+
+            // Schedule cleanup of this duplicate entry
+            CleanupDuplicateLibraryItem::dispatch($this->libraryItem)->delay(now()->addMinutes(5));
+
+            // Store flash message for user notification
+            session()->flash('warning', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
+
+            return;
+        }
+
+        // Check for cross-user sharing
+        if ($existingMediaFile && $existingMediaFile->user_id !== $this->libraryItem->user_id) {
+            Log::info('Found existing media file from different user for YouTube URL', [
+                'library_item_id' => $this->libraryItem->id,
+                'existing_media_file_id' => $existingMediaFile->id,
+                'existing_user_id' => $existingMediaFile->user_id,
+                'current_user_id' => $this->libraryItem->user_id,
+                'youtube_url' => $this->youtubeUrl,
+            ]);
+
+            // Link to existing media file from different user (cross-user sharing)
             $this->libraryItem->media_file_id = $existingMediaFile->id;
             $this->libraryItem->update([
                 'processing_status' => 'completed',
@@ -196,10 +224,30 @@ class ProcessYouTubeAudio implements ShouldQueue
                 'final_path' => $finalPath,
             ]);
 
-            // Check if file already exists with this hash
-            $mediaFile = MediaFile::where('file_hash', $fileHash)->first();
+            // Check if file already exists with this hash for this user
+            $existingLibraryItem = LibraryItem::findByHashForUser($fileHash, $this->libraryItem->user_id);
+            $mediaFile = $existingLibraryItem?->mediaFile;
 
             if (! $mediaFile) {
+                // Check if file exists for any user (global deduplication)
+                $globalMediaFile = MediaFile::findByHash($fileHash);
+
+                if ($globalMediaFile) {
+                    // File exists globally but not for this user, link to existing file
+                    Storage::disk('public')->delete($downloadedFile);
+
+                    $this->libraryItem->media_file_id = $globalMediaFile->id;
+                    // Don't mark as duplicate since this is a different user's file
+                    $this->libraryItem->update([
+                        'processing_status' => 'completed',
+                        'processing_completed_at' => now(),
+                    ]);
+
+                    // Store flash message for user notification
+                    session()->flash('info', 'File already exists in the system. Linked to existing media file.');
+
+                    return;
+                }
                 Log::info('Moving file to final location', [
                     'library_item_id' => $this->libraryItem->id,
                     'from' => $downloadedFile,
@@ -263,6 +311,7 @@ class ProcessYouTubeAudio implements ShouldQueue
                 ]);
 
                 $mediaFile = MediaFile::create([
+                    'user_id' => $this->libraryItem->user_id,
                     'file_path' => $finalPath,
                     'file_hash' => $fileHash,
                     'mime_type' => $mimeType,

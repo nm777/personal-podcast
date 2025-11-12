@@ -64,6 +64,7 @@ it('reuses existing media file when same YouTube URL is provided', function () {
 
     // Create an existing media file from YouTube URL
     $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     ]);
 

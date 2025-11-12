@@ -8,6 +8,7 @@ use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
 use App\Services\YouTubeUrlValidator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class LibraryController extends Controller
@@ -17,7 +18,7 @@ class LibraryController extends Controller
      */
     public function index()
     {
-        return LibraryItem::where('user_id', auth()->id())->get();
+        return LibraryItem::where('user_id', Auth::user()->id)->get();
     }
 
     /**
@@ -48,7 +49,7 @@ class LibraryController extends Controller
         }
 
         $libraryItem = LibraryItem::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::user()->id,
             'title' => $request->title,
             'description' => $request->description,
             'source_type' => $request->source_type,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MediaFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class MediaController extends Controller
@@ -13,7 +14,7 @@ class MediaController extends Controller
         $mediaFile = MediaFile::where('file_path', $file_path)->firstOrFail();
 
         // Ensure user can only access their own media files
-        if ($mediaFile->user_id !== auth()->id()) {
+        if ($mediaFile->user_id !== Auth::user()->id) {
             abort(403);
         }
 

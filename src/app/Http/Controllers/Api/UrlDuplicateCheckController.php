@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class UrlDuplicateCheckController extends Controller
@@ -20,17 +22,20 @@ class UrlDuplicateCheckController extends Controller
         }
 
         $url = $request->input('url');
+
+        $existingLibraryItem = LibraryItem::findBySourceUrlForUser($url, Auth::user()->id);
         $existingMediaFile = MediaFile::findBySourceUrl($url);
 
-        // Only consider it a duplicate if it belongs to the current user
-        $isUserDuplicate = $existingMediaFile && $existingMediaFile->user_id === auth()->id();
+        // Check if user has either a library item or a media file with this URL
+        $isDuplicate = $existingLibraryItem || ($existingMediaFile && $existingMediaFile->user_id === Auth::user()->id);
+        $mediaFile = $existingLibraryItem?->mediaFile ?? ($existingMediaFile && $existingMediaFile->user_id === Auth::user()->id ? $existingMediaFile : null);
 
         return response()->json([
-            'is_duplicate' => $isUserDuplicate,
-            'existing_file' => $isUserDuplicate ? [
-                'id' => $existingMediaFile->id,
-                'mime_type' => $existingMediaFile->mime_type,
-                'filesize' => $existingMediaFile->filesize,
+            'is_duplicate' => $isDuplicate ? true : false,
+            'existing_file' => $mediaFile ? [
+                'id' => $mediaFile->id,
+                'mime_type' => $mediaFile->mime_type,
+                'filesize' => $mediaFile->filesize,
             ] : null,
         ]);
     }

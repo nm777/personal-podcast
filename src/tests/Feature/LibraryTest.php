@@ -397,6 +397,7 @@ it('reuses existing media file when same URL is provided', function () {
 
     $user = User::factory()->create();
     $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
         'source_url' => 'https://example.com/shared-audio.mp3',
     ]);
 
@@ -514,21 +515,24 @@ it('multiple users can reuse same file from same URL', function () {
     ]);
 
     $response2->assertRedirect('/library');
-    $response2->assertSessionHas('success', 'Duplicate URL detected. This file already exists in your library and will be removed automatically in 5 minutes.');
+    $response2->assertSessionHas('success', 'Media file URL added successfully. Downloading and processing...');
 
-    // No new job should be dispatched
-    Queue::assertNotPushed(\App\Jobs\ProcessMediaFile::class);
+    // A new job should be dispatched since user2 doesn't have this file yet
+    Queue::assertPushed(\App\Jobs\ProcessMediaFile::class);
 
-    // Both users should have library items pointing to the same media file
+    // User1 should have library item pointing to their media file
     $this->assertDatabaseHas('library_items', [
         'user_id' => $user1->id,
         'media_file_id' => $mediaFile->id,
     ]);
 
-    $this->assertDatabaseHas('library_items', [
-        'user_id' => $user2->id,
-        'media_file_id' => $mediaFile->id,
-    ]);
+    // User2 should have their own library item with their own media file (cross-user deduplication)
+    $user2LibraryItem = \App\Models\LibraryItem::where('user_id', $user2->id)
+        ->where('title', 'User 2 Copy')
+        ->first();
+    expect($user2LibraryItem)->not->toBeNull();
+    expect($user2LibraryItem->media_file_id)->not->toBe($mediaFile->id); // Should be different
+    expect($user2LibraryItem->is_duplicate)->toBeFalse(); // Cross-user links are not duplicates
 });
 
 it('detects duplicate file uploads by hash', function () {
@@ -539,6 +543,7 @@ it('detects duplicate file uploads by hash', function () {
 
     // Create first media file with specific hash
     $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
         'file_hash' => hash('sha256', 'test audio content'),
         'file_path' => 'media/existing-file.mp3',
     ]);
@@ -665,6 +670,7 @@ it('marks duplicate library items and schedules cleanup', function () {
 
     // Create existing media file
     $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
         'file_hash' => hash('sha256', 'duplicate content'),
         'file_path' => 'media/existing-file.mp3',
     ]);

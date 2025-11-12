@@ -40,7 +40,9 @@ class MediaFile extends Model
      */
     public static function findBySourceUrl(string $sourceUrl): ?static
     {
-        return static::where('source_url', $sourceUrl)->first();
+        $query = static::where('source_url', $sourceUrl);
+
+        return $query->first();
     }
 
     /**
@@ -49,14 +51,6 @@ class MediaFile extends Model
     public static function findByHash(string $fileHash): ?static
     {
         return static::where('file_hash', $fileHash)->first();
-    }
-
-    /**
-     * Find a media file by file hash for a specific user.
-     */
-    public static function findByHashForUser(string $fileHash, int $userId): ?static
-    {
-        return static::where('file_hash', $fileHash)->where('user_id', $userId)->first();
     }
 
     /**
@@ -85,5 +79,33 @@ class MediaFile extends Model
         }
 
         return static::findByHash($fileHash);
+    }
+
+    /**
+     * Check if a file is a duplicate for a specific user by calculating its hash.
+     */
+    public static function isDuplicateForUser(string $filePath, int $userId): ?static
+    {
+        // Try to get file content from storage first
+        try {
+            $content = Storage::disk('public')->get($filePath);
+            if ($content === false) {
+                // Fallback to real file system if storage doesn't have it
+                if (! file_exists($filePath)) {
+                    return null;
+                }
+                $fileHash = hash_file('sha256', $filePath);
+            } else {
+                $fileHash = hash('sha256', $content);
+            }
+        } catch (\Exception $e) {
+            // Fallback to real file system
+            if (! file_exists($filePath)) {
+                return null;
+            }
+            $fileHash = hash_file('sha256', $filePath);
+        }
+
+        return LibraryItem::findByHashForUser($fileHash, $userId)?->mediaFile;
     }
 }

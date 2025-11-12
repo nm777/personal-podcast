@@ -11,6 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ProcessMediaFile implements ShouldQueue
@@ -49,13 +50,35 @@ class ProcessMediaFile implements ShouldQueue
         $mediaFile = null;
 
         try {
-            // Check if we already have this file from the same URL for this user
+            // Check if user already has this URL in their library (excluding current item)
             if ($this->sourceUrl) {
-                $mediaFile = MediaFile::findBySourceUrl($this->sourceUrl);
+                $existingLibraryItem = LibraryItem::findBySourceUrlForUser($this->sourceUrl, $this->libraryItem->user_id);
+                $existingMediaFile = MediaFile::findBySourceUrl($this->sourceUrl);
 
-                if ($mediaFile && $mediaFile->user_id === $this->libraryItem->user_id) {
-                    // File already exists from this URL for this user, just link it
-                    $this->libraryItem->media_file_id = $mediaFile->id;
+                // Exclude the current library item from the duplicate check
+                if ($existingLibraryItem && $existingLibraryItem->id !== $this->libraryItem->id) {
+                    // User already has this URL, link to existing media file and mark as completed
+                    $this->libraryItem->media_file_id = $existingLibraryItem->media_file_id;
+                    $this->libraryItem->update([
+                        'processing_status' => 'completed',
+                        'processing_completed_at' => now(),
+                    ]);
+
+                    return;
+                }
+
+                // Check for cross-user sharing
+                if ($existingMediaFile && $existingMediaFile->user_id !== $this->libraryItem->user_id) {
+                    Log::info('Found existing media file from different user for URL', [
+                        'library_item_id' => $this->libraryItem->id,
+                        'existing_media_file_id' => $existingMediaFile->id,
+                        'existing_user_id' => $existingMediaFile->user_id,
+                        'current_user_id' => $this->libraryItem->user_id,
+                        'source_url' => $this->sourceUrl,
+                    ]);
+
+                    // Link to existing media file from different user (cross-user sharing)
+                    $this->libraryItem->media_file_id = $existingMediaFile->id;
                     $this->libraryItem->update([
                         'processing_status' => 'completed',
                         'processing_completed_at' => now(),
@@ -212,7 +235,8 @@ class ProcessMediaFile implements ShouldQueue
             $finalPath = 'media/'.$fileHash.'.'.$extension;
 
             // Check if file already exists with this hash for this user
-            $mediaFile = MediaFile::findByHashForUser($fileHash, $this->libraryItem->user_id);
+            $existingLibraryItem = LibraryItem::findByHashForUser($fileHash, $this->libraryItem->user_id);
+            $mediaFile = $existingLibraryItem?->mediaFile;
 
             if (! $mediaFile) {
                 // Check if file exists for any user (global deduplication)
@@ -223,8 +247,7 @@ class ProcessMediaFile implements ShouldQueue
                     Storage::disk('public')->delete($tempPath);
 
                     $this->libraryItem->media_file_id = $globalMediaFile->id;
-                    $this->libraryItem->is_duplicate = true;
-                    $this->libraryItem->duplicate_detected_at = now();
+                    // Don't mark as duplicate since this is a different user's file
                     $this->libraryItem->update([
                         'processing_status' => 'completed',
                         'processing_completed_at' => now(),

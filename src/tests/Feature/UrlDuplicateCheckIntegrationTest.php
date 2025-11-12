@@ -1,13 +1,20 @@
 <?php
 
+use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 
 test('URL duplicate checking works end-to-end', function () {
     $user = User::factory()->create();
 
-    // Create existing media file with specific URL
+    // Create existing library item with media file
     $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'source_url' => 'https://example.com/existing-audio.mp3',
+    ]);
+    $libraryItem = LibraryItem::factory()->create([
+        'user_id' => $user->id,
+        'media_file_id' => $mediaFile->id,
         'source_url' => 'https://example.com/existing-audio.mp3',
     ]);
 

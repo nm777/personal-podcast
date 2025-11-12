@@ -41,6 +41,26 @@ class LibraryItem extends Model
         return $this->belongsTo(MediaFile::class);
     }
 
+    /**
+     * Find a library item by source URL and user id
+     */
+    public static function findBySourceUrlForUser(string $sourceUrl, int $userId): ?static
+    {
+        $query = static::where('source_url', $sourceUrl)->where('user_id', $userId);
+
+        return $query->first();
+    }
+
+    /**
+     * Find a library item by media file hash for a specific user.
+     */
+    public static function findByHashForUser(string $fileHash, int $userId): ?static
+    {
+        return static::whereHas('mediaFile', function ($query) use ($fileHash) {
+            $query->where('file_hash', $fileHash);
+        })->where('user_id', $userId)->first();
+    }
+
     public function isProcessing()
     {
         return $this->processing_status === 'processing';

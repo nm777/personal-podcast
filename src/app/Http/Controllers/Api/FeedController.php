@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Feed;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class FeedController extends Controller
@@ -14,7 +15,7 @@ class FeedController extends Controller
      */
     public function index()
     {
-        return Feed::where('user_id', auth()->id())->get();
+        return Feed::where('user_id', Auth::user()->id)->get();
     }
 
     /**
@@ -27,11 +28,11 @@ class FeedController extends Controller
             'description' => 'nullable|string',
             'cover_image_url' => 'nullable|url',
             'is_public' => 'boolean',
-            'slug' => 'required|string|max:255|unique:feeds,slug,NULL,id,user_id,' . auth()->id(),
+            'slug' => 'required|string|max:255|unique:feeds,slug,NULL,id,user_id,'.Auth::user()->id,
         ]);
 
         $feed = Feed::create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::user()->id,
             'title' => $request->title,
             'description' => $request->description,
             'cover_image_url' => $request->cover_image_url,
@@ -50,7 +51,7 @@ class FeedController extends Controller
 
         $request->validate([
             'items' => 'required|array',
-            'items.*.library_item_id' => 'required|exists:library_items,id,user_id,' . auth()->id(),
+            'items.*.library_item_id' => 'required|exists:library_items,id,user_id,'.Auth::user()->id,
             'items.*.sequence' => 'required|integer',
         ]);
 
@@ -67,7 +68,7 @@ class FeedController extends Controller
 
         $request->validate([
             'item_ids' => 'required|array',
-            'item_ids.*' => 'required|exists:feed_items,id,feed_id,' . $feed->id,
+            'item_ids.*' => 'required|exists:feed_items,id,feed_id,'.$feed->id,
         ]);
 
         $feed->items()->whereIn('id', $request->item_ids)->delete();

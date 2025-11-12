@@ -4,6 +4,7 @@ use App\Http\Controllers\FeedController;
 use App\Http\Controllers\LibraryController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\RssController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -19,8 +20,8 @@ Route::post('check-url-duplicate', [App\Http\Controllers\Api\UrlDuplicateCheckCo
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
-        $feeds = auth()->user()->feeds()->latest()->get();
-        $libraryItems = auth()->user()->libraryItems()
+        $feeds = Auth::user()->feeds()->latest()->get();
+        $libraryItems = Auth::user()->libraryItems()
             ->with('mediaFile')
             ->latest()
             ->get();
@@ -37,5 +38,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('library', LibraryController::class)->only(['index', 'store', 'destroy']);
 });
 
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';

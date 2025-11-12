@@ -4,6 +4,7 @@ use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 use function Pest\Laravel\actingAs;
@@ -39,7 +40,7 @@ it('allows users to only access their own media files', function () {
         ->assertStatus(403);
 });
 
-it('allows duplicate files for different users but links to existing media', function () {
+it('allows duplicate files for different users but links to existing media without duplicate flag', function () {
     Storage::fake('public');
 
     $user1 = User::factory()->create();
@@ -81,7 +82,7 @@ it('allows duplicate files for different users but links to existing media', fun
 
     expect($libraryItem2)->not->toBeNull();
     expect($libraryItem2->media_file_id)->toBe($mediaFile1->id);
-    expect($libraryItem2->is_duplicate)->toBeTrue();
+    expect($libraryItem2->is_duplicate)->toBeFalse(); // Cross-user links are not duplicates
 });
 
 it('prevents users from accessing other users library items', function () {
@@ -160,4 +161,69 @@ it('creates new media file when user uploads file with different hash', function
     $mediaFile = MediaFile::find($libraryItem->media_file_id);
     expect($mediaFile->user_id)->toBe($user->id);
     expect($libraryItem->is_duplicate)->toBeFalse();
+});
+
+it('correctly sets is_duplicate flag for true duplicate file uploads', function () {
+    Storage::fake('public');
+    Queue::fake(); // Prevent jobs from actually running
+
+    $user = User::factory()->create();
+
+    // Create a media file first to simulate a previous upload
+    $fileContent = 'fake audio content for testing';
+    $fileHash = hash('sha256', $fileContent);
+
+    // Store the file in storage to match the factory
+    Storage::disk('public')->put('media/'.$fileHash.'.mp3', $fileContent);
+
+    $existingMediaFile = MediaFile::factory()->create([
+        'user_id' => $user->id,
+        'file_hash' => $fileHash,
+        'file_path' => 'media/'.$fileHash.'.mp3',
+    ]);
+
+    // Now upload the same file content again
+    $uploadedFile = UploadedFile::fake()->createWithContent('test.mp3', $fileContent);
+
+    $response = actingAs($user)
+        ->post('/library', [
+            'title' => 'Duplicate Test',
+            'source_type' => 'upload',
+            'file' => $uploadedFile,
+        ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHas('success', 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.');
+
+    // Check that library item was created with is_duplicate flag
+    $libraryItem = LibraryItem::where('user_id', $user->id)
+        ->where('title', 'Duplicate Test')
+        ->first();
+    expect($libraryItem)->not->toBeNull();
+    expect($libraryItem->is_duplicate)->toBeTrue();
+    expect($libraryItem->media_file_id)->toBe($existingMediaFile->id);
+});
+
+it('detects duplicate YouTube URLs correctly', function () {
+    Storage::fake('public');
+
+    $user1 = User::factory()->create();
+
+    // Create a media file for user1 with YouTube URL
+    $mediaFile = MediaFile::factory()->create([
+        'user_id' => $user1->id,
+        'source_url' => 'https://www.youtube.com/watch?v=test123',
+        'file_hash' => 'youtube-hash-123',
+    ]);
+
+    // User1 tries to add same YouTube URL (should show duplicate warning)
+    $response = actingAs($user1)
+        ->post('/library', [
+            'title' => 'Duplicate YouTube',
+            'source_type' => 'youtube',
+            'source_url' => 'https://www.youtube.com/watch?v=test123',
+        ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHas('success', 'Duplicate URL detected. This file already exists in your library and will be removed automatically in 5 minutes.');
 });
