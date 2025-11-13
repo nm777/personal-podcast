@@ -4,8 +4,7 @@ use App\Http\Requests\LibraryItemRequest;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
-use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
-use App\Services\SourceProcessors\UnifiedSourceProcessor;
+use App\Services\SourceProcessors\SourceProcessorFactory;
 use App\Services\SourceProcessors\UploadStrategy;
 use App\Services\SourceProcessors\UrlStrategy;
 use App\Services\SourceProcessors\YouTubeStrategy;
@@ -22,14 +21,12 @@ beforeEach(function () {
 describe('UnifiedSourceProcessor', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
-        $this->duplicateProcessor = new UnifiedDuplicateProcessor;
         $this->actingAs($this->user);
     });
 
     describe('Upload Processing', function () {
         beforeEach(function () {
-            $this->strategy = new UploadStrategy;
-            $this->processor = new UnifiedSourceProcessor($this->duplicateProcessor, $this->strategy);
+            $this->processor = SourceProcessorFactory::create('upload');
         });
 
         it('processes new file upload without duplicates', function () {
@@ -101,8 +98,7 @@ describe('UnifiedSourceProcessor', function () {
 
     describe('URL Processing', function () {
         beforeEach(function () {
-            $this->strategy = new UrlStrategy;
-            $this->processor = new UnifiedSourceProcessor($this->duplicateProcessor, $this->strategy);
+            $this->processor = SourceProcessorFactory::create('url');
         });
 
         it('processes new URL without duplicates', function () {
@@ -167,8 +163,7 @@ describe('UnifiedSourceProcessor', function () {
 
     describe('YouTube Processing', function () {
         beforeEach(function () {
-            $this->strategy = new YouTubeStrategy;
-            $this->processor = new UnifiedSourceProcessor($this->duplicateProcessor, $this->strategy);
+            $this->processor = SourceProcessorFactory::create('youtube');
         });
 
         it('validates YouTube URL correctly', function () {

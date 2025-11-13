@@ -2,9 +2,7 @@
 
 use App\Http\Requests\LibraryItemRequest;
 use App\Models\User;
-use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
-use App\Services\SourceProcessors\UnifiedSourceProcessor;
-use App\Services\SourceProcessors\UrlStrategy;
+use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -16,34 +14,20 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
 
     it('validates strategy creation with different types', function () {
         // Test that we can create processor with different strategies
-        $uploadProcessor = new UnifiedSourceProcessor(
-            new UnifiedDuplicateProcessor,
-            new \App\Services\SourceProcessors\UploadStrategy
-        );
+        $uploadProcessor = SourceProcessorFactory::create('upload');
+        $urlProcessor = SourceProcessorFactory::create('url');
+        $youtubeProcessor = SourceProcessorFactory::create('youtube');
 
-        $urlProcessor = new UnifiedSourceProcessor(
-            new UnifiedDuplicateProcessor,
-            new \App\Services\SourceProcessors\UrlStrategy
-        );
-
-        $youtubeProcessor = new UnifiedSourceProcessor(
-            new UnifiedDuplicateProcessor,
-            new \App\Services\SourceProcessors\YouTubeStrategy
-        );
-
-        expect($uploadProcessor)->toBeInstanceOf(UnifiedSourceProcessor::class);
-        expect($urlProcessor)->toBeInstanceOf(UnifiedSourceProcessor::class);
-        expect($youtubeProcessor)->toBeInstanceOf(UnifiedSourceProcessor::class);
+        expect($uploadProcessor)->toBeInstanceOf(\App\Services\SourceProcessors\UnifiedSourceProcessor::class);
+        expect($urlProcessor)->toBeInstanceOf(\App\Services\SourceProcessors\UnifiedSourceProcessor::class);
+        expect($youtubeProcessor)->toBeInstanceOf(\App\Services\SourceProcessors\UnifiedSourceProcessor::class);
     });
 
     it('handles unauthenticated user gracefully', function () {
         // Log out any authenticated user
         auth()->logout();
 
-        $processor = new UnifiedSourceProcessor(
-            new UnifiedDuplicateProcessor,
-            new UrlStrategy
-        );
+        $processor = SourceProcessorFactory::create('url');
 
         $validated = [
             'title' => 'Test Title',
@@ -62,10 +46,7 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
     it('validates input data structure', function () {
         $this->actingAs($this->user);
 
-        $processor = new UnifiedSourceProcessor(
-            new UnifiedDuplicateProcessor,
-            new UrlStrategy
-        );
+        $processor = SourceProcessorFactory::create('url');
 
         // Test that processor accepts various data structures
         $minimalData = ['title' => 'Test'];
