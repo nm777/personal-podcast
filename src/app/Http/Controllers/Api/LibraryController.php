@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\LibraryItemRequest;
+use App\Http\Resources\LibraryItemResource;
 use App\Jobs\ProcessMediaFile;
 use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
@@ -18,7 +19,9 @@ class LibraryController extends Controller
      */
     public function index()
     {
-        return LibraryItem::where('user_id', Auth::user()->id)->get();
+        $libraryItems = LibraryItem::where('user_id', Auth::user()->id)->get();
+
+        return LibraryItemResource::collection($libraryItems);
     }
 
     /**
@@ -56,7 +59,7 @@ class LibraryController extends Controller
             ProcessYouTubeAudio::dispatch($libraryItem, $sourceUrl);
         }
 
-        return response()->json($libraryItem, 201);
+        return (new LibraryItemResource($libraryItem))->response()->setStatusCode(201);
     }
 
     /**

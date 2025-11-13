@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MediaFileResource;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use Illuminate\Http\Request;
@@ -32,11 +33,7 @@ class UrlDuplicateCheckController extends Controller
 
         return response()->json([
             'is_duplicate' => $isDuplicate ? true : false,
-            'existing_file' => $mediaFile ? [
-                'id' => $mediaFile->id,
-                'mime_type' => $mediaFile->mime_type,
-                'filesize' => $mediaFile->filesize,
-            ] : null,
+            'existing_file' => $mediaFile ? MediaFileResource::make($mediaFile) : null,
         ]);
     }
 }

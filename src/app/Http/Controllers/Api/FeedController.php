@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\FeedItemResource;
+use App\Http\Resources\FeedResource;
 use App\Models\Feed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,11 +13,13 @@ use Illuminate\Support\Str;
 class FeedController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Display a listing of resource.
      */
     public function index()
     {
-        return Feed::where('user_id', Auth::user()->id)->get();
+        $feeds = Feed::where('user_id', Auth::user()->id)->get();
+
+        return FeedResource::collection($feeds);
     }
 
     /**
@@ -42,7 +46,7 @@ class FeedController extends Controller
             'token' => (string) Str::random(32),
         ]);
 
-        return response()->json($feed, 201);
+        return (new FeedResource($feed))->response()->setStatusCode(201);
     }
 
     public function addItems(Request $request, Feed $feed)
@@ -59,7 +63,7 @@ class FeedController extends Controller
             $feed->items()->create($item);
         }
 
-        return response()->json($feed->items, 201);
+        return FeedItemResource::collection($feed->items)->response()->setStatusCode(201);
     }
 
     public function removeItems(Request $request, Feed $feed)

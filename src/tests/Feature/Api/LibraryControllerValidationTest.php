@@ -83,16 +83,11 @@ describe('API Library Controller Validation', function () {
         ]);
 
         $response->assertStatus(201);
-        $response->assertJsonStructure([
-            'id',
-            'title',
-            'description',
-            'source_type',
-            'source_url',
-            'user_id',
-            'created_at',
-            'updated_at',
-        ]);
+
+        // Assert the response contains expected data
+        $response->assertJsonPath('data.title', 'Valid Library Item');
+        $response->assertJsonPath('data.source_type', 'url');
+        $response->assertJsonPath('data.source_url', 'https://example.com/audio.mp3');
     });
 
     it('uses consolidated validation rules from form request', function () {
