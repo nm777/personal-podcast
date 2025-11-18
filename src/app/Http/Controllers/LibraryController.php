@@ -18,8 +18,11 @@ class LibraryController extends Controller
             ->latest()
             ->get();
 
+        $feeds = Auth::user()->feeds()->latest()->get();
+
         return Inertia::render('Library/Index', [
             'libraryItems' => $libraryItems,
+            'feeds' => $feeds,
         ]);
     }
 
@@ -36,6 +39,12 @@ class LibraryController extends Controller
         // Use strategy pattern to process different source types
         $processor = SourceProcessorFactory::create($sourceType);
         [$libraryItem, $message] = $processor->process($request, $validated, $sourceType, $sourceUrl);
+
+        // Add feed information to success message if feeds were selected
+        if (! empty($validated['feed_ids'])) {
+            $feedCount = count($validated['feed_ids']);
+            $message .= " Item will be added to {$feedCount} feed".($feedCount > 1 ? 's' : '').' once processing completes.';
+        }
 
         return redirect()->route('library.index')
             ->with('success', $message);

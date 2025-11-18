@@ -42,8 +42,18 @@ interface LibraryItem {
     media_file?: MediaFile;
 }
 
+interface Feed {
+    id: number;
+    title: string;
+    description?: string;
+    is_public: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 interface LibraryIndexProps {
     libraryItems: LibraryItem[];
+    feeds: Feed[];
     flash?: {
         success?: string;
         warning?: string;
@@ -57,7 +67,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps) {
+export default function LibraryIndex({ libraryItems, feeds, flash }: LibraryIndexProps) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
@@ -137,7 +147,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="flex items-center justify-between">
                     <h1 className="text-2xl font-bold">Media Library</h1>
-                    <MediaUploadButton onUploadSuccess={handleUploadSuccess} />
+                    <MediaUploadButton onUploadSuccess={handleUploadSuccess} feeds={feeds} />
                 </div>
 
                 {libraryItems.length === 0 ? (

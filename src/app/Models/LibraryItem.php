@@ -90,4 +90,16 @@ class LibraryItem extends Model
     {
         return $this->processing_status?->getDisplayName() ?? 'Unknown';
     }
+
+    public function feedItems()
+    {
+        return $this->hasMany(FeedItem::class);
+    }
+
+    public function feeds()
+    {
+        return $this->belongsToMany(Feed::class, 'feed_items')
+            ->withPivot('sequence')
+            ->withTimestamps();
+    }
 }

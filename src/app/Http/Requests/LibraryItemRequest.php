@@ -34,6 +34,8 @@ class LibraryItemRequest extends FormRequest
                 'regex:/\.(mp3|mp4,m4a,wav,ogg)(\?.*)?$/i',
             ],
             'source_url' => 'required_without_all:file,url|prohibits:file,url|url|max:2048',
+            'feed_ids' => 'nullable|array',
+            'feed_ids.*' => 'integer|exists:feeds,id',
         ];
     }
 

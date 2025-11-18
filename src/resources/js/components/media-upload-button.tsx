@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,13 +8,21 @@ import { useForm } from '@inertiajs/react';
 import { AlertCircle, Globe, Loader2, Plus, Upload, Youtube } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
+interface Feed {
+    id: number;
+    title: string;
+    description?: string;
+    is_public: boolean;
+}
+
 interface MediaUploadButtonProps {
     onUploadSuccess?: () => void;
     variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
     size?: 'default' | 'sm' | 'lg' | 'icon';
+    feeds?: Feed[];
 }
 
-export default function MediaUploadButton({ onUploadSuccess, variant = 'default', size = 'default' }: MediaUploadButtonProps) {
+export default function MediaUploadButton({ onUploadSuccess, variant = 'default', size = 'default', feeds = [] }: MediaUploadButtonProps) {
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -29,6 +38,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
         file: null as File | null,
         url: '',
         source_url: '',
+        feed_ids: [] as number[],
     });
 
     const extractYouTubeVideoId = (url: string): string | null => {
@@ -189,23 +199,26 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
 
         // Transform data to only include relevant field based on input type
         transform((data) => {
+            const baseData = {
+                title: data.title,
+                description: data.description,
+                feed_ids: data.feed_ids,
+            };
+
             if (inputType === 'file') {
                 return {
-                    title: data.title,
-                    description: data.description,
+                    ...baseData,
                     file: data.file,
                 };
             } else if (inputType === 'youtube') {
                 return {
-                    title: data.title,
-                    description: data.description,
+                    ...baseData,
                     source_type: 'youtube',
                     source_url: data.url,
                 };
             } else {
                 return {
-                    title: data.title,
-                    description: data.description,
+                    ...baseData,
                     source_type: 'url',
                     url: data.url,
                 };
@@ -377,6 +390,43 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                         />
                         {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
                     </div>
+
+                    {feeds.length > 0 && (
+                        <div>
+                            <Label>Add to Feeds (Optional)</Label>
+                            <div className="mt-2 max-h-32 space-y-2 overflow-y-auto">
+                                {feeds.map((feed) => (
+                                    <div key={feed.id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`feed-${feed.id}`}
+                                            checked={data.feed_ids.includes(feed.id)}
+                                            onCheckedChange={(checked: boolean) => {
+                                                if (checked) {
+                                                    setData('feed_ids', [...data.feed_ids, feed.id]);
+                                                } else {
+                                                    setData(
+                                                        'feed_ids',
+                                                        data.feed_ids.filter((id) => id !== feed.id),
+                                                    );
+                                                }
+                                            }}
+                                        />
+                                        <Label
+                                            htmlFor={`feed-${feed.id}`}
+                                            className="text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                        >
+                                            {feed.title}
+                                            {feed.is_public && <span className="ml-2 text-xs text-gray-500">(Public)</span>}
+                                        </Label>
+                                    </div>
+                                ))}
+                            </div>
+                            {errors.feed_ids && <p className="mt-1 text-sm text-red-600">{errors.feed_ids}</p>}
+                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                The item will be added to selected feeds after processing completes.
+                            </p>
+                        </div>
+                    )}
 
                     <div className="flex justify-end gap-2">
                         <Button
