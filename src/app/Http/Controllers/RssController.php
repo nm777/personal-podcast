@@ -12,14 +12,14 @@ class RssController extends Controller
     {
         $feed = Feed::where('user_guid', $user_guid)->where('slug', $feed_slug)->firstOrFail();
 
-        if (!$feed->is_public && $request->token !== $feed->token) {
+        if (! $feed->is_public && $request->token !== $feed->token) {
             abort(403);
         }
 
         $xml = view('rss', compact('feed'))->render();
 
         return Response::make($xml, 200, [
-            'Content-Type' => 'application/xml'
+            'Content-Type' => 'application/xml',
         ]);
     }
 }

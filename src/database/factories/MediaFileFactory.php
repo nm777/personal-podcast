@@ -20,7 +20,7 @@ class MediaFileFactory extends Factory
     public function definition(): array
     {
         return [
-            'file_path' => 'media/' . $this->faker->uuid() . '.mp3',
+            'file_path' => 'media/'.$this->faker->uuid().'.mp3',
             'file_hash' => $this->faker->sha256(),
             'mime_type' => $this->faker->randomElement(['audio/mpeg', 'audio/mp4', 'audio/wav', 'video/mp4']),
             'filesize' => $this->faker->numberBetween(1000000, 50000000), // 1MB to 50MB

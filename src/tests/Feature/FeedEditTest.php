@@ -14,7 +14,7 @@ it('allows feed owner to view edit page', function () {
 
     $response->assertOk()
         ->assertInertia(
-            fn($page) => $page->component('feeds/edit')
+            fn ($page) => $page->component('feeds/edit')
                 ->has('feed')
                 ->has('userLibraryItems')
         );
@@ -201,7 +201,7 @@ it('shows user library items on edit page', function () {
 
     $response->assertOk()
         ->assertInertia(
-            fn($page) => $page->component('feeds/edit')
+            fn ($page) => $page->component('feeds/edit')
                 ->has('userLibraryItems', 1)
                 ->where('userLibraryItems.0.id', $libraryItem->id)
         );
