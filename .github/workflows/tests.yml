@@ -14,6 +14,10 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: ./src
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,6 +34,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: '../package-lock.json'
 
       - name: Install Node Dependencies
         run: npm ci
@@ -39,16 +44,12 @@ jobs:
 
       - name: Install Dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
-        working-directory: ./src
 
       - name: Copy Environment File
         run: cp .env.example .env
-        working-directory: ./src
 
       - name: Generate Application Key
         run: php artisan key:generate
-        working-directory: ./src
 
       - name: Tests
         run: ./vendor/bin/pest
-        working-directory: ./src
