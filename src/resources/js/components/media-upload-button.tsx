@@ -40,7 +40,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     const fetchYouTubeVideoTitle = async (videoId: string): Promise<string | null> => {
         try {
             setIsFetchingYouTubeTitle(true);
-            const response = await fetch(`/api/youtube/video-info/${videoId}`);
+            const response = await fetch(`/youtube/video-info/${videoId}`);
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);

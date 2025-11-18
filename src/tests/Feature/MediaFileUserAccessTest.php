@@ -117,7 +117,7 @@ it('only shows user-specific duplicates in URL check API', function () {
 
     // User1 should see the duplicate
     actingAs($user1)
-        ->post('/api/check-url', ['url' => 'https://example.com/audio.mp3'])
+        ->post('/check-url-duplicate', ['url' => 'https://example.com/audio.mp3'])
         ->assertJson([
             'is_duplicate' => true,
             'existing_file' => [
@@ -127,7 +127,7 @@ it('only shows user-specific duplicates in URL check API', function () {
 
     // User2 should not see the duplicate
     actingAs($user2)
-        ->post('/api/check-url', ['url' => 'https://example.com/audio.mp3'])
+        ->post('/check-url-duplicate', ['url' => 'https://example.com/audio.mp3'])
         ->assertJson([
             'is_duplicate' => false,
             'existing_file' => null,
