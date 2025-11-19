@@ -1,13 +1,12 @@
-import { Head, useForm } from '@inertiajs/react';
-import { useState } from 'react';
-import { usePage } from '@inertiajs/react';
-import AdminLayout from '@/layouts/admin-layout';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import AdminLayout from '@/layouts/admin-layout';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 interface User {
     id: number;
@@ -64,11 +63,7 @@ export default function UserManagement() {
             rejected: 'destructive',
         } as const;
 
-        return (
-            <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-            </Badge>
-        );
+        return <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     };
 
     return (
@@ -81,17 +76,9 @@ export default function UserManagement() {
                     <p className="text-muted-foreground">Manage user registrations and permissions</p>
                 </div>
 
-                {flash?.success && (
-                    <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-                        {flash.success}
-                    </div>
-                )}
+                {flash?.success && <div className="mb-4 rounded border border-green-400 bg-green-100 p-4 text-green-700">{flash.success}</div>}
 
-                {flash?.error && (
-                    <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-                        {flash.error}
-                    </div>
-                )}
+                {flash?.error && <div className="mb-4 rounded border border-red-400 bg-red-100 p-4 text-red-700">{flash.error}</div>}
 
                 <Card>
                     <CardHeader>
@@ -102,12 +89,12 @@ export default function UserManagement() {
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b">
-                                        <th className="text-left p-2">Name</th>
-                                        <th className="text-left p-2">Email</th>
-                                        <th className="text-left p-2">Status</th>
-                                        <th className="text-left p-2">Admin</th>
-                                        <th className="text-left p-2">Joined</th>
-                                        <th className="text-left p-2">Actions</th>
+                                        <th className="p-2 text-left">Name</th>
+                                        <th className="p-2 text-left">Email</th>
+                                        <th className="p-2 text-left">Status</th>
+                                        <th className="p-2 text-left">Admin</th>
+                                        <th className="p-2 text-left">Joined</th>
+                                        <th className="p-2 text-left">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -117,29 +104,19 @@ export default function UserManagement() {
                                             <td className="p-2">{user.email}</td>
                                             <td className="p-2">{getStatusBadge(user.approval_status)}</td>
                                             <td className="p-2">
-                                                <Badge variant={user.is_admin ? 'default' : 'secondary'}>
-                                                    {user.is_admin ? 'Yes' : 'No'}
-                                                </Badge>
+                                                <Badge variant={user.is_admin ? 'default' : 'secondary'}>{user.is_admin ? 'Yes' : 'No'}</Badge>
                                             </td>
                                             <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
                                             <td className="p-2">
                                                 <div className="flex gap-2">
                                                     {user.approval_status === 'pending' && (
                                                         <>
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() => handleApprove(user)}
-                                                                disabled={approveForm.processing}
-                                                            >
+                                                            <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
                                                                 {approveForm.processing ? 'Approving...' : 'Approve'}
                                                             </Button>
                                                             <Dialog>
                                                                 <DialogTrigger asChild>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        variant="destructive"
-                                                                        onClick={() => setRejectingUser(user)}
-                                                                    >
+                                                                    <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
                                                                         Reject
                                                                     </Button>
                                                                 </DialogTrigger>
@@ -158,10 +135,12 @@ export default function UserManagement() {
                                                                                 className="mt-1"
                                                                             />
                                                                             {rejectForm.errors.reason && (
-                                                                                <p className="text-red-500 text-sm mt-1">{rejectForm.errors.reason}</p>
+                                                                                <p className="mt-1 text-sm text-red-500">
+                                                                                    {rejectForm.errors.reason}
+                                                                                </p>
                                                                             )}
                                                                         </div>
-                                                                        <div className="flex gap-2 justify-end">
+                                                                        <div className="flex justify-end gap-2">
                                                                             <Button
                                                                                 variant="outline"
                                                                                 onClick={() => {
@@ -191,7 +170,7 @@ export default function UserManagement() {
                                                         onClick={() => handleToggleAdmin(user)}
                                                         disabled={toggleAdminForm.processing}
                                                     >
-                                                        {toggleAdminForm.processing ? 'Updating...' : (user.is_admin ? 'Remove Admin' : 'Make Admin')}
+                                                        {toggleAdminForm.processing ? 'Updating...' : user.is_admin ? 'Remove Admin' : 'Make Admin'}
                                                     </Button>
                                                 </div>
                                             </td>

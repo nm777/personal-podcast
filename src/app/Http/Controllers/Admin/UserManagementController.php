@@ -4,9 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,8 +40,6 @@ class UserManagementController extends Controller
             }),
         ]);
     }
-
-
 
     /**
      * Approve a user.
@@ -79,7 +76,7 @@ class UserManagementController extends Controller
     {
         $this->authorize('toggleAdmin', $user);
 
-        $user->update(['is_admin' => !$user->is_admin]);
+        $user->update(['is_admin' => ! $user->is_admin]);
 
         return redirect()->back()->with('success', 'Admin status updated successfully');
     }

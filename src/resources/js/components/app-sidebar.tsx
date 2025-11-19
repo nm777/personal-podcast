@@ -1,7 +1,17 @@
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarGroup, SidebarGroupLabel } from '@/components/ui/sidebar';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, Music, Users } from 'lucide-react';
@@ -37,13 +47,15 @@ export function AppSidebar() {
     const page = usePage();
     const user = page.props.auth.user;
 
-    const adminNavItems: NavItem[] = user?.is_admin ? [
-        {
-            title: 'User Management',
-            href: '/admin/users',
-            icon: Users,
-        },
-    ] : [];
+    const adminNavItems: NavItem[] = user?.is_admin
+        ? [
+              {
+                  title: 'User Management',
+                  href: '/admin/users',
+                  icon: Users,
+              },
+          ]
+        : [];
 
     return (
         <Sidebar collapsible="icon" variant="inset">

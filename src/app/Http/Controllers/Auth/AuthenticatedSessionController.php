@@ -33,10 +33,11 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
 
         $user = auth()->user();
-        
+
         // Check if user is approved
-        if (!$user->isApproved()) {
+        if (! $user->isApproved()) {
             auth()->logout();
+
             return redirect()->route('login')
                 ->with('status', 'Your account is pending approval. Please wait for an administrator to approve your registration.')
                 ->with('status_type', 'warning');
@@ -45,8 +46,9 @@ class AuthenticatedSessionController extends Controller
         // Check if user is rejected
         if ($user->isRejected()) {
             auth()->logout();
+
             return redirect()->route('login')
-                ->with('status', 'Your registration has been rejected. ' . ($user->rejection_reason ? 'Reason: ' . $user->rejection_reason : ''))
+                ->with('status', 'Your registration has been rejected. '.($user->rejection_reason ? 'Reason: '.$user->rejection_reason : ''))
                 ->with('status_type', 'error');
         }
 

@@ -102,7 +102,7 @@ class User extends Authenticatable
     /**
      * Reject the user.
      */
-    public function reject(string $reason = null): void
+    public function reject(?string $reason = null): void
     {
         $this->update([
             'approval_status' => 'rejected',

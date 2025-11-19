@@ -16,13 +16,14 @@ class ApprovedUserMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return redirect()->route('login');
         }
 
-        if (!$user->isApproved()) {
+        if (! $user->isApproved()) {
             auth()->logout();
+
             return redirect()->route('login')
                 ->with('status', 'Your account is pending approval. Please wait for an administrator to approve your registration.')
                 ->with('status_type', 'warning');
@@ -30,8 +31,9 @@ class ApprovedUserMiddleware
 
         if ($user->isRejected()) {
             auth()->logout();
+
             return redirect()->route('login')
-                ->with('status', 'Your registration has been rejected. ' . ($user->rejection_reason ? 'Reason: ' . $user->rejection_reason : ''))
+                ->with('status', 'Your registration has been rejected. '.($user->rejection_reason ? 'Reason: '.$user->rejection_reason : ''))
                 ->with('status_type', 'error');
         }
 

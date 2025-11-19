@@ -62,7 +62,8 @@ export default function Welcome() {
                                 </div>
                                 <h3 className="mb-4 text-xl font-semibold text-gray-100">Custom RSS Feeds</h3>
                                 <p className="leading-relaxed text-gray-400">
-                                    Create multiple podcast feeds with different content. Each feed gets its own URL that you can add to your podcast app.
+                                    Create multiple podcast feeds with different content. Each feed gets its own URL that you can add to your podcast
+                                    app.
                                 </p>
                             </div>
 

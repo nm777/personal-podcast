@@ -106,11 +106,11 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
             </form>
 
             {status && (
-                <div className={`mb-4 text-center text-sm font-medium ${
-                    statusType === 'error' ? 'text-red-600' : 
-                    statusType === 'warning' ? 'text-yellow-600' : 
-                    'text-green-600'
-                }`}>
+                <div
+                    className={`mb-4 text-center text-sm font-medium ${
+                        statusType === 'error' ? 'text-red-600' : statusType === 'warning' ? 'text-yellow-600' : 'text-green-600'
+                    }`}
+                >
                     {status}
                 </div>
             )}

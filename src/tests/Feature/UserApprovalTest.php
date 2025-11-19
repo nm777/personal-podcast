@@ -4,7 +4,7 @@ use App\Models\User;
 
 test('admin can view user management page', function () {
     $admin = User::factory()->create(['is_admin' => true, 'approval_status' => 'approved']);
-    
+
     $response = $this->actingAs($admin)->get('/admin/users');
 
     $response->assertStatus(200);
@@ -12,7 +12,7 @@ test('admin can view user management page', function () {
 
 test('non admin cannot view user management page', function () {
     $user = User::factory()->create(['approval_status' => 'approved']);
-    
+
     $response = $this->actingAs($user)->get('/admin/users');
 
     $response->assertStatus(403);
@@ -21,7 +21,7 @@ test('non admin cannot view user management page', function () {
 test('admin can approve pending user', function () {
     $admin = User::factory()->create(['is_admin' => true, 'approval_status' => 'approved']);
     $pendingUser = User::factory()->create(['approval_status' => 'pending']);
-    
+
     $response = $this->actingAs($admin)->post("/admin/users/{$pendingUser->id}/approve");
 
     $response->assertRedirect();
@@ -34,7 +34,7 @@ test('admin can approve pending user', function () {
 test('admin can reject pending user', function () {
     $admin = User::factory()->create(['is_admin' => true, 'approval_status' => 'approved']);
     $pendingUser = User::factory()->create(['approval_status' => 'pending']);
-    
+
     $response = $this->actingAs($admin)->post("/admin/users/{$pendingUser->id}/reject", [
         'reason' => 'Test rejection reason',
     ]);
@@ -50,7 +50,7 @@ test('admin can reject pending user', function () {
 test('admin can toggle admin status', function () {
     $admin = User::factory()->create(['is_admin' => true, 'approval_status' => 'approved']);
     $user = User::factory()->create(['approval_status' => 'approved', 'is_admin' => false]);
-    
+
     $response = $this->actingAs($admin)->post("/admin/users/{$user->id}/toggle-admin");
 
     $response->assertRedirect();
@@ -62,7 +62,7 @@ test('admin can toggle admin status', function () {
 
 test('admin cannot toggle their own admin status', function () {
     $admin = User::factory()->create(['is_admin' => true, 'approval_status' => 'approved']);
-    
+
     $response = $this->actingAs($admin)->post("/admin/users/{$admin->id}/toggle-admin");
 
     $response->assertStatus(403);
@@ -89,7 +89,7 @@ test('pending user cannot login', function () {
         'password' => bcrypt('password'),
         'approval_status' => 'pending',
     ]);
-    
+
     $response = $this->post('/login', [
         'email' => 'test@example.com',
         'password' => 'password',
@@ -106,7 +106,7 @@ test('rejected user cannot login', function () {
         'approval_status' => 'rejected',
         'rejection_reason' => 'Test rejection',
     ]);
-    
+
     $response = $this->post('/login', [
         'email' => 'test@example.com',
         'password' => 'password',
@@ -122,7 +122,7 @@ test('approved user can login', function () {
         'password' => bcrypt('password'),
         'approval_status' => 'approved',
     ]);
-    
+
     $response = $this->post('/login', [
         'email' => 'test@example.com',
         'password' => 'password',
