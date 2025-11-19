@@ -1,4 +1,4 @@
-# Podcast Feed
+# Personal Podcasts
 
 A Laravel-based podcast feed management application with React frontend.
 

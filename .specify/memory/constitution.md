@@ -8,7 +8,7 @@ Templates requiring updates: ✅ plan-template.md, ✅ spec-template.md, ✅ tas
 Follow-up TODOs: None
 -->
 
-# Podcast Feed Constitution
+# Personal Podcasts Constitution
 
 ## Core Principles
 
