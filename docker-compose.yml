@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: podcast-feed-app
+    hostname: personal-podcast-app
     restart: unless-stopped
     working_dir: /var/www/html
     volumes:
@@ -11,8 +11,6 @@ services:
       - ./src/storage:/var/www/html/storage
     networks:
       - podcast-network
-    depends_on:
-      - database
 
   webserver:
     image: nginx:alpine
@@ -31,7 +29,3 @@ services:
 networks:
   podcast-network:
     driver: bridge
-
-volumes:
-  dbdata:
-    driver: local

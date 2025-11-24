@@ -50,6 +50,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy application files
 COPY src/ .
 
+# Copy startup script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html/storage \
@@ -65,11 +68,8 @@ RUN npm install \
 # Copy environment file
 RUN cp .env.example .env
 
-# Generate application key
-RUN php artisan key:generate
-
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
 # Start PHP-FPM
-CMD ["php-fpm"]
+ENTRYPOINT ["docker-entrypoint.sh"]
