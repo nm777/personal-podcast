@@ -11,13 +11,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+Route::get('', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name('rss.show');
+Route::get('rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name('rss.show');
 
-Route::get('/files/{file_path}', [MediaController::class, 'show'])->name('files.show')->where('file_path', '.*');
+Route::get('files/{file_path}', [MediaController::class, 'show'])->name('files.show')->where('file_path', '.*');
 
 Route::post('check-url-duplicate', [UrlDuplicateCheckController::class, 'check'])->middleware(['auth', 'verified']);
 Route::get('youtube/video-info/{videoId}', [YouTubeController::class, 'getVideoInfo'])->middleware(['auth', 'verified']);
