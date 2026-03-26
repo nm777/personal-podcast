@@ -125,8 +125,12 @@ start_dev() {
 # Function to build production image
 build_prod() {
     print_status "Building production image..."
+    print_warning "Make sure to stop existing containers first: docker-compose down"
 
-    # Always create fresh production Dockerfile
+    # Remove old Dockerfile to ensure fresh generation
+    rm -f Dockerfile.prod
+
+    # Create production Dockerfile
     print_status "Creating production Dockerfile..."
     cat > Dockerfile.prod << 'EOF'
 # Multi-stage production build
@@ -213,11 +217,11 @@ EXPOSE 9000
 CMD ["php-fpm"]
 EOF
 
-    docker build -f Dockerfile.prod -t podkeep:latest .
+    docker build -f Dockerfile.prod -t podkeep:prod .
 
     if [ $? -eq 0 ]; then
         print_success "Production image built successfully!"
-        print_status "Tag: podkeep:latest"
+        print_status "Tag: podkeep:prod"
     else
         print_error "Failed to build production image"
         exit 1
