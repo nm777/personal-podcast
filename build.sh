@@ -71,19 +71,19 @@ check_docker() {
 build_image() {
     local cache_flag="--pull"
     local verbose_flag=""
-    
+
     if [[ "$*" == *"--no-cache"* ]]; then
         cache_flag="--no-cache"
         print_warning "Building without cache..."
     fi
-    
+
     if [[ "$*" == *"--verbose"* ]]; then
         verbose_flag="--progress=plain"
     fi
-    
+
     print_status "Building Docker image..."
-    docker build $cache_flag $verbose_flag -t podcast-feed:latest .
-    
+    docker build $cache_flag $verbose_flag -t podkeep:latest .
+
     if [ $? -eq 0 ]; then
         print_success "Docker image built successfully!"
     else
@@ -95,17 +95,17 @@ build_image() {
 # Function to start development environment
 start_dev() {
     print_status "Starting development environment..."
-    
+
     # Copy environment file if it doesn't exist
     if [ ! -f "src/.env" ]; then
         print_status "Creating environment file..."
         cp src/.env.example src/.env
         print_warning "Please update src/.env with your configuration"
     fi
-    
+
     # Build and start containers
     docker-compose up -d --build
-    
+
     if [ $? -eq 0 ]; then
         print_success "Development environment started!"
         print_status "Application is available at: http://localhost:8000"
@@ -125,13 +125,13 @@ start_dev() {
 # Function to build production image
 build_prod() {
     print_status "Building production image..."
-    
+
     # Create production Dockerfile if it doesn't exist
     if [ ! -f "Dockerfile.prod" ]; then
         print_status "Creating production Dockerfile..."
         cat > Dockerfile.prod << 'EOF'
 # Multi-stage production build
-FROM node:18-alpine AS frontend
+FROM node:24-alpine AS frontend
 
 WORKDIR /app
 
@@ -144,7 +144,7 @@ COPY src/ .
 RUN npm run build
 
 # Production PHP image
-FROM php:8.2-fpm-alpine AS production
+FROM php:8.4-fpm-alpine AS production
 
 # Install system dependencies
 RUN apk add --no-cache \
@@ -214,12 +214,12 @@ EXPOSE 9000
 CMD ["php-fpm"]
 EOF
     fi
-    
-    docker build -f Dockerfile.prod -t podcast-feed:prod .
-    
+
+    docker build -f Dockerfile.prod -t podkeep:prod .
+
     if [ $? -eq 0 ]; then
         print_success "Production image built successfully!"
-        print_status "Tag: podcast-feed:prod"
+        print_status "Tag: podkeep:prod"
     else
         print_error "Failed to build production image"
         exit 1
@@ -273,7 +273,7 @@ run_tests() {
 # Main script logic
 main() {
     check_docker
-    
+
     case "${1:-help}" in
         "build")
             build_image "$@"
