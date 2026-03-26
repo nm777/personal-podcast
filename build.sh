@@ -215,9 +215,23 @@ WORKDIR /var/www/html
 EXPOSE 9000
 
 CMD ["php-fpm"]
+
+# Production Nginx image
+FROM nginx:alpine AS webserver
+
+# Copy nginx configuration
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+# Copy public files from PHP image (includes built frontend assets)
+COPY --from=production /var/www/html/public /var/www/html/public
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
 EOF
 
-    docker build -f Dockerfile.prod -t podkeep:prod .
+    docker build -f Dockerfile.prod --target production -t podkeep:prod .
+    docker build -f Dockerfile.prod --target webserver -t podkeep:webserver .
 
     if [ $? -eq 0 ]; then
         print_success "Production image built successfully!"
