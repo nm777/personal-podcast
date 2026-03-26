@@ -21,10 +21,15 @@ services:
       - podcast-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.podcast.rule=Host(`yourdomain.com`)"
+      - "traefik.http.routers.podcast.rule=Host(`podkeep.app`)"
       - "traefik.http.routers.podcast.entrypoints=websecure"
-      - "traefik.http.routers.podcast.tls.certresolver=yourresolver"
+      - "traefik.http.routers.podcast.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.podcast.tls.domains[0].main=podkeep.app"
       - "traefik.http.services.podcast.loadbalancer.server.port=80"
+      - "traefik.http.routers.podcast-http.rule=Host(`podkeep.app`)"
+      - "traefik.http.routers.podcast-http.entrypoints=web"
+      - "traefik.http.routers.podcast-http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
     depends_on:
       - app
     volumes:
