@@ -126,10 +126,9 @@ start_dev() {
 build_prod() {
     print_status "Building production image..."
 
-    # Create production Dockerfile if it doesn't exist
-    if [ ! -f "Dockerfile.prod" ]; then
-        print_status "Creating production Dockerfile..."
-        cat > Dockerfile.prod << 'EOF'
+    # Always create fresh production Dockerfile
+    print_status "Creating production Dockerfile..."
+    cat > Dockerfile.prod << 'EOF'
 # Multi-stage production build
 FROM node:24-alpine AS frontend
 
@@ -213,13 +212,12 @@ EXPOSE 9000
 
 CMD ["php-fpm"]
 EOF
-    fi
 
-    docker build -f Dockerfile.prod -t podkeep:prod .
+    docker build -f Dockerfile.prod -t podkeep:latest .
 
     if [ $? -eq 0 ]; then
         print_success "Production image built successfully!"
-        print_status "Tag: podkeep:prod"
+        print_status "Tag: podkeep:latest"
     else
         print_error "Failed to build production image"
         exit 1
