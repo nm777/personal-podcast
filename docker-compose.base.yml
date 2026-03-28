@@ -31,8 +31,6 @@ services:
     command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
     networks:
       - podcast-network
-    environment:
-      - PHP_FPM_LISTEN=${PHP_FPM_LISTEN:-0.0.0.0:9000}
 
 networks:
   podcast-network:

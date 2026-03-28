@@ -10,41 +10,9 @@ services:
     networks:
       - traefik_web
 
-   webserver:
-     image: podkeep:webserver
-     networks:
-       - traefik_web
-       - podcast-network
-     labels:
-       - "traefik.enable=true"
-       - "traefik.http.routers.podcast.rule=Host(`podkeep.app`)"
-       - "traefik.http.routers.podcast.entrypoints=websecure"
-       - "traefik.http.routers.podcast.tls=true"
-       - "traefik.http.routers.podcast.tls.certresolver=leresolver"
-       - "traefik.http.routers.podcast.tls.domains[0].main=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[0].sans=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[1].main=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[1].sans=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[2].main=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[2].sans=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[3].main=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[3].sans=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[4].main=podkeep.app"
-       - "traefik.http.routers.podcast.tls.domains[4].sans=podkeep.app"
-       - "traefik.http.services.podcast.loadbalancer.server.port=80"
-       - "traefik.http.routers.podcast-http.rule=Host(`podkeep.app`)"
-       - "traefik.http.routers.podcast-http.entrypoints=web"
-       - "traefik.http.routers.podcast-http.middlewares=redirect-to-https"
-       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
-     container_name: podcast-feed-webserver
-
-  worker:
-    image: podkeep:prod
-    volumes:
-      - podcast-storage:/var/www/html/storage
-      - podcast-logs:/var/www/html/storage/logs
-
-networks:
+  webserver:
+    image: podkeep:webserver
+    networks:
       - traefik_web
       - podcast-network
     labels:
@@ -54,12 +22,27 @@ networks:
       - "traefik.http.routers.podcast.tls=true"
       - "traefik.http.routers.podcast.tls.certresolver=leresolver"
       - "traefik.http.routers.podcast.tls.domains[0].main=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[0].sans=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[1].main=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[1].sans=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[2].main=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[2].sans=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[3].main=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[3].sans=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[4].main=podkeep.app"
+      - "traefik.http.routers.podcast.tls.domains[4].sans=podkeep.app"
       - "traefik.http.services.podcast.loadbalancer.server.port=80"
       - "traefik.http.routers.podcast-http.rule=Host(`podkeep.app`)"
       - "traefik.http.routers.podcast-http.entrypoints=web"
       - "traefik.http.routers.podcast-http.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
     container_name: podcast-feed-webserver
+
+  worker:
+    image: podkeep:prod
+    volumes:
+      - podcast-storage:/var/www/html/storage
+      - podcast-logs:/var/www/html/storage/logs
 
 networks:
   traefik_web:
