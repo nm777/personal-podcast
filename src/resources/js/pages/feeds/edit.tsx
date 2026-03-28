@@ -293,7 +293,12 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                                             )}
                                                         </p>
                                                     </div>
-                                                    <Button variant="ghost" size="sm" onClick={() => addLibraryItem(libraryItem.id)} className="shrink-0">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => addLibraryItem(libraryItem.id)}
+                                                        className="shrink-0"
+                                                    >
                                                         <Plus className="h-4 w-4" />
                                                     </Button>
                                                 </div>
