@@ -23,6 +23,19 @@ services:
     networks:
       - app
 
+  worker:
+    build:
+      context: .
+      target: dev
+    hostname: podkeep-worker
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    volumes:
+      - ./src:/var/www/html
+    environment:
+      - PHP_FPM_LISTEN=0.0.0.0:9000
+    networks:
+      - app
+
 networks:
   app:
     driver: bridge
