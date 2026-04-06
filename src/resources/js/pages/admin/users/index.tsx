@@ -31,7 +31,6 @@ interface PageProps {
 export default function UserManagement() {
     const { users, flash } = usePage().props as PageProps;
     const [rejectingUser, setRejectingUser] = useState<User | null>(null);
-    const [rejectionReason, setRejectionReason] = useState('');
 
     const approveForm = useForm({});
     const rejectForm = useForm({ reason: '' });
@@ -47,7 +46,7 @@ export default function UserManagement() {
         rejectForm.post(`/admin/users/${rejectingUser.id}/reject`, {
             onSuccess: () => {
                 setRejectingUser(null);
-                setRejectionReason('');
+                rejectForm.setData('reason', '');
             },
         });
     };
@@ -129,8 +128,8 @@ export default function UserManagement() {
                                                                             <Label htmlFor="reason">Rejection Reason</Label>
                                                                             <Textarea
                                                                                 id="reason"
-                                                                                value={rejectionReason}
-                                                                                onChange={(e) => setRejectionReason(e.target.value)}
+                                                                                value={rejectForm.data.reason}
+                                                                                onChange={(e) => rejectForm.setData('reason', e.target.value)}
                                                                                 placeholder="Enter reason for rejection..."
                                                                                 className="mt-1"
                                                                             />
@@ -145,7 +144,7 @@ export default function UserManagement() {
                                                                                 variant="outline"
                                                                                 onClick={() => {
                                                                                     setRejectingUser(null);
-                                                                                    setRejectionReason('');
+                                                                                    rejectForm.setData('reason', '');
                                                                                     rejectForm.clearErrors();
                                                                                 }}
                                                                             >
@@ -154,7 +153,7 @@ export default function UserManagement() {
                                                                             <Button
                                                                                 variant="destructive"
                                                                                 onClick={handleReject}
-                                                                                disabled={!rejectionReason.trim() || rejectForm.processing}
+                                                                                disabled={!rejectForm.data.reason.trim() || rejectForm.processing}
                                                                             >
                                                                                 {rejectForm.processing ? 'Rejecting...' : 'Reject'}
                                                                             </Button>
