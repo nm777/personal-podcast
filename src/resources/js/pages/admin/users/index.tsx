@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,6 +32,7 @@ interface PageProps {
 export default function UserManagement() {
     const { users, flash } = usePage().props as PageProps;
     const [rejectingUser, setRejectingUser] = useState<User | null>(null);
+    const [showRejected, setShowRejected] = useState(false);
 
     const approveForm = useForm({});
     const rejectForm = useForm({ reason: '' });
@@ -65,14 +67,30 @@ export default function UserManagement() {
         return <Badge variant={variants[status as keyof typeof variants] || 'secondary'}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>;
     };
 
+    const filteredUsers = users.filter((user) => showRejected || user.approval_status !== 'rejected');
+
     return (
         <AdminLayout>
             <Head title="User Management" />
 
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 <div className="mb-6">
-                    <h1 className="text-3xl font-bold">User Management</h1>
-                    <p className="text-muted-foreground">Manage user registrations and permissions</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-3xl font-bold">User Management</h1>
+                            <p className="text-muted-foreground">Manage user registrations and permissions</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="show-rejected"
+                                checked={showRejected}
+                                onCheckedChange={(checked) => setShowRejected(checked === true)}
+                            />
+                            <Label htmlFor="show-rejected" className="cursor-pointer">
+                                Show rejected users
+                            </Label>
+                        </div>
+                    </div>
                 </div>
 
                 {flash?.success && <div className="mb-4 rounded border border-green-400 bg-green-100 p-4 text-green-700">{flash.success}</div>}
@@ -97,7 +115,7 @@ export default function UserManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {users.map((user) => (
+                                    {filteredUsers.map((user) => (
                                         <tr key={user.id} className="border-b">
                                             <td className="p-2">{user.name}</td>
                                             <td className="p-2">{user.email}</td>
