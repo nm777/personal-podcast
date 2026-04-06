@@ -1,7 +1,7 @@
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import MediaUploadButton from '@/components/media-upload-button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { type BreadcrumbItem as BreadcrumbItemType, type Feed, type SharedData } from '@/types';
+import { type BreadcrumbItem as BreadcrumbItemType, type SharedData } from '@/types';
 import { router, usePage } from '@inertiajs/react';
 
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
