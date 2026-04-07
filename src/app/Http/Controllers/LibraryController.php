@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LibraryItemRequest;
 use App\Models\LibraryItem;
+use App\ProcessingStatusType;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -89,7 +90,7 @@ class LibraryController extends Controller
 
         // Reset status to pending and clear error
         $libraryItem->update([
-            'processing_status' => \App\ProcessingStatusType::PENDING,
+            'processing_status' => ProcessingStatusType::PENDING,
             'processing_error' => null,
             'processing_started_at' => null,
             'processing_completed_at' => null,
@@ -97,7 +98,7 @@ class LibraryController extends Controller
 
         // Re-dispatch the processing job based on source type
         $sourceType = $libraryItem->source_type;
-        $processor = \App\Services\SourceProcessors\SourceProcessorFactory::create($sourceType);
+        $processor = SourceProcessorFactory::create($sourceType);
         $processor->retry($libraryItem);
 
         return redirect()->route('library.index')

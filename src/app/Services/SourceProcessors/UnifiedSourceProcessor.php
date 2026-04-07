@@ -3,6 +3,7 @@
 namespace App\Services\SourceProcessors;
 
 use App\Http\Requests\LibraryItemRequest;
+use App\Models\LibraryItem;
 
 class UnifiedSourceProcessor
 {
@@ -32,7 +33,7 @@ class UnifiedSourceProcessor
     /**
      * Retry processing a failed library item.
      */
-    public function retry(\App\Models\LibraryItem $libraryItem): void
+    public function retry(LibraryItem $libraryItem): void
     {
         $this->strategy->processNewSource($libraryItem, $libraryItem->source_url);
     }
