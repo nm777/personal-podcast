@@ -178,8 +178,11 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                             <span>Duplicate file - will be removed automatically</span>
                                         </div>
                                     )}
-                                    {ProcessingStatusHelper.from(item.processing_status).isPending() || ProcessingStatusHelper.from(item.processing_status).isProcessing() ? (
-                                        <div className={`flex items-center gap-2 text-xs ${ProcessingStatusHelper.from(item.processing_status).getColor()}`}>
+                                    {ProcessingStatusHelper.from(item.processing_status).isPending() ||
+                                    ProcessingStatusHelper.from(item.processing_status).isProcessing() ? (
+                                        <div
+                                            className={`flex items-center gap-2 text-xs ${ProcessingStatusHelper.from(item.processing_status).getColor()}`}
+                                        >
                                             {ProcessingStatusHelper.from(item.processing_status).getIcon()}
                                             <span>{ProcessingStatusHelper.from(item.processing_status).getDisplayName()}...</span>
                                         </div>
