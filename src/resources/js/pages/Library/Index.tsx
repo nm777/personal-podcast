@@ -12,7 +12,7 @@ import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper, ProcessingStatusType } from '@/lib/processing-status';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { AlertCircle, FileAudio, FileVideo, Play, Pencil, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertCircle, FileAudio, FileVideo, Pencil, Play, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface MediaFile {
@@ -67,7 +67,15 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<LibraryItem | null>(null);
-    const { delete: destroyForm, post: retryForm, put, processing, errors, data, setData } = useForm({
+    const {
+        delete: destroyForm,
+        post: retryForm,
+        put,
+        processing,
+        errors,
+        data,
+        setData,
+    } = useForm({
         title: '',
         description: '',
     });
