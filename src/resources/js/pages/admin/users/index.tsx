@@ -81,11 +81,7 @@ export default function UserManagement() {
                             <p className="text-muted-foreground">Manage user registrations and permissions</p>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <Checkbox
-                                id="show-rejected"
-                                checked={showRejected}
-                                onCheckedChange={(checked) => setShowRejected(checked === true)}
-                            />
+                            <Checkbox id="show-rejected" checked={showRejected} onCheckedChange={(checked) => setShowRejected(checked === true)} />
                             <Label htmlFor="show-rejected" className="cursor-pointer">
                                 Show rejected users
                             </Label>
