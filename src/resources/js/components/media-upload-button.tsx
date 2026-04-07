@@ -127,22 +127,28 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     const handleUrlChange = async (url: string) => {
         setData('url', url);
         setData('file', null);
-        setData('source_url', inputType === 'youtube' ? url : '');
         setSelectedFile(null);
 
+        // Auto-detect YouTube URLs and switch to YouTube mode
+        const videoId = extractYouTubeVideoId(url);
+        const isYouTubeUrl = !!videoId;
+
+        if (isYouTubeUrl && inputType !== 'youtube') {
+            setInputType('youtube');
+        }
+
+        setData('source_url', isYouTubeUrl ? url : '');
+
         // For YouTube URLs, always fetch and update the video title
-        if (inputType === 'youtube' && url) {
-            const videoId = extractYouTubeVideoId(url);
-            if (videoId) {
-                const title = await fetchYouTubeVideoTitle(videoId);
-                if (title) {
-                    setData('title', title);
-                }
+        if (isYouTubeUrl && url) {
+            const title = await fetchYouTubeVideoTitle(videoId);
+            if (title) {
+                setData('title', title);
             }
         }
 
         // For non-YouTube URLs, use filename fallback only if title is empty
-        if (!data.title && url && inputType !== 'youtube') {
+        if (!data.title && url && !isYouTubeUrl) {
             try {
                 const filename = new URL(url).pathname.split('/').pop() || '';
                 const title = filename.replace(/\.[^/.]+$/, '');
