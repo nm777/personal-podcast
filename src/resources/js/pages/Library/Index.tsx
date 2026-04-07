@@ -3,12 +3,16 @@ import MediaPlayer from '@/components/media-player';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper, ProcessingStatusType } from '@/lib/processing-status';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
-import { AlertCircle, FileAudio, FileVideo, Play, RefreshCw, Trash2 } from 'lucide-react';
+import { AlertCircle, FileAudio, FileVideo, Play, Pencil, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface MediaFile {
@@ -61,7 +65,12 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<number | null>(null);
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
-    const { delete: destroyForm, post: retryForm } = useForm();
+    const [editDialogOpen, setEditDialogOpen] = useState(false);
+    const [itemToEdit, setItemToEdit] = useState<LibraryItem | null>(null);
+    const { delete: destroyForm, post: retryForm, put, processing, errors, data, setData } = useForm({
+        title: '',
+        description: '',
+    });
 
     // Auto-refresh for processing items using custom polling
     useEffect(() => {
@@ -102,6 +111,33 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                 router.reload({ only: ['libraryItems'] });
             },
         });
+    };
+
+    const handleEditClick = (item: LibraryItem) => {
+        setItemToEdit(item);
+        setData('title', item.title);
+        setData('description', item.description || '');
+        setEditDialogOpen(true);
+    };
+
+    const handleEditSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (itemToEdit) {
+            put(route('library.update', itemToEdit.id), {
+                onSuccess: () => {
+                    setEditDialogOpen(false);
+                    setItemToEdit(null);
+                    router.reload({ only: ['libraryItems'] });
+                },
+            });
+        }
+    };
+
+    const handleEditDialogClose = () => {
+        setEditDialogOpen(false);
+        setItemToEdit(null);
+        setData('title', '');
+        setData('description', '');
     };
 
     const formatFileSize = (bytes: number) => {
@@ -173,14 +209,24 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                                 </CardDescription>
                                             </div>
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleDeleteClick(item.id)}
-                                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleEditClick(item)}
+                                                className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDeleteClick(item.id)}
+                                                className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                     {item.is_duplicate && (
                                         <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300">
@@ -262,6 +308,50 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
 
             {/* Media Player Modal */}
             {playingItem && <MediaPlayer libraryItem={playingItem} isOpen={true} onClose={() => setPlayingItem(null)} />}
+
+            {/* Edit Dialog */}
+            <Dialog open={editDialogOpen} onOpenChange={handleEditDialogClose}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>Edit Media Details</DialogTitle>
+                        <DialogDescription>Update the title and description for this media file</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEditSubmit}>
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="title">Title</Label>
+                                <Input
+                                    id="title"
+                                    value={data.title}
+                                    onChange={(e) => setData('title', e.target.value)}
+                                    placeholder="Enter title"
+                                    required
+                                />
+                                {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                    id="description"
+                                    value={data.description}
+                                    onChange={(e) => setData('description', e.target.value)}
+                                    placeholder="Enter description (optional)"
+                                    rows={3}
+                                />
+                                {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={handleEditDialogClose}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={processing}>
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

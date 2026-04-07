@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\LibraryItemRequest;
+use App\Http\Requests\UpdateLibraryItemRequest;
 use App\Models\LibraryItem;
 use App\ProcessingStatusType;
 use App\Services\SourceProcessors\SourceProcessorFactory;
@@ -103,6 +104,22 @@ class LibraryController extends Controller
 
         return redirect()->route('library.index')
             ->with('success', 'Processing has been restarted.');
+    }
+
+    public function update(UpdateLibraryItemRequest $request, $id)
+    {
+        $libraryItem = LibraryItem::findOrFail($id);
+
+        // Ensure user can only update their own library items
+        if ($libraryItem->user_id !== Auth::user()->id) {
+            abort(403);
+        }
+
+        $validated = $request->validated();
+
+        $libraryItem->update($validated);
+
+        return back()->with('success', 'Media file details updated successfully.');
     }
 
     /**
