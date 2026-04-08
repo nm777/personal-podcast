@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Feed;
 use App\Models\MediaFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,7 @@ class MediaController extends Controller
 
         // For feeds without token (public feeds)
         if (! $feedToken) {
-            $hasPublicFeed = \App\Models\Feed::where('is_public', true)
+            $hasPublicFeed = Feed::where('is_public', true)
                 ->whereHas('items', function ($query) use ($mediaFile) {
                     $query->whereHas('libraryItem', function ($query) use ($mediaFile) {
                         $query->where('media_file_id', $mediaFile->id);
@@ -43,7 +44,7 @@ class MediaController extends Controller
 
         // For feeds with token (private feeds)
         if ($feedToken) {
-            $hasFeedAccess = \App\Models\Feed::where('token', $feedToken)
+            $hasFeedAccess = Feed::where('token', $feedToken)
                 ->whereHas('items', function ($query) use ($mediaFile) {
                     $query->whereHas('libraryItem', function ($query) use ($mediaFile) {
                         $query->where('media_file_id', $mediaFile->id);
