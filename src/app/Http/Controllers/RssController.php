@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Feed;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Response;
 
 class RssController extends Controller
@@ -23,15 +24,21 @@ class RssController extends Controller
             abort(404);
         }
 
-        $xml = view('rss', compact('feed'))->render();
+        $cacheKey = "rss.{$feed->id}";
+        $cacheDuration = config('constants.cache.rss_feed_duration_seconds');
 
-        $dom = new \DOMDocument('1.0');
-        $dom->preserveWhiteSpace = false;
-        $dom->formatOutput = true;
-        $dom->loadXML($xml);
-        $formattedXml = $dom->saveXML();
+        $xml = Cache::remember($cacheKey, $cacheDuration, function() use ($feed) {
+            $rssXml = view('rss', compact('feed'))->render();
 
-        return Response::make($formattedXml, 200, [
+            $dom = new \DOMDocument('1.0');
+            $dom->preserveWhiteSpace = false;
+            $dom->formatOutput = true;
+            $dom->loadXML($rssXml);
+            
+            return $dom->saveXML();
+        });
+
+        return Response::make($xml, 200, [
             'Content-Type' => 'application/xml',
         ]);
     }

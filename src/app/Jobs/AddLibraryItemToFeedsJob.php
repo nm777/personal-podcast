@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 
 class AddLibraryItemToFeedsJob implements ShouldQueue
 {
@@ -35,6 +36,9 @@ class AddLibraryItemToFeedsJob implements ShouldQueue
                 'library_item_id' => $this->libraryItem->id,
                 'sequence' => $maxSequence + 1,
             ]);
+
+            // Clear RSS cache when item is added to feed
+            Cache::forget("rss.{$feed->id}");
         }
     }
 }

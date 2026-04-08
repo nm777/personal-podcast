@@ -8,6 +8,7 @@ use App\Models\LibraryItem;
 use App\ProcessingStatusType;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -62,6 +63,13 @@ class LibraryController extends Controller
         }
 
         $mediaFile = $libraryItem->mediaFile;
+        
+        // Clear RSS cache for feeds that contain this item
+        $feedIds = $libraryItem->feeds()->pluck('id');
+        foreach ($feedIds as $feedId) {
+            Cache::forget("rss.{$feedId}");
+        }
+        
         $libraryItem->delete();
 
         // Check if this was the last reference to the media file

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\FeedRequest;
 use App\Models\Feed;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -81,6 +82,9 @@ class FeedController extends Controller
             $this->syncFeedItems($feed, $validated['items']);
         }
 
+        // Clear RSS cache when feed is updated
+        Cache::forget("rss.{$feed->id}");
+
         return redirect()->route('dashboard')->with('success', 'Feed updated successfully!');
     }
 
@@ -90,6 +94,9 @@ class FeedController extends Controller
     public function destroy(Feed $feed)
     {
         Gate::authorize('delete', $feed);
+
+        // Clear RSS cache before deleting
+        Cache::forget("rss.{$feed->id}");
 
         $feed->delete();
 
