@@ -13,10 +13,14 @@ class RssController extends Controller
         $feed = Feed::where('user_guid', $user_guid)
             ->where('slug', $feed_slug)
             ->with(['items.libraryItem.mediaFile'])
-            ->firstOrFail();
+            ->first();
+
+        if (! $feed) {
+            abort(404);
+        }
 
         if (! $feed->is_public && $request->token !== $feed->token) {
-            abort(403);
+            abort(404);
         }
 
         $xml = view('rss', compact('feed'))->render();
