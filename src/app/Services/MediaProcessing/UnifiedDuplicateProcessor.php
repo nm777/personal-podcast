@@ -58,7 +58,7 @@ class UnifiedDuplicateProcessor
     /**
      * Build standard success response array.
      */
-    private function buildSuccessResponse(bool $isDuplicate, ?MediaFile $mediaFile, string $message = null): array
+    private function buildSuccessResponse(bool $isDuplicate, ?MediaFile $mediaFile, ?string $message = null): array
     {
         $response = [
             'success' => true,
@@ -121,7 +121,7 @@ class UnifiedDuplicateProcessor
         return $this->buildSuccessResponse(
             true,
             $existingLibraryItem->mediaFile,
-            'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.'
+            'Duplicate file detected. This file already exists in your library and will be removed automatically in '.config('constants.duplicate.cleanup_delay_minutes').' minutes.'
         );
     }
 
@@ -192,7 +192,7 @@ class UnifiedDuplicateProcessor
         return $this->buildSuccessResponse(
             true,
             $userDuplicateMediaFile,
-            'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.'
+            'Duplicate file detected. This file already exists in your library and will be removed automatically in '.config('constants.duplicate.cleanup_delay_minutes').' minutes.'
         );
     }
 

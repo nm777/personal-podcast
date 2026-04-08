@@ -2,6 +2,7 @@
 
 namespace App\Services\MediaProcessing;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -34,7 +35,7 @@ class MediaDownloader
     /**
      * Execute HTTP download with redirect options.
      */
-    private function executeDownload(string $url): \Illuminate\Http\Client\Response
+    private function executeDownload(string $url): Response
     {
         return Http::timeout(60)->withOptions([
             'allow_redirects' => [
@@ -50,7 +51,7 @@ class MediaDownloader
     /**
      * Validate HTTP response and content.
      */
-    private function validateResponse(\Illuminate\Http\Client\Response $response, string $contents): void
+    private function validateResponse(Response $response, string $contents): void
     {
         if (! $response->successful()) {
             throw new \Exception('Failed to download file: HTTP '.$response->status());
