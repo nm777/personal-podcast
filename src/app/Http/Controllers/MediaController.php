@@ -28,17 +28,7 @@ class MediaController extends Controller
                 ->exists();
 
             if ($hasPublicFeed) {
-                if (! Storage::disk('public')->exists($file_path)) {
-                    abort(404);
-                }
-
-                $file = Storage::disk('public')->get($file_path);
-                $mimeType = $mediaFile->mime_type ?? 'application/octet-stream';
-
-                return response($file)
-                    ->header('Content-Type', $mimeType)
-                    ->header('Content-Length', (string) strlen($file))
-                    ->header('Accept-Ranges', 'bytes');
+                return $this->serveMediaFile($file_path, $mediaFile);
             }
         }
 
@@ -53,17 +43,7 @@ class MediaController extends Controller
                 ->exists();
 
             if ($hasFeedAccess) {
-                if (! Storage::disk('public')->exists($file_path)) {
-                    abort(404);
-                }
-
-                $file = Storage::disk('public')->get($file_path);
-                $mimeType = $mediaFile->mime_type ?? 'application/octet-stream';
-
-                return response($file)
-                    ->header('Content-Type', $mimeType)
-                    ->header('Content-Length', (string) strlen($file))
-                    ->header('Accept-Ranges', 'bytes');
+                return $this->serveMediaFile($file_path, $mediaFile);
             }
         }
 
@@ -72,17 +52,15 @@ class MediaController extends Controller
             abort(403);
         }
 
+        return $this->serveMediaFile($file_path, $mediaFile);
+    }
+
+    private function serveMediaFile(string $file_path, MediaFile $mediaFile): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
         if (! Storage::disk('public')->exists($file_path)) {
             abort(404);
         }
 
-        // Serve the file directly instead of redirecting
-        $file = Storage::disk('public')->get($file_path);
-        $mimeType = $mediaFile->mime_type ?? 'application/octet-stream';
-
-        return response($file)
-            ->header('Content-Type', $mimeType)
-            ->header('Content-Length', (string) strlen($file))
-            ->header('Accept-Ranges', 'bytes');
+        return Storage::disk('public')->download($file_path);
     }
 }
