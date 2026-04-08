@@ -10,7 +10,10 @@ class RssController extends Controller
 {
     public function show(Request $request, $user_guid, $feed_slug)
     {
-        $feed = Feed::where('user_guid', $user_guid)->where('slug', $feed_slug)->firstOrFail();
+        $feed = Feed::where('user_guid', $user_guid)
+            ->where('slug', $feed_slug)
+            ->with(['items.libraryItem.mediaFile'])
+            ->firstOrFail();
 
         if (! $feed->is_public && $request->token !== $feed->token) {
             abort(403);
@@ -18,7 +21,13 @@ class RssController extends Controller
 
         $xml = view('rss', compact('feed'))->render();
 
-        return Response::make($xml, 200, [
+        $dom = new \DOMDocument('1.0');
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom->loadXML($xml);
+        $formattedXml = $dom->saveXML();
+
+        return Response::make($formattedXml, 200, [
             'Content-Type' => 'application/xml',
         ]);
     }

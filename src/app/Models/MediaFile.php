@@ -33,7 +33,12 @@ class MediaFile extends Model
 
     public function getPublicUrlAttribute(): string
     {
-        return Storage::url($this->file_path);
+        return Storage::disk('public')->url($this->file_path);
+    }
+
+    public function getRssUrlAttribute(): string
+    {
+        return url('/files/' . $this->file_path);
     }
 
     /**
