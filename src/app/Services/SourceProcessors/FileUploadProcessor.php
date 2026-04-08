@@ -50,9 +50,14 @@ class FileUploadProcessor
 
         // Delete temporary library item and create new one for processing
         $tempLibraryItem->delete();
+
+        // Calculate file hash efficiently without loading into memory
+        $fullTempPath = Storage::disk('public')->path($tempPath);
+        $fileHash = hash_file('sha256', $fullTempPath);
+
         $libraryItem = $this->libraryItemFactory->createFromValidatedWithMediaData($validated, $sourceType, [
             'file_path' => $tempPath,
-            'file_hash' => hash('sha256', Storage::disk('public')->get($tempPath)),
+            'file_hash' => $fileHash,
             'mime_type' => $file->getMimeType(),
             'filesize' => $file->getSize(),
         ], $userId);

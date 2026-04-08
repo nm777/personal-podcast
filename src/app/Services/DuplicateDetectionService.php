@@ -13,27 +13,22 @@ class DuplicateDetectionService
      */
     public static function calculateFileHash(string $filePath): ?string
     {
-        // Try to get file content from storage first
+        // Try to use hash_file with storage path first (most efficient)
         try {
-            $content = Storage::disk('public')->get($filePath);
-            if ($content === false) {
-                // Fallback to real file system if storage doesn't have it
-                if (! file_exists($filePath)) {
-                    return null;
-                }
-
-                return hash_file('sha256', $filePath);
-            } else {
-                return hash('sha256', $content);
+            $fullPath = Storage::disk('public')->path($filePath);
+            if (file_exists($fullPath)) {
+                return hash_file('sha256', $fullPath);
             }
         } catch (\Exception $e) {
-            // Fallback to real file system
-            if (! file_exists($filePath)) {
-                return null;
-            }
+            // Fall through to fallback
+        }
 
+        // Fallback to direct file path
+        if (file_exists($filePath)) {
             return hash_file('sha256', $filePath);
         }
+
+        return null;
     }
 
     /**

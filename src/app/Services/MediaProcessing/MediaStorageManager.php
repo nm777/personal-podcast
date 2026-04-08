@@ -11,11 +11,17 @@ class MediaStorageManager
      */
     public function storeFile(string $content, string $extension, ?string $sourceUrl = null): array
     {
-        $fileHash = hash('sha256', $content);
-        $finalPath = 'media/'.$fileHash.'.'.$extension;
+        // Store to temp location first to calculate hash efficiently
+        $tempPath = 'temp-hash-'.uniqid().'.'.$extension;
+        Storage::disk('public')->put($tempPath, $content);
 
-        // Store the file
-        Storage::disk('public')->put($finalPath, $content);
+        // Calculate hash using native function (no memory loading)
+        $fullPath = Storage::disk('public')->path($tempPath);
+        $fileHash = hash_file('sha256', $fullPath);
+
+        // Move to final location
+        $finalPath = 'media/'.$fileHash.'.'.$extension;
+        Storage::disk('public')->move($tempPath, $finalPath);
 
         return [
             'file_path' => $finalPath,
