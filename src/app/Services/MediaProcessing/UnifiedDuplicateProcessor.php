@@ -34,7 +34,7 @@ class UnifiedDuplicateProcessor
             return $this->handleGlobalUrlDuplicate($libraryItem, $duplicateAnalysis, $sourceUrl);
         }
 
-        return ['success' => true, 'is_duplicate' => false, 'media_file' => null];
+        return $this->buildSuccessResponse(false, null);
     }
 
     /**
@@ -52,7 +52,53 @@ class UnifiedDuplicateProcessor
             return $this->handleGlobalFileDuplicate($libraryItem, $duplicateAnalysis, $filePath);
         }
 
-        return ['success' => true, 'is_duplicate' => false, 'media_file' => null];
+        return $this->buildSuccessResponse(false, null);
+    }
+
+    /**
+     * Build standard success response array.
+     */
+    private function buildSuccessResponse(bool $isDuplicate, ?MediaFile $mediaFile, string $message = null): array
+    {
+        $response = [
+            'success' => true,
+            'is_duplicate' => $isDuplicate,
+            'media_file' => $mediaFile,
+        ];
+
+        if ($message) {
+            $response['message'] = $message;
+        }
+
+        return $response;
+    }
+
+    /**
+     * Mark library item as completed and optionally as duplicate.
+     */
+    private function markAsCompleted(LibraryItem $libraryItem, bool $isDuplicate = false): void
+    {
+        $updateData = [
+            'processing_status' => ProcessingStatusType::COMPLETED,
+            'processing_completed_at' => now(),
+        ];
+
+        if ($isDuplicate) {
+            $libraryItem->is_duplicate = true;
+            $libraryItem->duplicate_detected_at = now();
+        }
+
+        $libraryItem->update($updateData);
+    }
+
+    /**
+     * Schedule cleanup job for duplicate library item.
+     */
+    private function scheduleCleanup(LibraryItem $libraryItem): void
+    {
+        CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(
+            now()->addMinutes(config('constants.duplicate.cleanup_delay_minutes'))
+        );
     }
 
     /**
@@ -68,26 +114,15 @@ class UnifiedDuplicateProcessor
             'existing_media_file_id' => $existingLibraryItem->media_file_id,
         ]);
 
-        // Link to existing media file and mark as duplicate
         $libraryItem->media_file_id = $existingLibraryItem->media_file_id;
-        $libraryItem->is_duplicate = true;
-        $libraryItem->duplicate_detected_at = now();
-        $libraryItem->update([
-            'processing_status' => ProcessingStatusType::COMPLETED,
-            'processing_completed_at' => now(),
-        ]);
+        $this->markAsCompleted($libraryItem, true);
+        $this->scheduleCleanup($libraryItem);
 
-        // Schedule cleanup of this duplicate entry
-        CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(
-            now()->addMinutes(config('constants.duplicate.cleanup_delay_minutes'))
+        return $this->buildSuccessResponse(
+            true,
+            $existingLibraryItem->mediaFile,
+            'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.'
         );
-
-        return [
-            'success' => true,
-            'is_duplicate' => true,
-            'media_file' => $existingLibraryItem->mediaFile,
-            'message' => 'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.',
-        ];
     }
 
     /**
@@ -102,19 +137,14 @@ class UnifiedDuplicateProcessor
             'media_file_id' => $mediaFile->id,
         ]);
 
-        // Link to existing media file
         $libraryItem->media_file_id = $mediaFile->id;
-        $libraryItem->update([
-            'processing_status' => ProcessingStatusType::COMPLETED,
-            'processing_completed_at' => now(),
-        ]);
+        $this->markAsCompleted($libraryItem);
 
-        return [
-            'success' => true,
-            'is_duplicate' => false,
-            'media_file' => $mediaFile,
-            'message' => 'File already exists in your library. Linked to existing media file.',
-        ];
+        return $this->buildSuccessResponse(
+            false,
+            $mediaFile,
+            'File already exists in your library. Linked to existing media file.'
+        );
     }
 
     /**
@@ -132,19 +162,14 @@ class UnifiedDuplicateProcessor
             'source_url' => $sourceUrl,
         ]);
 
-        // Link to existing media file from different user (cross-user sharing)
         $libraryItem->media_file_id = $globalMediaFile->id;
-        $libraryItem->update([
-            'processing_status' => ProcessingStatusType::COMPLETED,
-            'processing_completed_at' => now(),
-        ]);
+        $this->markAsCompleted($libraryItem);
 
-        return [
-            'success' => true,
-            'is_duplicate' => false,
-            'media_file' => $globalMediaFile,
-            'message' => 'File already exists in system. Linked to existing media file.',
-        ];
+        return $this->buildSuccessResponse(
+            false,
+            $globalMediaFile,
+            'File already exists in system. Linked to existing media file.'
+        );
     }
 
     /**
@@ -160,26 +185,15 @@ class UnifiedDuplicateProcessor
             $userDuplicateMediaFile->save();
         }
 
-        // Mark this library item as a duplicate
         $libraryItem->media_file_id = $userDuplicateMediaFile->id;
-        $libraryItem->is_duplicate = true;
-        $libraryItem->duplicate_detected_at = now();
-        $libraryItem->update([
-            'processing_status' => ProcessingStatusType::COMPLETED,
-            'processing_completed_at' => now(),
-        ]);
+        $this->markAsCompleted($libraryItem, true);
+        $this->scheduleCleanup($libraryItem);
 
-        // Schedule cleanup of this duplicate entry
-        CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(
-            now()->addMinutes(config('constants.duplicate.cleanup_delay_minutes'))
+        return $this->buildSuccessResponse(
+            true,
+            $userDuplicateMediaFile,
+            'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.'
         );
-
-        return [
-            'success' => true,
-            'is_duplicate' => true,
-            'media_file' => $userDuplicateMediaFile,
-            'message' => 'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.',
-        ];
     }
 
     /**
@@ -189,18 +203,13 @@ class UnifiedDuplicateProcessor
     {
         $globalDuplicateMediaFile = $duplicateAnalysis['global_duplicate_media_file'];
 
-        // Don't mark as duplicate since this is a different user's file
         $libraryItem->media_file_id = $globalDuplicateMediaFile->id;
-        $libraryItem->update([
-            'processing_status' => ProcessingStatusType::COMPLETED,
-            'processing_completed_at' => now(),
-        ]);
+        $this->markAsCompleted($libraryItem);
 
-        return [
-            'success' => true,
-            'is_duplicate' => false,
-            'media_file' => $globalDuplicateMediaFile,
-            'message' => 'File already exists in system. Linked to existing media file.',
-        ];
+        return $this->buildSuccessResponse(
+            false,
+            $globalDuplicateMediaFile,
+            'File already exists in system. Linked to existing media file.'
+        );
     }
 }
