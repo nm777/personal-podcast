@@ -71,7 +71,7 @@ class FileUploadProcessor
     private function getSuccessMessage(bool $isDuplicate): string
     {
         return $isDuplicate
-            ? 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.'
+            ? 'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.'
             : 'Media file uploaded successfully. Processing...';
     }
 

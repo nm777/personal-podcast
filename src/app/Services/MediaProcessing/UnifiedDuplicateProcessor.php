@@ -78,13 +78,15 @@ class UnifiedDuplicateProcessor
         ]);
 
         // Schedule cleanup of this duplicate entry
-        CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
+        CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(
+            now()->addMinutes(config('constants.duplicate.cleanup_delay_minutes'))
+        );
 
         return [
             'success' => true,
             'is_duplicate' => true,
             'media_file' => $existingLibraryItem->mediaFile,
-            'message' => 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.',
+            'message' => 'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.',
         ];
     }
 
@@ -168,13 +170,15 @@ class UnifiedDuplicateProcessor
         ]);
 
         // Schedule cleanup of this duplicate entry
-        CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(now()->addMinutes(5));
+        CleanupDuplicateLibraryItem::dispatch($libraryItem)->delay(
+            now()->addMinutes(config('constants.duplicate.cleanup_delay_minutes'))
+        );
 
         return [
             'success' => true,
             'is_duplicate' => true,
             'media_file' => $userDuplicateMediaFile,
-            'message' => 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.',
+            'message' => 'Duplicate file detected. This file already exists in your library and will be removed automatically in ' . config('constants.duplicate.cleanup_delay_minutes') . ' minutes.',
         ];
     }
 

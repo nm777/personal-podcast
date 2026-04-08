@@ -81,7 +81,7 @@ class LibraryItemFactory
         // Only dispatch job for items that need processing
         if ($libraryItem->isPending() || $libraryItem->isProcessing()) {
             AddLibraryItemToFeedsJob::dispatch($libraryItem, $validated['feed_ids'])
-                ->delay(now()->addSeconds(30)); // Give some time for processing to start
+                ->delay(now()->addSeconds(config('constants.processing.start_delay_seconds')));
         } else {
             // For completed items, add to feeds immediately
             AddLibraryItemToFeedsJob::dispatchSync($libraryItem, $validated['feed_ids']);
