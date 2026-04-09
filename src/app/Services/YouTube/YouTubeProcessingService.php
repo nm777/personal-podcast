@@ -38,7 +38,12 @@ class YouTubeProcessingService
                 'library_item_id' => $libraryItem->id,
                 'youtube_url' => $youtubeUrl,
             ]);
-            $libraryItem->delete();
+
+            $libraryItem->update([
+                'processing_status' => ProcessingStatusType::FAILED,
+                'processing_completed_at' => now(),
+                'processing_error' => 'Invalid YouTube URL',
+            ]);
 
             return [
                 'success' => false,
@@ -74,7 +79,11 @@ class YouTubeProcessingService
             $downloadedFile = $this->downloader->downloadAudio($youtubeUrl, $tempDir);
 
             if (! $downloadedFile) {
-                $libraryItem->delete();
+                $libraryItem->update([
+                    'processing_status' => ProcessingStatusType::FAILED,
+                    'processing_completed_at' => now(),
+                    'processing_error' => 'Failed to download YouTube video',
+                ]);
 
                 return [
                     'success' => false,

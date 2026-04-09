@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { type Feed } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { AlertCircle, Globe, Loader2, Plus, Upload, Youtube } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 interface MediaUploadButtonProps {
     onUploadSuccess?: () => void;
@@ -24,7 +24,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     const [isCheckingUrl, setIsCheckingUrl] = useState(false);
     const [isFetchingYouTubeTitle, setIsFetchingYouTubeTitle] = useState(false);
     const [urlDuplicateWarning, setUrlDuplicateWarning] = useState<string | null>(null);
-    const [urlCheckTimeout, setUrlCheckTimeout] = useState<NodeJS.Timeout | null>(null);
+    const urlCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const { data, setData, post, processing, errors, reset, transform } = useForm({
         title: '',
@@ -161,8 +161,8 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
         }
 
         // Clear existing timeout
-        if (urlCheckTimeout) {
-            clearTimeout(urlCheckTimeout);
+        if (urlCheckTimeout.current) {
+            clearTimeout(urlCheckTimeout.current);
         }
 
         // Debounce URL check to avoid too many API calls
@@ -170,7 +170,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             checkUrlDuplicate(url);
         }, 500);
 
-        setUrlCheckTimeout(timeout);
+        urlCheckTimeout.current = timeout;
     };
 
     const handleDrop = (e: React.DragEvent) => {

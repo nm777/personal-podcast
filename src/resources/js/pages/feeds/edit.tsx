@@ -4,48 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowLeft, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-
-interface MediaFile {
-    id: number;
-    file_path: string;
-    file_hash: string;
-    mime_type: string;
-    filesize: number;
-    duration?: number;
-}
-
-interface LibraryItem {
-    id: number;
-    title: string;
-    description?: string;
-    source_type: string;
-    source_url?: string;
-    media_file?: MediaFile | null;
-}
-
-interface FeedItem {
-    id: number;
-    feed_id: number;
-    library_item_id: number;
-    sequence: number;
-    library_item: LibraryItem;
-}
-
-interface Feed {
-    id: number;
-    title: string;
-    description?: string;
-    is_public: boolean;
-    slug: string;
-    user_guid: string;
-    created_at: string;
-    updated_at: string;
-    items: FeedItem[];
-}
 
 interface EditFeedProps {
     feed: Feed;
@@ -84,7 +46,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
     const addLibraryItem = (libraryItemId: number) => {
         const newItem = {
-            id: 0,
+            id: Date.now(),
             library_item_id: libraryItemId,
             sequence: data.items.length,
         };
@@ -238,7 +200,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
                                             return (
                                                 <div
-                                                    key={index}
+                                                    key={item.library_item_id}
                                                     draggable
                                                     onDragStart={() => handleDragStart(index)}
                                                     onDragOver={handleDragOver}

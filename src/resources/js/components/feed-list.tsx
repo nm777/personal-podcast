@@ -1,22 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { type Feed } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { router } from '@inertiajs/react';
+import { router, Link } from '@inertiajs/react';
 import { Copy, Edit, Eye, EyeOff, FileAudio, Rss, Trash2 } from 'lucide-react';
-
-interface Feed {
-    id: number;
-    title: string;
-    description?: string;
-    is_public: boolean;
-    slug: string;
-    user_guid: string;
-    token?: string;
-    items_count: number;
-    created_at: string;
-    updated_at: string;
-}
 
 interface FeedListProps {
     feeds: Feed[];
@@ -28,7 +16,7 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
 
     const handleDelete = (feedId: number) => {
         if (confirm('Are you sure you want to delete this feed?')) {
-            router.delete(`/feeds/${feedId}`, {
+            router.delete(route('feeds.destroy', feedId), {
                 onSuccess: () => {
                     // Feed deleted successfully
                 },
@@ -151,9 +139,9 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                                 {canEdit && (
                                     <>
                                         <Button variant="outline" size="sm" asChild>
-                                            <a href={`/feeds/${feed.id}/edit`}>
+                                            <Link href={route('feeds.edit', feed.id)}>
                                                 <Edit className="h-4 w-4" />
-                                            </a>
+                                            </Link>
                                         </Button>
                                         <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)}>
                                             <Trash2 className="h-4 w-4" />

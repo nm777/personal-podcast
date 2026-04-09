@@ -9,42 +9,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
-import { ProcessingStatusHelper, ProcessingStatusType } from '@/lib/processing-status';
-import { type BreadcrumbItem } from '@/types';
+import { ProcessingStatusHelper } from '@/lib/processing-status';
+import { type BreadcrumbItem, type LibraryItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { AlertCircle, FileAudio, FileVideo, Pencil, Play, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
-interface MediaFile {
-    id: number;
-    file_path: string;
-    file_hash: string;
-    mime_type: string;
-    filesize: number;
-    duration?: number;
-    public_url?: string;
-    created_at: string;
-    updated_at: string;
-}
-
-interface LibraryItem {
-    id: number;
-    user_id: number;
-    media_file_id: number;
-    title: string;
-    description?: string;
-    source_type: string;
-    source_url?: string;
-    is_duplicate: boolean;
-    duplicate_detected_at?: string;
-    processing_status: ProcessingStatusType;
-    processing_started_at?: string;
-    processing_completed_at?: string;
-    processing_error?: string;
-    created_at: string;
-    updated_at: string;
-    media_file?: MediaFile;
-}
 
 interface LibraryIndexProps {
     libraryItems: LibraryItem[];

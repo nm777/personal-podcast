@@ -11,14 +11,14 @@ class MediaDownloader
     /**
      * Download media from URL with redirect handling.
      */
-    public function downloadFromUrl(string $url): ?string
+    public function downloadFromUrl(string $url, int $maxRedirects = 5): ?string
     {
         try {
             $response = $this->executeDownload($url);
             $contents = $response->body();
 
             $this->validateResponse($response, $contents);
-            $contents = $this->handleHtmlRedirect($contents, $url);
+            $contents = $this->handleHtmlRedirect($contents, $url, $maxRedirects);
             $this->validateMediaContent($contents);
 
             return $contents;
@@ -65,18 +65,25 @@ class MediaDownloader
     /**
      * Handle HTML JavaScript redirects.
      */
-    private function handleHtmlRedirect(string $contents, string $originalUrl): string
+    private function handleHtmlRedirect(string $contents, string $originalUrl, int $maxRedirects): string
     {
         if (! $this->isHtmlContent($contents)) {
             return $contents;
+        }
+
+        if ($maxRedirects <= 0) {
+            throw new \Exception('Download failed: Maximum HTML redirect limit reached');
         }
 
         $redirectUrl = $this->extractRedirectUrl($contents, $originalUrl);
 
         if ($redirectUrl) {
             try {
-                return $this->downloadFromUrl($redirectUrl);
+                return $this->downloadFromUrl($redirectUrl, $maxRedirects - 1);
             } catch (\Exception $e) {
+                if (str_contains($e->getMessage(), 'Maximum HTML redirect limit')) {
+                    throw $e;
+                }
                 throw new \Exception('Download failed: Got HTML redirect page instead of media file');
             }
         }

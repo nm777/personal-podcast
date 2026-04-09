@@ -1,20 +1,10 @@
+import CreateFeedForm from '@/components/create-feed-form';
 import FeedList from '@/components/feed-list';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, useForm } from '@inertiajs/react';
-import { useState } from 'react';
-
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Dashboard',
-        href: '/dashboard',
-    },
-];
+import { Head } from '@inertiajs/react';
 
 interface Feed {
     id: number;
@@ -36,114 +26,35 @@ interface DashboardProps {
     };
 }
 
+const breadcrumbs: BreadcrumbItem[] = [
+    {
+        title: 'Dashboard',
+        href: '/dashboard',
+    },
+];
+
 export default function Dashboard({ feeds, flash }: DashboardProps) {
-    const [isCreateFeedExpanded, setIsCreateFeedExpanded] = useState(false);
-
-    const { data, setData, post, processing, errors, reset } = useForm<{
-        title: string;
-        description: string;
-        is_public: boolean;
-    }>({
-        title: '',
-        description: '',
-        is_public: false,
-    });
-
-    const handleCreateFeedSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-
-        post('/feeds', {
-            onSuccess: () => {
-                reset();
-                setIsCreateFeedExpanded(false);
-            },
-            onError: (errors) => {
-                console.error('Error creating feed:', errors);
-            },
-        });
-    };
-
-    const handleCreateFeedCancel = () => {
-        reset();
-        setIsCreateFeedExpanded(false);
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
             {flash?.success && (
-                <div className="mb-4 rounded-md bg-green-50 p-4 dark:bg-green-900/20">
-                    <p className="text-sm text-green-800 dark:text-green-200">{flash.success}</p>
-                </div>
+                <Alert className="mb-4 border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-900/20 dark:text-green-200">
+                    <AlertDescription>{flash.success}</AlertDescription>
+                </Alert>
             )}
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-                {/* Feed Management */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold">Your Feeds</h2>
-                        {!isCreateFeedExpanded && (
-                            <Button size="sm" onClick={() => setIsCreateFeedExpanded(true)}>
-                                Create New Feed
-                            </Button>
-                        )}
+                        <CreateFeedForm
+                            showCard={false}
+                            renderTrigger={(onClick) => (
+                                <Button size="sm" onClick={onClick}>
+                                    Create New Feed
+                                </Button>
+                            )}
+                        />
                     </div>
-
-                    {isCreateFeedExpanded && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Create New Feed</CardTitle>
-                                <CardDescription>Set up a new podcast feed to organize and share your content.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <form onSubmit={handleCreateFeedSubmit} className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="title">Title</Label>
-                                        <Input
-                                            id="title"
-                                            type="text"
-                                            value={data.title}
-                                            onChange={(e) => setData('title', e.target.value)}
-                                            placeholder="Enter feed title"
-                                            required
-                                        />
-                                        {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="description">Description</Label>
-                                        <Textarea
-                                            id="description"
-                                            value={data.description}
-                                            onChange={(e) => setData('description', e.target.value)}
-                                            placeholder="Enter feed description (optional)"
-                                            rows={3}
-                                        />
-                                        {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            id="is_public"
-                                            checked={data.is_public}
-                                            onChange={(e) => setData('is_public', e.target.checked)}
-                                            className="rounded border-gray-300"
-                                        />
-                                        <Label htmlFor="is_public">Make this feed public</Label>
-                                    </div>
-
-                                    <div className="flex gap-2 pt-4">
-                                        <Button type="submit" disabled={processing}>
-                                            {processing ? 'Creating...' : 'Create Feed'}
-                                        </Button>
-                                        <Button type="button" variant="outline" onClick={handleCreateFeedCancel}>
-                                            Cancel
-                                        </Button>
-                                    </div>
-                                </form>
-                            </CardContent>
-                        </Card>
-                    )}
 
                     <FeedList feeds={feeds} />
                 </div>

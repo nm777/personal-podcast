@@ -28,7 +28,6 @@ export default function DeleteConfirmDialog({
 }: DeleteConfirmDialogProps) {
     const handleConfirm = () => {
         onConfirm();
-        onClose();
     };
 
     return (

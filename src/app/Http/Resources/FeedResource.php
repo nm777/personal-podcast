@@ -22,7 +22,7 @@ class FeedResource extends JsonResource
             'is_public' => $this->is_public,
             'slug' => $this->slug,
             'user_guid' => $this->user_guid,
-            'token' => $this->token,
+            'token' => $this->when($request->user()?->id === $this->user_id, $this->token),
             'items_count' => $this->when(isset($this->items_count), $this->items_count),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

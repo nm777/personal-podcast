@@ -38,8 +38,16 @@ class MediaProcessingService
             $tempPath = 'temp-uploads/'.uniqid().'_'.basename(parse_url($sourceUrl, PHP_URL_PATH) ?: 'download');
             Storage::disk('public')->put($tempPath, $content);
 
-            // Process the downloaded file
-            return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
+            try {
+                // Process the downloaded file
+                return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
+            } catch (\Exception $e) {
+                if (Storage::disk('public')->exists($tempPath)) {
+                    Storage::disk('public')->delete($tempPath);
+                }
+
+                throw $e;
+            }
 
         } catch (\Exception $e) {
             return $this->handleProcessingError($libraryItem, $e);

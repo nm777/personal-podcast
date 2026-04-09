@@ -303,6 +303,81 @@ it('stores source URL when downloading new file', function () {
     expect($mediaFile->source_url)->toBe('https://example.com/new-audio.mp3');
 });
 
+it('accepts URL with m4a file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test M4A Audio',
+        'url' => 'https://example.com/test-audio.m4a',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with mp4 file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test MP4 Audio',
+        'url' => 'https://example.com/test-audio.mp4',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with wav file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test WAV Audio',
+        'url' => 'https://example.com/test-audio.wav',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with ogg file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test OGG Audio',
+        'url' => 'https://example.com/test-audio.ogg',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with query parameters after file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test Audio With Query',
+        'url' => 'https://example.com/test-audio.mp3?token=abc123&expires=456',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
 it('multiple users can reuse same file from same URL', function () {
     Storage::fake('public');
     Queue::fake();

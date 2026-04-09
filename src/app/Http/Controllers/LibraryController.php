@@ -9,6 +9,7 @@ use App\ProcessingStatusType;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -57,19 +58,16 @@ class LibraryController extends Controller
     {
         $libraryItem = LibraryItem::findOrFail($id);
 
-        // Ensure user can only delete their own library items
-        if ($libraryItem->user_id !== Auth::user()->id) {
-            abort(403);
-        }
+        Gate::authorize('delete', $libraryItem);
 
         $mediaFile = $libraryItem->mediaFile;
-        
+
         // Clear RSS cache for feeds that contain this item
         $feedIds = $libraryItem->feedItems()->pluck('feed_id');
         foreach ($feedIds as $feedId) {
             Cache::forget("rss.{$feedId}");
         }
-        
+
         $libraryItem->delete();
 
         // Check if this was the last reference to the media file
@@ -86,10 +84,7 @@ class LibraryController extends Controller
     {
         $libraryItem = LibraryItem::findOrFail($id);
 
-        // Ensure user can only retry their own library items
-        if ($libraryItem->user_id !== Auth::user()->id) {
-            abort(403);
-        }
+        Gate::authorize('retry', $libraryItem);
 
         // Only allow retry for failed items
         if (! $libraryItem->hasFailed()) {
@@ -101,7 +96,7 @@ class LibraryController extends Controller
         $libraryItem->update([
             'processing_status' => ProcessingStatusType::PENDING,
             'processing_error' => null,
-            'processing_started_at' => null,
+            'processing_started_at' => now(),
             'processing_completed_at' => null,
         ]);
 
@@ -118,10 +113,7 @@ class LibraryController extends Controller
     {
         $libraryItem = LibraryItem::findOrFail($id);
 
-        // Ensure user can only update their own library items
-        if ($libraryItem->user_id !== Auth::user()->id) {
-            abort(403);
-        }
+        Gate::authorize('update', $libraryItem);
 
         $validated = $request->validated();
 

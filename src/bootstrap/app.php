@@ -31,7 +31,6 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'check-url-duplicate',
         ]);
 
         $middleware->trustProxies(

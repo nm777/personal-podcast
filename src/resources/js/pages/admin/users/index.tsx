@@ -39,13 +39,13 @@ export default function UserManagement() {
     const toggleAdminForm = useForm({});
 
     const handleApprove = (user: User) => {
-        approveForm.post(`/admin/users/${user.id}/approve`);
+        approveForm.post(route('admin.users.approve', user.id));
     };
 
     const handleReject = () => {
         if (!rejectingUser) return;
 
-        rejectForm.post(`/admin/users/${rejectingUser.id}/reject`, {
+        rejectForm.post(route('admin.users.reject', rejectingUser.id), {
             onSuccess: () => {
                 setRejectingUser(null);
                 rejectForm.setData('reason', '');
@@ -54,7 +54,7 @@ export default function UserManagement() {
     };
 
     const handleToggleAdmin = (user: User) => {
-        toggleAdminForm.post(`/admin/users/${user.id}/toggle-admin`);
+        toggleAdminForm.post(route('admin.users.toggle-admin', user.id));
     };
 
     const getStatusBadge = (status: string) => {

@@ -92,3 +92,22 @@ test('throws exception for invalid media content', function () {
     expect(fn () => (new MediaDownloader())->downloadFromUrl($url))
         ->toThrow(\Exception::class);
 });
+
+test('prevents infinite redirect loops', function () {
+    $url1 = 'https://example.com/loop1';
+    $url2 = 'https://example.com/loop2';
+
+    Http::fake([
+        $url1 => Http::response(
+            '<!DOCTYPE html><html><script>window.location.replace("'.$url2.'")</script></html>',
+            200
+        ),
+        $url2 => Http::response(
+            '<!DOCTYPE html><html><script>window.location.replace("'.$url1.'")</script></html>',
+            200
+        ),
+    ]);
+
+    expect(fn () => (new MediaDownloader())->downloadFromUrl($url1))
+        ->toThrow(\Exception::class, 'Maximum HTML redirect limit reached');
+});

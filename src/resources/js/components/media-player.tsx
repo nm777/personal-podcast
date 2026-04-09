@@ -1,39 +1,8 @@
-'use client';
-
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ProcessingStatusType } from '@/lib/processing-status';
+import { type LibraryItem } from '@/types';
 import { X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-
-interface MediaFile {
-    id: number;
-    file_path: string;
-    file_hash: string;
-    mime_type: string;
-    filesize: number;
-    duration?: number;
-    public_url?: string;
-    created_at: string;
-    updated_at: string;
-}
-
-interface LibraryItem {
-    id: number;
-    user_id: number;
-    media_file_id: number;
-    title: string;
-    description?: string;
-    source_type: string;
-    source_url?: string;
-    processing_status: ProcessingStatusType;
-    processing_started_at?: string;
-    processing_completed_at?: string;
-    processing_error?: string;
-    created_at: string;
-    updated_at: string;
-    media_file?: MediaFile;
-}
 
 interface MediaPlayerProps {
     libraryItem: LibraryItem;
@@ -51,9 +20,16 @@ export default function MediaPlayer({ libraryItem, isOpen, onClose }: MediaPlaye
 
         const audio = audioRef.current;
         if (audio) {
-            // Listen to media events
-            audio.addEventListener('error', () => setError('Audio loading failed'));
-            audio.addEventListener('canplay', () => setError(null));
+            const handleError = () => setError('Audio loading failed');
+            const handleCanPlay = () => setError(null);
+
+            audio.addEventListener('error', handleError);
+            audio.addEventListener('canplay', handleCanPlay);
+
+            return () => {
+                audio.removeEventListener('error', handleError);
+                audio.removeEventListener('canplay', handleCanPlay);
+            };
         }
     }, [isOpen, libraryItem.media_file]);
 

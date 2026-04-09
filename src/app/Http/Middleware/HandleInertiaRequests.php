@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Inertia\Middleware;
 use Tighten\Ziggy\Ziggy;
 
@@ -51,9 +52,9 @@ class HandleInertiaRequests extends Middleware
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
-            'feeds' => fn (): array => $request->user()
+            'feeds' => Inertia::defer(fn (): array => $request->user()
                 ? $request->user()->feeds()->latest()->get()->toArray()
-                : [],
+                : []),
         ];
     }
 }

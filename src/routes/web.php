@@ -28,10 +28,12 @@ Route::get('youtube/video-info/{videoId}', [YouTubeController::class, 'getVideoI
             $feeds = Auth::user()->feeds()
                 ->withCount('items')
                 ->latest()
+                ->limit(50)
                 ->get();
             $libraryItems = Auth::user()->libraryItems()
                 ->with('mediaFile', 'feeds')
                 ->latest()
+                ->limit(100)
                 ->get();
 
             return Inertia::render('dashboard', [

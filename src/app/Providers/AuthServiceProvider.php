@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Feed;
+use App\Models\LibraryItem;
 use App\Models\User;
 use App\Policies\FeedPolicy;
+use App\Policies\LibraryItemPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
@@ -17,6 +19,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         Feed::class => FeedPolicy::class,
+        LibraryItem::class => LibraryItemPolicy::class,
         User::class => UserPolicy::class,
     ];
 

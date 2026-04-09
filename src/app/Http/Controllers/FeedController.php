@@ -33,10 +33,12 @@ class FeedController extends Controller
     {
         $validated = $request->validated();
 
+        $slug = $this->generateUniqueSlug($validated['title']);
+
         $feed = Auth::user()->feeds()->create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'slug' => Str::slug($validated['title']),
+            'slug' => $slug,
             'user_guid' => Str::uuid(),
             'token' => Str::random(32),
             'is_public' => $validated['is_public'] ?? false,
@@ -71,10 +73,12 @@ class FeedController extends Controller
 
         $validated = $request->validated();
 
+        $slug = $this->generateUniqueSlug($validated['title'], $feed->id);
+
         $feed->update([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
-            'slug' => Str::slug($validated['title']),
+            'slug' => $slug,
             'is_public' => $validated['is_public'] ?? false,
         ]);
 
@@ -128,5 +132,27 @@ class FeedController extends Controller
                 ]
             );
         }
+    }
+
+    private function generateUniqueSlug(string $title, ?int $excludeId = null): string
+    {
+        $slug = Str::slug($title);
+        $originalSlug = $slug;
+        $count = 1;
+
+        $query = Auth::user()->feeds()->where('slug', $slug);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        while ($query->exists()) {
+            $slug = $originalSlug.'-'.$count++;
+            $query = Auth::user()->feeds()->where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
+        }
+
+        return $slug;
     }
 }
