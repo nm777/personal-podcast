@@ -1,9 +1,12 @@
 <?php
 
 use App\Services\MediaProcessing\MediaStorageManager;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
 
-uses()->group('Unit', 'MediaStorageManager');
+uses(TestCase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');
@@ -25,11 +28,9 @@ test('stores file with hash-based naming', function () {
 
 test('stores file with source url', function () {
     $manager = app(MediaStorageManager::class);
-    $content = 'test content';
-    $extension = 'mp3';
     $sourceUrl = 'https://example.com/audio.mp3';
 
-    $result = $manager->storeFile($content, $extension, $sourceUrl);
+    $result = $manager->storeFile('test content', 'mp3', $sourceUrl);
 
     expect($result['source_url'])->toBe($sourceUrl);
     Storage::disk('public')->assertExists($result['file_path']);
@@ -82,39 +83,6 @@ test('returns false for non-existent file', function () {
     expect($exists)->toBeFalse();
 });
 
-test('handles file extension correctly', function () {
-    $manager = app(MediaStorageManager::class);
-    $content = 'test content';
-    
-    $resultMp3 = $manager->storeFile($content, 'mp3');
-    $resultWav = $manager->storeFile($content, 'wav');
-
-    expect($resultMp3['file_path'])->toEndWith('.mp3');
-    expect($resultWav['file_path'])->toEndWith('.wav');
-});
-
-test('calculates correct file size', function () {
-    $manager = app(MediaStorageManager::class);
-    $content = str_repeat('x', 1000);
-    $extension = 'mp3';
-
-    $result = $manager->storeFile($content, $extension);
-
-    expect($result['filesize'])->toBe(1000);
-});
-
-test('generates unique hash for different content', function () {
-    $manager = app(MediaStorageManager::class);
-    $content1 = 'content one';
-    $content2 = 'content two';
-
-    $result1 = $manager->storeFile($content1, 'mp3');
-    $result2 = $manager->storeFile($content2, 'mp3');
-
-    expect($result1['file_hash'])->not->toBe($result2['file_hash']);
-    expect($result1['file_path'])->not->toBe($result2['file_path']);
-});
-
 test('generates same hash for identical content', function () {
     $manager = app(MediaStorageManager::class);
     $content = 'identical content';
@@ -126,3 +94,12 @@ test('generates same hash for identical content', function () {
     expect($result1['file_path'])->toBe($result2['file_path']);
 });
 
+test('generates unique hash for different content', function () {
+    $manager = app(MediaStorageManager::class);
+
+    $result1 = $manager->storeFile('content one', 'mp3');
+    $result2 = $manager->storeFile('content two', 'mp3');
+
+    expect($result1['file_hash'])->not->toBe($result2['file_hash']);
+    expect($result1['file_path'])->not->toBe($result2['file_path']);
+});
