@@ -547,10 +547,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - `server_name podkeep.app` is hardcoded. Must be rebuilt if the domain changes.
 - **Fix:** Use `envsubst` to inject the domain dynamically.
 
-### 9.17 [ ] LOW — Deprecated X-XSS-Protection header
-- **File:** `src/docker/nginx/default.conf:37`
-- `X-XSS-Protection: 1; mode=block` is deprecated. Modern browsers use CSP instead.
-- **Fix:** Remove the header.
+### 9.17 [x] LOW — Deprecated X-XSS-Protection header
+- **File:** `docker/nginx/default.conf:36`
+- Removed `X-XSS-Protection: 1; mode=block`. Modern browsers rely on CSP instead; this header is deprecated and can introduce vulnerabilities.
 
 ### 9.18 [ ] LOW — `latest` tag makes rollbacks difficult
 - **File:** `src/docker-compose.prod.yml:6`
