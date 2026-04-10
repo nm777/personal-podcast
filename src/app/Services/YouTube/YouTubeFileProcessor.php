@@ -86,9 +86,17 @@ class YouTubeFileProcessor
      */
     public function updateLibraryItemWithMetadata(LibraryItem $libraryItem, array $metadata): void
     {
-        if ($metadata && ! $libraryItem->title) {
-            $libraryItem->title = $metadata['title'] ?? $libraryItem->title;
-            $libraryItem->description = $metadata['description'] ?? $libraryItem->description;
+        if ($metadata) {
+            if (! $libraryItem->title) {
+                $libraryItem->title = $metadata['title'] ?? $libraryItem->title;
+                $libraryItem->description = $metadata['description'] ?? $libraryItem->description;
+            }
+
+            if (! $libraryItem->published_at && isset($metadata['upload_date'])) {
+                $libraryItem->published_at = \Carbon\Carbon::createFromFormat('Ymd', $metadata['upload_date'])->startOfDay();
+            }
+
+            $libraryItem->save();
         }
     }
 }

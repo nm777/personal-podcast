@@ -32,6 +32,7 @@ class LibraryItemResource extends JsonResource
             'has_completed' => $this->hasCompleted(),
             'has_failed' => $this->hasFailed(),
             'media_file' => $this->when($this->mediaFile, MediaFileResource::make($this->mediaFile)),
+            'published_at' => $this->published_at,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

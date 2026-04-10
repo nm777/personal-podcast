@@ -17,6 +17,7 @@ class LibraryItem extends Model
         'description',
         'source_type',
         'source_url',
+        'published_at',
         'is_duplicate',
         'duplicate_detected_at',
         'processing_status',
@@ -30,6 +31,7 @@ class LibraryItem extends Model
         return [
             'is_duplicate' => 'boolean',
             'duplicate_detected_at' => 'datetime',
+            'published_at' => 'datetime',
             'processing_started_at' => 'datetime',
             'processing_completed_at' => 'datetime',
             'processing_status' => ProcessingStatusType::class,

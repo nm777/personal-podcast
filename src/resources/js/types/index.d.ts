@@ -49,6 +49,7 @@ export interface LibraryItem {
     processing_started_at?: string;
     processing_completed_at?: string;
     processing_error?: string;
+    published_at?: string;
     created_at: string;
     updated_at: string;
     media_file?: MediaFile | null;

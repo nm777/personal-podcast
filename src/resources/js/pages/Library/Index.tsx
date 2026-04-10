@@ -47,6 +47,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     } = useForm({
         title: '',
         description: '',
+        published_at: '',
     });
 
     // Auto-refresh for processing items using custom polling
@@ -95,6 +96,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         setItemToEdit(item);
         setData('title', item.title);
         setData('description', item.description || '');
+        setData('published_at', item.published_at ? new Date(item.published_at).toISOString().split('T')[0] : '');
         setEditDialogOpen(true);
     };
 
@@ -116,6 +118,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         setItemToEdit(null);
         setData('title', '');
         setData('description', '');
+        setData('published_at', '');
     };
 
     const formatFileSize = (bytes: number) => {
@@ -183,7 +186,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                                     {item.title}
                                                 </button>
                                                 <CardDescription className="text-xs">
-                                                    {new Date(item.created_at).toLocaleDateString()}
+                                                    {new Date(item.published_at || item.created_at).toLocaleDateString()}
                                                 </CardDescription>
                                             </div>
                                         </div>
@@ -292,7 +295,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                 <DialogContent className="sm:max-w-[500px]">
                     <DialogHeader>
                         <DialogTitle>Edit Media Details</DialogTitle>
-                        <DialogDescription>Update the title and description for this media file</DialogDescription>
+                        <DialogDescription>Update the details for this media file</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleEditSubmit}>
                         <div className="space-y-4 py-4">
@@ -317,6 +320,16 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                     rows={3}
                                 />
                                 {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="published_at">Published Date</Label>
+                                <Input
+                                    id="published_at"
+                                    type="date"
+                                    value={data.published_at}
+                                    onChange={(e) => setData('published_at', e.target.value)}
+                                />
+                                {errors.published_at && <p className="text-sm text-destructive">{errors.published_at}</p>}
                             </div>
                         </div>
                         <DialogFooter>

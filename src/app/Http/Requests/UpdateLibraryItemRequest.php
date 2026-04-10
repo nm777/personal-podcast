@@ -25,6 +25,7 @@ class UpdateLibraryItemRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'published_at' => 'nullable|date',
         ];
     }
 
@@ -37,6 +38,7 @@ class UpdateLibraryItemRequest extends FormRequest
             'title.required' => 'The title field is required.',
             'title.max' => 'The title must not exceed 255 characters.',
             'description.max' => 'The description must not exceed 1000 characters.',
+            'published_at.date' => 'The published date must be a valid date.',
         ];
     }
 }

@@ -28,6 +28,7 @@ class LibraryItemFactory extends Factory
             'description' => $this->faker->paragraph(2),
             'source_type' => $this->faker->randomElement(['upload', 'url', 'youtube']),
             'source_url' => $this->faker->optional(0.7)->url(),
+            'published_at' => null,
         ];
     }
 }
