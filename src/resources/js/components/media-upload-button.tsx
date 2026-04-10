@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { type Feed } from '@/types';
 import { useForm } from '@inertiajs/react';
+import { formatFileSize } from '@/lib/format';
 import { AlertCircle, Globe, Loader2, Plus, Upload, Youtube } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 
@@ -246,14 +247,6 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                 onUploadSuccess?.();
             },
         });
-    };
-
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     return (

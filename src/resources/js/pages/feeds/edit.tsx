@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { formatDuration, formatFileSize } from '@/lib/format';
 import { ArrowLeft, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -87,25 +88,6 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
     const getLibraryItem = (libraryItemId: number) => {
         return userLibraryItems.find((item) => item.id === libraryItemId);
-    };
-
-    const formatDuration = (seconds?: number) => {
-        if (!seconds) return 'Unknown';
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = Math.floor(seconds % 60);
-
-        if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-        return `${minutes}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const formatFileSize = (bytes: number) => {
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        if (bytes === 0) return '0 B';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
     };
 
     const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));

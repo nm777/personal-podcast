@@ -141,10 +141,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Handles file upload, URL import, YouTube import, drag-and-drop, URL duplicate checking, YouTube title fetching, and feed assignment.
 - **Fix:** Extract into `useFileUpload`, `useUrlImport`, `useYouTubeImport` hooks and separate presentational sub-components.
 
-### 2.11 [ ] MEDIUM — Duplicate utility functions across files
-- **Files:** `src/resources/js/pages/feeds/edit.tsx:142`, `src/resources/js/pages/Library/Index.tsx:151`, `src/resources/js/components/media-upload-button.tsx:238`
-- `formatFileSize` is implemented three times with slightly different formatting. `formatDuration` is implemented with variations.
-- **Fix:** Extract into `src/resources/js/lib/format.ts` and import everywhere.
+### 2.11 [x] MEDIUM — Duplicate utility functions across files
+- **Files:** `src/resources/js/pages/feeds/edit.tsx`, `src/resources/js/pages/Library/Index.tsx`, `src/resources/js/components/media-upload-button.tsx`
+- Extracted `formatFileSize` and `formatDuration` into `src/resources/js/lib/format.ts`. Removed three inline implementations. All three files now import from the shared module.
 
 ### 2.12 [x] MEDIUM — Starter kit navigation links left in production code
 - **File:** `src/resources/js/components/app-header.tsx:26-37`

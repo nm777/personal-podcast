@@ -12,6 +12,7 @@ import AppLayout from '@/layouts/app-layout';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { type BreadcrumbItem, type LibraryItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
+import { formatFileSize } from '@/lib/format';
 import { AlertCircle, FileAudio, FileVideo, Pencil, Play, RefreshCw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -124,14 +125,6 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     const formatDisplayDate = (dateString: string) => {
         const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
         return new Date(year, month - 1, day).toLocaleDateString();
-    };
-
-    const formatFileSize = (bytes: number) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
     const getFileIcon = (mimeType?: string) => {
