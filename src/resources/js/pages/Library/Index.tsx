@@ -14,7 +14,7 @@ import { type BreadcrumbItem, type LibraryItem } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { formatFileSize } from '@/lib/format';
 import { AlertCircle, FileAudio, FileVideo, Pencil, Play, RefreshCw, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface LibraryIndexProps {
     libraryItems: LibraryItem[];
@@ -51,13 +51,16 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         published_at: '',
     });
 
-    // Auto-refresh for processing items using custom polling
-    useEffect(() => {
-        const hasProcessingItems = libraryItems.some(
-            (item) =>
-                ProcessingStatusHelper.from(item.processing_status).isPending() || ProcessingStatusHelper.from(item.processing_status).isProcessing(),
-        );
+    const hasProcessingItems = useMemo(
+        () =>
+            libraryItems.some(
+                (item) =>
+                    ProcessingStatusHelper.from(item.processing_status).isPending() || ProcessingStatusHelper.from(item.processing_status).isProcessing(),
+            ),
+        [libraryItems],
+    );
 
+    useEffect(() => {
         if (!hasProcessingItems) return;
 
         const interval = setInterval(() => {
@@ -65,7 +68,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         }, 5000);
 
         return () => clearInterval(interval);
-    }, [libraryItems]);
+    }, [hasProcessingItems]);
 
     const handleDeleteClick = (itemId: number) => {
         setItemToDelete(itemId);

@@ -196,10 +196,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - `updateOrCreate()` is called per-item in a foreach loop.
 - **Fix:** Use `upsert()` for batch operations.
 
-### 3.9 [ ] MEDIUM — Polling effect tears down/recreates interval on every reload
-- **File:** `src/resources/js/pages/Library/Index.tsx:84-97`
-- `useEffect` depends on `libraryItems` — every reload changes the reference, triggering interval teardown/recreate.
-- **Fix:** Use Inertia v2's built-in polling, or memoize the "has processing items" boolean.
+### 3.9 [x] MEDIUM — Polling effect tears down/recreates interval on every reload
+- **File:** `src/resources/js/pages/Library/Index.tsx:55-68`
+- `useEffect` depended on `libraryItems` array (new reference every reload). Extracted `hasProcessingItems` into `useMemo` so the interval is only recreated when the boolean value actually changes (items start/stop processing).
 
 ### 3.10 [x] MEDIUM — use-toast useEffect causes listener churn
 - **File:** `src/resources/js/hooks/use-toast.ts:173-181`
