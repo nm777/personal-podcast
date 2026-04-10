@@ -8,11 +8,8 @@ use App\Services\SourceProcessors\SourceProcessorFactory;
 use App\Services\SourceProcessors\UploadStrategy;
 use App\Services\SourceProcessors\UrlStrategy;
 use App\Services\SourceProcessors\YouTubeStrategy;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-
-uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');

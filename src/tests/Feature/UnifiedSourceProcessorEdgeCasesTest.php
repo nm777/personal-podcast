@@ -4,9 +4,6 @@ use App\Http\Requests\LibraryItemRequest;
 use App\Models\User;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use App\Services\SourceProcessors\UnifiedSourceProcessor;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
 
 describe('UnifiedSourceProcessor Edge Cases', function () {
     beforeEach(function () {

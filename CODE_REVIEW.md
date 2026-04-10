@@ -395,10 +395,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Three tests reference `file-examples.com` specifically, making them brittle and tied to a particular website.
 - **Fix:** Use generic example URLs and describe the behavior pattern in test names.
 
-### 7.9 [ ] LOW — Redundant `uses(RefreshDatabase::class)` in multiple test files
-- **Files:** `src/tests/Feature/UnifiedSourceProcessorTest.php:15`, `src/tests/Feature/UnifiedSourceProcessorEdgeCasesTest.php:9`, `src/tests/Feature/ApiResourceTest.php:13`
-- Already applied by `Pest.php` for Feature tests.
-- **Fix:** Remove redundant `uses(RefreshDatabase::class)`.
+### 7.9 [x] LOW — Redundant `uses(RefreshDatabase::class)` in multiple test files
+- **Files:** `src/tests/Feature/ApiResourceTest.php:13`, `src/tests/Feature/UnifiedSourceProcessorEdgeCasesTest.php:9`, `src/tests/Feature/UnifiedSourceProcessorTest.php:15`
+- Removed redundant `uses(RefreshDatabase::class)` from 3 Feature test files. Already applied by `Pest.php` for all Feature tests.
 
 ### 7.10 [x] LOW — Unused `something()` helper in Pest.php
 - **File:** `src/tests/Pest.php:47-49`

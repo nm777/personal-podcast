@@ -7,10 +7,7 @@ use App\Models\Feed;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Resources\MissingValue;
-
-uses(RefreshDatabase::class);
 
 describe('API Resources', function () {
     beforeEach(function () {
