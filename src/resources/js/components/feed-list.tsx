@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
 import { type Feed } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { router, Link } from '@inertiajs/react';
@@ -15,12 +16,20 @@ interface FeedListProps {
 export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     const { toast } = useToast();
     const [revealedFeeds, setRevealedFeeds] = useState<Set<number>>(new Set());
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [feedToDelete, setFeedToDelete] = useState<number | null>(null);
 
-    const handleDelete = (feedId: number) => {
-        if (confirm('Are you sure you want to delete this feed?')) {
-            router.delete(route('feeds.destroy', feedId), {
+    const handleDeleteClick = (feedId: number) => {
+        setFeedToDelete(feedId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (feedToDelete) {
+            router.delete(route('feeds.destroy', feedToDelete), {
                 onSuccess: () => {
-                    // Feed deleted successfully
+                    setDeleteDialogOpen(false);
+                    setFeedToDelete(null);
                 },
                 onError: () => {
                     toast({
@@ -28,6 +37,8 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                         description: 'Failed to delete feed. Please try again.',
                         variant: 'destructive',
                     });
+                    setDeleteDialogOpen(false);
+                    setFeedToDelete(null);
                 },
             });
         }
@@ -121,6 +132,7 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     }
 
     return (
+        <>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {feeds.map((feed) => (
                 <Card key={feed.id} className="min-w-0">
@@ -174,7 +186,7 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                                                 <Edit className="h-4 w-4" />
                                             </Link>
                                         </Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)}>
+                                        <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(feed.id)}>
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
                                     </>
@@ -185,5 +197,16 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                 </Card>
             ))}
         </div>
+
+        <DeleteConfirmDialog
+            isOpen={deleteDialogOpen}
+            onClose={() => { setDeleteDialogOpen(false); setFeedToDelete(null); }}
+            onConfirm={handleDeleteConfirm}
+            title="Delete Feed"
+            description="Are you sure you want to delete this feed? This action cannot be undone."
+            confirmText="Delete Feed"
+            variant="destructive"
+        />
+        </>
     );
 }

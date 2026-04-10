@@ -425,10 +425,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/app/Http/Middleware/AdminMiddleware.php`, `src/app/Http/Middleware/ApprovedUserMiddleware.php`, `src/app/Http/Controllers/FeedController.php`, `src/app/Http/Controllers/LibraryController.php`
 - Standardized all auth access to `$request->user()`. Removed `Auth` facade imports from both controllers and AdminMiddleware. Controllers now inject `Request` where needed.
 
-### 8.4 [ ] MEDIUM — Inconsistent delete confirmation UX
-- **Files:** `src/resources/js/components/feed-list.tsx:30` (browser `confirm()`), `src/resources/js/pages/Library/Index.tsx:306-315` (`DeleteConfirmDialog`), `src/resources/js/components/delete-user.tsx:42-85` (inline Dialog)
-- Three different approaches to confirming destructive actions.
-- **Fix:** Use `DeleteConfirmDialog` everywhere.
+### 8.4 [x] MEDIUM — Inconsistent delete confirmation UX
+- **Files:** `src/resources/js/components/feed-list.tsx`
+- Replaced browser `confirm()` with the existing `DeleteConfirmDialog` component for consistent destructive action confirmation across the app.
 
 ### 8.5 [ ] MEDIUM — Inconsistent error styling across forms
 - **Files:** `src/resources/js/pages/dashboard.tsx:109`, `src/resources/js/pages/feeds/edit.tsx:186`, `src/resources/js/components/media-upload-button.tsx:318`, `src/resources/js/pages/admin/users/index.tsx:152`
