@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatusType;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -67,7 +68,7 @@ class User extends Authenticatable
      */
     public function isApproved(): bool
     {
-        return $this->approval_status === 'approved';
+        return $this->approval_status === ApprovalStatusType::APPROVED;
     }
 
     /**
@@ -75,7 +76,7 @@ class User extends Authenticatable
      */
     public function isPending(): bool
     {
-        return $this->approval_status === 'pending';
+        return $this->approval_status === ApprovalStatusType::PENDING;
     }
 
     /**
@@ -83,7 +84,7 @@ class User extends Authenticatable
      */
     public function isRejected(): bool
     {
-        return $this->approval_status === 'rejected';
+        return $this->approval_status === ApprovalStatusType::REJECTED;
     }
 
     /**
@@ -92,7 +93,7 @@ class User extends Authenticatable
     public function approve(): void
     {
         $this->update([
-            'approval_status' => 'approved',
+            'approval_status' => ApprovalStatusType::APPROVED,
             'approved_at' => now(),
             'rejected_at' => null,
             'rejection_reason' => null,
@@ -105,7 +106,7 @@ class User extends Authenticatable
     public function reject(?string $reason = null): void
     {
         $this->update([
-            'approval_status' => 'rejected',
+            'approval_status' => ApprovalStatusType::REJECTED,
             'rejected_at' => now(),
             'rejection_reason' => $reason,
         ]);
@@ -122,6 +123,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'approval_status' => ApprovalStatusType::class,
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
         ];

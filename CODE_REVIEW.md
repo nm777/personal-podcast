@@ -126,10 +126,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - When user A duplicates user B's file, user A's library item links to user B's `MediaFile`. If user B deletes their account, user A gets a dangling reference.
 - **Fix:** Create separate `MediaFile` records per user pointing to the same physical file, or implement reference counting.
 
-### 2.8 [ ] MEDIUM — approval_status uses magic strings instead of enum
+### 2.8 [x] MEDIUM — approval_status uses magic strings instead of enum
 - **File:** `src/app/Models/User.php:70,78,86,94-95,108`
-- Hardcoded strings `'approved'`, `'pending'`, `'rejected'` instead of an enum like `ProcessingStatusType`.
-- **Fix:** Create an `ApprovalStatusType` enum.
+- Created `App\Enums\ApprovalStatusType` with `PENDING`, `APPROVED`, `REJECTED` cases. Added enum cast to User model. Updated all model methods to use enum values instead of hardcoded strings.
 
 ### 2.9 [ ] MEDIUM — Library/Index.tsx too large (365 lines, 7 responsibilities)
 - **File:** `src/resources/js/pages/Library/Index.tsx`
