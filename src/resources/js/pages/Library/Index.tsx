@@ -121,6 +121,11 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         setData('published_at', '');
     };
 
+    const formatDisplayDate = (dateString: string) => {
+        const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+        return new Date(year, month - 1, day).toLocaleDateString();
+    };
+
     const formatFileSize = (bytes: number) => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -186,7 +191,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                                     {item.title}
                                                 </button>
                                                 <CardDescription className="text-xs">
-                                                    {new Date(item.published_at || item.created_at).toLocaleDateString()}
+                                                    {formatDisplayDate(item.published_at || item.created_at)}
                                                 </CardDescription>
                                             </div>
                                         </div>
