@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { type Feed } from '@/types';
 import { useForm } from '@inertiajs/react';
 import { formatFileSize } from '@/lib/format';
+import axios from 'axios';
 import { AlertCircle, Globe, Loader2, Plus, Upload, Youtube } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 
@@ -91,26 +92,9 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
 
         setIsCheckingUrl(true);
         try {
-            const response = await fetch('/check-url-duplicate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                    Accept: 'application/json',
-                },
-                body: JSON.stringify({ url }),
-                credentials: 'same-origin',
-            });
+            const response = await axios.post('/check-url-duplicate', { url });
 
-            const responseText = await response.text();
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${responseText}`);
-            }
-
-            const result = JSON.parse(responseText);
-
-            if (result.is_duplicate) {
+            if (response.data.is_duplicate) {
                 setUrlDuplicateWarning(
                     'This URL is a duplicate of a file already in your library. The duplicate will be removed automatically after submission.',
                 );
@@ -118,7 +102,6 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                 setUrlDuplicateWarning(null);
             }
         } catch (error) {
-            // If duplicate check fails, continue without warning
             console.error('URL duplicate check failed:', error);
             setUrlDuplicateWarning(null);
         } finally {

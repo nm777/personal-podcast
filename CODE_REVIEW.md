@@ -254,10 +254,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Http/Controllers/FeedController.php:43`
 - Changed `Str::random(32)` to `Str::random(64)` for stronger private feed access tokens.
 
-### 4.9 [ ] MEDIUM — Fragile CSRF token retrieval in manual fetch
-- **File:** `src/resources/js/components/media-upload-button.tsx:84`
-- The duplicate URL check performs a manual `fetch()` with `document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''`. If the meta tag is missing, the fallback is an empty string.
-- **Fix:** Use the configured Axios instance (already includes CSRF) instead of raw `fetch()`.
+### 4.9 [x] MEDIUM — Fragile CSRF token retrieval in manual fetch
+- **File:** `src/resources/js/components/media-upload-button.tsx:87-113`
+- Replaced raw `fetch()` with `axios.post()`. Axios is already configured by Inertia with CSRF tokens, so manual `document.querySelector` for the meta tag is no longer needed.
 
 ### 4.10 [x] MEDIUM — MediaController streams files instead of forcing download
 - **File:** `src/app/Http/Controllers/MediaController.php:66`
