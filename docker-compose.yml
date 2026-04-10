@@ -8,6 +8,7 @@ services:
       - ./src:/var/www/html
     environment:
       - PHP_FPM_LISTEN=0.0.0.0:9000
+      - RUN_MIGRATIONS=true
     networks:
       - app
 

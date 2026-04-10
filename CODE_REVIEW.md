@@ -490,10 +490,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - No health checks defined for app, web, or worker services. Docker cannot determine if services are actually healthy.
 - **Fix:** Add health checks: `php-fpm -t` for app, `wget --spider` for web, `php artisan queue:status` for worker.
 
-### 9.3 [ ] HIGH — Auto-migrate on every container start
-- **File:** `src/docker-entrypoint.sh:11`
-- `php artisan migrate --force` runs unconditionally on every startup. Destructive migrations in production could cause data loss.
-- **Fix:** Gate behind an env var: `if [ "${RUN_MIGRATIONS}" = "true" ]; then ...`.
+### 9.3 [x] HIGH — Auto-migrate on every container start
+- **File:** `docker-entrypoint.sh:11`
+- Wrapped `php artisan migrate --force` behind `RUN_MIGRATIONS=true` env var check. Dev docker-compose sets `RUN_MIGRATIONS=true` for convenience. Production must opt in explicitly.
 
 ### 9.4 [ ] HIGH — Permissive CSP in nginx (also listed in Security)
 - **File:** `src/docker/nginx/default.conf:39`
