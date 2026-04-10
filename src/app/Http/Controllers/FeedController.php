@@ -56,7 +56,7 @@ class FeedController extends Controller
 
         $feed->load(['items.libraryItem', 'items.libraryItem.mediaFile']);
 
-        $userLibraryItems = $request->user()->libraryItems()->with('mediaFile')->get();
+        $userLibraryItems = $request->user()->libraryItems()->with('mediaFile')->limit(100)->get();
 
         return Inertia::render('feeds/edit', [
             'feed' => $feed,

@@ -182,10 +182,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/routes/web.php:28-35`
 - Added `->limit(50)` for feeds and `->limit(100)` for library items on the dashboard route.
 
-### 3.6 [ ] MEDIUM — FeedController::edit loads ALL user library items
-- **File:** `src/app/Http/Controllers/FeedController.php:57`
-- `$userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->get()` loads every library item.
-- **Fix:** Paginate or lazy-load library items in the UI.
+### 3.6 [x] MEDIUM — FeedController::edit loads ALL user library items
+- **File:** `src/app/Http/Controllers/FeedController.php:59`
+- Added `->limit(100)` to the library items query on the feed edit page.
 
 ### 3.7 [x] MEDIUM — Duplicate file hash calculated twice per upload
 - **File:** `src/app/Services/DuplicateDetectionService.php:90-104`
