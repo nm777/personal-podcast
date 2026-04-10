@@ -24,12 +24,11 @@ export interface NavItem {
 
 export interface MediaFile {
     id: number;
-    file_path: string;
+    public_url?: string;
     file_hash: string;
     mime_type: string;
     filesize: number;
     duration?: number;
-    public_url?: string;
     source_url?: string;
     created_at: string;
     updated_at: string;

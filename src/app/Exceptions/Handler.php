@@ -17,20 +17,6 @@ use Throwable;
 class Handler extends ExceptionHandler
 {
     /**
-     * A list of exception types with their corresponding custom log levels.
-     */
-    protected $levels = [
-        'emergency' => 'emergency',
-        'alert' => 'alert',
-        'critical' => 'critical',
-        'error' => 'error',
-        'warning' => 'warning',
-        'notice' => 'notice',
-        'info' => 'info',
-        'debug' => 'debug',
-    ];
-
-    /**
      * A list of the exception types that should not be reported.
      */
     protected $dontReport = [

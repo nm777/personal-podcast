@@ -20,8 +20,12 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                 onSuccess: () => {
                     // Feed deleted successfully
                 },
-                onError: (errors) => {
-                    console.error('Error deleting feed:', errors);
+                onError: () => {
+                    toast({
+                        title: 'Error',
+                        description: 'Failed to delete feed. Please try again.',
+                        variant: 'destructive',
+                    });
                 },
             });
         }

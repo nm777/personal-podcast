@@ -54,20 +54,17 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/components/media-player.tsx:49-58`
 - Added named handler functions and a cleanup function in the `useEffect` return that calls `removeEventListener` for both `error` and `canplay`.
 
-### 1.11 [ ] MEDIUM — Race condition in YouTube title fetching
-- **File:** `src/resources/js/components/media-upload-button.tsx:127-174`
-- Multiple concurrent fetches can arrive out of order, causing stale titles to overwrite newer ones.
-- **Fix:** Use an `AbortController` or track the latest request with a ref.
+### 1.11 [x] MEDIUM — Race condition in YouTube title fetching
+- **File:** `src/resources/js/components/media-upload-button.tsx:44-60`
+- Multiple concurrent YouTube title fetches could arrive out of order. Added `AbortController` ref that aborts the previous request before starting a new one. Ignored `AbortError` in the catch block.
 
-### 1.12 [ ] MEDIUM — Handler `$levels` configuration is meaningless
-- **File:** `src/app/Exceptions/Handler.php:22-30`
-- The `$levels` property maps log level strings to themselves (e.g., `'emergency' => 'emergency'`). It's supposed to map exception classes to log levels. As configured, it has no effect.
-- **Fix:** Remove the property or map actual exception classes, e.g., `[ValidationException::class => 'info']`.
+### 1.12 [x] MEDIUM — Handler `$levels` configuration is meaningless
+- **File:** `src/app/Exceptions/Handler.php`
+- The `$levels` property mapped log level strings to themselves (e.g., `'emergency' => 'emergency'`). Removed the meaningless property.
 
-### 1.13 [ ] MEDIUM — Admin reject dialog state management bug
-- **File:** `src/resources/js/pages/admin/users/index.tsx:130-177`
-- Each table row renders its own `<Dialog>` component. Multiple Dialog instances compete for the same state. The "Cancel" button clears `rejectingUser` but doesn't actually close the Dialog.
-- **Fix:** Use a single controlled Dialog outside the table, controlled by `rejectingUser` state.
+### 1.13 [x] MEDIUM — Admin reject dialog state management bug
+- **File:** `src/resources/js/pages/admin/users/index.tsx`
+- Each table row rendered its own `<Dialog>` component competing for state. Refactored to a single controlled Dialog outside the table, controlled by `rejectingUser` state via `open`/`onOpenChange` props.
 
 ### 1.14 [x] MEDIUM — Library delete dialog closes on success
 - **File:** `src/resources/js/pages/Library/Index.tsx:104-113`
@@ -82,10 +79,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/pages/feeds/edit.tsx:240`
 - Changed `key={index}` to `key={item.library_item_id}`.
 
-### 1.17 [ ] LOW — Duplicate `onChange` and `onInput` handlers on form inputs
-- **Files:** `src/resources/js/pages/auth/login.tsx:56-57,80-81`, `src/resources/js/pages/auth/register.tsx:50-51,68-69,86-87,104-105`, `src/resources/js/pages/auth/reset-password.tsx:70,86`
-- Both handlers call `setData` with the same value, causing redundant state updates.
-- **Fix:** Remove the `onInput` handlers. `onChange` is sufficient for React controlled inputs.
+### 1.17 [x] LOW — Duplicate `onChange` and `onInput` handlers on form inputs
+- **Files:** `src/resources/js/pages/auth/login.tsx`, `src/resources/js/pages/auth/register.tsx`, `src/resources/js/pages/auth/reset-password.tsx`
+- Both handlers called `setData` with the same value, causing redundant state updates. Removed all `onInput` handlers — `onChange` is sufficient for React controlled inputs.
 
 ### 1.18 [x] LOW — `addLibraryItem` uses sentinel `id: 0` that could conflict
 - **File:** `src/resources/js/pages/feeds/edit.tsx:87`
@@ -154,10 +150,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/components/app-header.tsx:26-37`
 - Emptied `rightNavItems` array. The Laravel React Starter Kit GitHub and docs links no longer render.
 
-### 2.13 [ ] LOW — Empty footer navigation rendered unnecessarily
-- **File:** `src/resources/js/components/app-sidebar.tsx:33,85`
-- `footerNavItems` is `[]` but `NavFooter` still renders wrapping elements.
-- **Fix:** Conditionally render `<NavFooter>` only when `footerNavItems.length > 0`.
+### 2.13 [x] LOW — Empty footer navigation rendered unnecessarily
+- **File:** `src/resources/js/components/app-sidebar.tsx:84-85`
+- `footerNavItems` is `[]` but `NavFooter` still rendered wrapping elements. Added conditional: `{footerNavItems.length > 0 && ...}`.
 
 ### 2.14 [ ] LOW — FeedController and LibraryController lack return type declarations
 - **Files:** `src/app/Http/Controllers/FeedController.php:18,32,51`, `src/app/Http/Controllers/LibraryController.php:17,32`
@@ -193,10 +188,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - `$userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->get()` loads every library item.
 - **Fix:** Paginate or lazy-load library items in the UI.
 
-### 3.7 [ ] MEDIUM — Duplicate file hash calculated twice per upload
+### 3.7 [x] MEDIUM — Duplicate file hash calculated twice per upload
 - **File:** `src/app/Services/DuplicateDetectionService.php:90-104`
-- `analyzeFileUpload()` calls both `findUserDuplicate()` and `findGlobalDuplicate()`, each computing the hash independently.
-- **Fix:** Compute hash once and pass it to both methods.
+- `analyzeFileUpload()` called both `findUserDuplicate()` and `findGlobalDuplicate()`, each computing the hash independently plus a third call for the result array. Refactored to compute hash once and pass it as `$precomputedHash` to both lookup methods.
 
 ### 3.8 [ ] MEDIUM — FeedController::syncFeedItems executes N queries in a loop
 - **File:** `src/app/Http/Controllers/FeedController.php:121-130`
@@ -248,10 +242,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Settings routes only required `auth`, while all other routes require `auth,verified,approved`. Unverified users could change passwords and delete accounts.
 - **Fix:** Changed middleware from `'auth'` to `['auth', 'verified', 'approved']`.
 
-### 4.5 [ ] MEDIUM — Audio source URL uses raw file_path from backend
-- **File:** `src/resources/js/components/media-player.tsx:82`
-- `` `/files/${libraryItem.media_file.file_path}` `` could allow path traversal if `file_path` isn't sanitized.
-- **Fix:** Use `public_url` instead of `file_path`. Don't send `file_path` to the client.
+### 4.5 [x] MEDIUM — Audio source URL uses raw file_path from backend
+- **File:** `src/app/Http/Resources/MediaFileResource.php`, `src/resources/js/components/media-player.tsx`
+- Removed `file_path` from `MediaFileResource` API response to prevent path traversal exposure. Media player now uses only `public_url`. Updated TypeScript `MediaFile` type to remove `file_path`.
 
 ### 4.6 [ ] MEDIUM — Nginx upload limit misaligned with PHP
 - **Files:** `src/docker/nginx/default.conf:7`, `src/php.ini:5-17`
@@ -263,10 +256,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Tokens appear in server logs, proxy logs, and browser history.
 - **Fix:** Consider HTTP Basic Auth or path-based tokens. Document the trade-off for users.
 
-### 4.8 [ ] MEDIUM — Feed token could be more cryptographically secure
-- **File:** `src/app/Http/Controllers/FeedController.php:41`
-- `Str::random(32)` is reasonable but for private feed access, `Str::random(64)` would be stronger.
-- **Fix:** Use `Str::random(64)` for feed tokens.
+### 4.8 [x] MEDIUM — Feed token could be more cryptographically secure
+- **File:** `src/app/Http/Controllers/FeedController.php:43`
+- Changed `Str::random(32)` to `Str::random(64)` for stronger private feed access tokens.
 
 ### 4.9 [ ] MEDIUM — Fragile CSRF token retrieval in manual fetch
 - **File:** `src/resources/js/components/media-upload-button.tsx:84`
@@ -291,20 +283,17 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Any rendering error causes a white screen. Created `error-boundary.tsx` with class-based ErrorBoundary wrapping `<App>`. Shows friendly message with reload button, includes error details in dev mode.
 - **Fix:** Created `components/error-boundary.tsx` and wrapped `<App>` in `<ErrorBoundary>` in `app.tsx`.
 
-### 5.2 [ ] MEDIUM — DuplicateDetectionService swallows exceptions
-- **File:** `src/app/Services/DuplicateDetectionService.php:17-24`
-- `calculateFileHash()` catches all exceptions silently. A misconfigured storage disk produces incorrect results with no indication.
-- **Fix:** Log the exception before falling through.
+### 5.2 [x] MEDIUM — DuplicateDetectionService swallows exceptions
+- **File:** `src/app/Services/DuplicateDetectionService.php:22`
+- `calculateFileHash()` caught all exceptions silently. Added `Log::warning()` before falling through so misconfigured storage is visible in logs.
 
-### 5.3 [ ] MEDIUM — Form error handlers only log to console
-- **Files:** `src/resources/js/pages/dashboard.tsx:61`, `src/resources/js/components/create-feed-form.tsx:31`, `src/resources/js/components/feed-list.tsx:36`
-- Server errors (500, network failures) are silently ignored — users get no visual feedback.
-- **Fix:** Show toast notifications on error.
+### 5.3 [x] MEDIUM — Form error handlers only log to console
+- **Files:** `src/resources/js/components/create-feed-form.tsx`, `src/resources/js/components/feed-list.tsx`
+- Server errors were silently ignored — users got no visual feedback. Added toast notifications via `useToast()` on `onError` callbacks.
 
-### 5.4 [ ] MEDIUM — RssController has no error handling for malformed XML
-- **File:** `src/app/Http/Controllers/RssController.php:33-38`
-- Malformed XML from the Blade template would be cached for 15 minutes.
-- **Fix:** Wrap in try/catch with `libxml_use_internal_errors(true)`.
+### 5.4 [x] MEDIUM — RssController has no error handling for malformed XML
+- **File:** `src/app/Http/Controllers/RssController.php:30-39`
+- Malformed XML from the Blade template would crash in `DOMDocument::loadXML()` and be cached for 15 minutes. Added `libxml_use_internal_errors(true)`, error collection, logging on failure, and graceful fallback to raw XML output.
 
 ### 5.5 [x] MEDIUM — ProcessMediaFile uses proper DI injection
 - **File:** `src/app/Jobs/ProcessMediaFile.php:30-35`
@@ -314,10 +303,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/components/media-player.tsx`
 - Added overlay click handler (`e.target === e.currentTarget`) and Escape key listener in the `useEffect` cleanup.
 
-### 5.7 [ ] LOW — RssController error handling for malformed XML
-- **File:** `src/app/Http/Controllers/RssController.php:33-38`
-- `$dom->loadXML($rssXml)` can throw on malformed XML. Wrapped in `Cache::remember()`, so a bad result could be cached for 15 minutes.
-- **Fix:** Use `libxml_use_internal_errors(true)` and validate before caching.
+### 5.7 [x] LOW — RssController error handling for malformed XML
+- **File:** `src/app/Http/Controllers/RssController.php`
+- Same issue as 5.4. Resolved together with libxml error handling.
 
 ---
 
@@ -336,15 +324,13 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - LibraryItemRequest uses `'required|string|max:255'` while FeedRequest uses `['required', 'string', 'max:255']`.
 - **Fix:** Standardize all form requests to array syntax.
 
-### 6.4 [ ] MEDIUM — `@ts-expect-error` and `as any` in SSR entry
-- **File:** `src/resources/js/ssr.tsx:16-24`
-- Four `@ts-expect-error` comments and one `as any` cast suppress type errors when setting up Ziggy's `route` function.
-- **Fix:** Create a proper type declaration for the global `route` function.
+### 6.4 [x] MEDIUM — `@ts-expect-error` and `as any` in SSR entry
+- **File:** `src/resources/js/ssr.tsx`
+- Removed 4 `@ts-expect-error` comments and `as any` cast. Used `Parameters<typeof route>[3]` for a single targeted type assertion on the ziggy config object. Removed unused `RouteName` import.
 
-### 6.5 [ ] MEDIUM — `usePage().props as PageProps` instead of generic parameter
+### 6.5 [x] MEDIUM — `usePage().props as PageProps` instead of generic parameter
 - **File:** `src/resources/js/pages/admin/users/index.tsx:33`
-- Uses type assertion instead of the generic `usePage<PageProps>()`. Bypasses compile-time checking.
-- **Fix:** `const { users, flash } = usePage<PageProps>().props;`
+- Changed from `usePage().props as PageProps` to `usePage<PageProps>().props` for proper compile-time type checking.
 
 ### 6.6 [ ] LOW — `isDuplicate()` returns `?MediaFile`, not `bool`
 - **File:** `src/app/Models/MediaFile.php:65-76`
@@ -446,10 +432,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/database/migrations/2026_04_09_202800_add_unique_constraint_to_feed_items.php`, `src/app/Jobs/AddLibraryItemToFeedsJob.php:34`
 - Added unique index on `(feed_id, library_item_id)`. Changed `FeedItem::create()` to `FeedItem::firstOrCreate()` to prevent duplicate feed items from duplicate job dispatches.
 
-### 8.3 [ ] MEDIUM — Inconsistent auth helper usage
-- **Files:** `src/app/Http/Middleware/AdminMiddleware.php:19`, `src/app/Http/Middleware/ApprovedUserMiddleware.php:18`, `src/app/Http/Controllers/FeedController.php:7`
-- Alternates between `Auth::user()`, `auth()->user()`, and `Auth::user()`.
-- **Fix:** Standardize on `$request->user()` in controllers.
+### 8.3 [x] MEDIUM — Inconsistent auth helper usage
+- **Files:** `src/app/Http/Middleware/AdminMiddleware.php`, `src/app/Http/Middleware/ApprovedUserMiddleware.php`, `src/app/Http/Controllers/FeedController.php`, `src/app/Http/Controllers/LibraryController.php`
+- Standardized all auth access to `$request->user()`. Removed `Auth` facade imports from both controllers and AdminMiddleware. Controllers now inject `Request` where needed.
 
 ### 8.4 [ ] MEDIUM — Inconsistent delete confirmation UX
 - **Files:** `src/resources/js/components/feed-list.tsx:30` (browser `confirm()`), `src/resources/js/pages/Library/Index.tsx:306-315` (`DeleteConfirmDialog`), `src/resources/js/components/delete-user.tsx:42-85` (inline Dialog)
@@ -470,10 +455,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/resources/js/pages/dashboard.tsx:125` (plain HTML), `src/resources/js/pages/feeds/edit.tsx:202` (plain HTML), `src/resources/js/pages/admin/users/index.tsx:84` (shadcn), `src/resources/js/components/media-upload-button.tsx:400` (shadcn)
 - **Fix:** Standardize on the shadcn `Checkbox` component.
 
-### 8.8 [ ] MEDIUM — `feed-list.tsx` uses `<a>` for internal navigation
-- **File:** `src/resources/js/components/feed-list.tsx:154`
-- Causes a full page reload instead of Inertia SPA navigation.
-- **Fix:** Replace with Inertia's `<Link>`.
+### 8.8 [x] MEDIUM — `feed-list.tsx` uses `<a>` for internal navigation
+- **File:** `src/resources/js/components/feed-list.tsx`
+- Already fixed in 8.1 — edit button now uses Inertia `<Link>`. The remaining `<a>` tag is for RSS feed URLs with `target="_blank"` which is correct for cross-origin links.
 
 ### 8.9 [ ] MEDIUM — UploadStrategy hardcodes cleanup delay
 - **File:** `src/app/Services/SourceProcessors/UploadStrategy.php:23`
@@ -485,10 +469,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Each strategy and processor has its own message methods that can diverge.
 - **Fix:** Have all processors delegate to the strategy for messages, or centralize in one location.
 
-### 8.11 [ ] MEDIUM — MediaFileFactory missing user_id, LibraryItemFactory missing processing_status
-- **Files:** `src/database/factories/MediaFileFactory.php:22`, `src/database/factories/LibraryItemFactory.php:22`
-- MediaFileFactory doesn't include `user_id` (required after migration). LibraryItemFactory missing `processing_status` and `is_duplicate`.
-- **Fix:** Add missing fields to factory definitions.
+### 8.11 [x] MEDIUM — MediaFileFactory missing user_id, LibraryItemFactory missing processing_status
+- **Files:** `src/database/factories/MediaFileFactory.php`, `src/database/factories/LibraryItemFactory.php`
+- Added `user_id => User::factory()` to MediaFileFactory. Added `processing_status => COMPLETED` and `is_duplicate => false` to LibraryItemFactory defaults.
 
 ### 8.12 [ ] LOW — Inconsistent component export styles
 - **Files:** Various

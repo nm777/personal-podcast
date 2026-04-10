@@ -54,7 +54,6 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            onInput={(e) => setData('email', (e.target as HTMLInputElement).value)}
                             placeholder="email@example.com"
                         />
                         <InputError message={errors.email} />
@@ -78,7 +77,6 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             placeholder="Password"
                         />
                         <InputError message={errors.password} />

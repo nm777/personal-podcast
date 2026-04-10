@@ -7,7 +7,7 @@ use App\Http\Requests\UpdateLibraryItemRequest;
 use App\Models\LibraryItem;
 use App\ProcessingStatusType;
 use App\Services\SourceProcessors\SourceProcessorFactory;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -15,14 +15,14 @@ use Inertia\Inertia;
 
 class LibraryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $libraryItems = Auth::user()->libraryItems()
+        $libraryItems = $request->user()->libraryItems()
             ->with('mediaFile')
             ->latest()
             ->get();
 
-        $feeds = Auth::user()->feeds()->latest()->get();
+        $feeds = $request->user()->feeds()->latest()->get();
 
         return Inertia::render('Library/Index', [
             'libraryItems' => $libraryItems,

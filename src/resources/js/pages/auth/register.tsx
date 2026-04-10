@@ -48,7 +48,6 @@ export default function Register() {
                             autoComplete="name"
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
-                            onInput={(e) => setData('name', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Full name"
                         />
@@ -66,7 +65,6 @@ export default function Register() {
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            onInput={(e) => setData('email', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="email@example.com"
                         />
@@ -84,7 +82,6 @@ export default function Register() {
                             autoComplete="new-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Password"
                         />
@@ -102,7 +99,6 @@ export default function Register() {
                             autoComplete="new-password"
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
-                            onInput={(e) => setData('password_confirmation', (e.target as HTMLInputElement).value)}
                             disabled={processing}
                             placeholder="Confirm password"
                         />

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class DuplicateDetectionService
@@ -20,7 +21,10 @@ class DuplicateDetectionService
                 return hash_file('sha256', $fullPath);
             }
         } catch (\Exception $e) {
-            // Fall through to fallback
+            Log::warning('Failed to calculate file hash from storage path', [
+                'path' => $filePath,
+                'error' => $e->getMessage(),
+            ]);
         }
 
         // Fallback to direct file path
@@ -34,9 +38,9 @@ class DuplicateDetectionService
     /**
      * Check if a file is a duplicate globally by calculating its hash.
      */
-    public static function findGlobalDuplicate(string $filePath): ?MediaFile
+    public static function findGlobalDuplicate(string $filePath, ?string $precomputedHash = null): ?MediaFile
     {
-        $fileHash = self::calculateFileHash($filePath);
+        $fileHash = $precomputedHash ?? self::calculateFileHash($filePath);
 
         if (! $fileHash) {
             return null;
@@ -48,9 +52,9 @@ class DuplicateDetectionService
     /**
      * Check if a file is a duplicate for a specific user by calculating its hash.
      */
-    public static function findUserDuplicate(string $filePath, int $userId): ?MediaFile
+    public static function findUserDuplicate(string $filePath, int $userId, ?string $precomputedHash = null): ?MediaFile
     {
-        $fileHash = self::calculateFileHash($filePath);
+        $fileHash = $precomputedHash ?? self::calculateFileHash($filePath);
 
         if (! $fileHash) {
             return null;
@@ -89,15 +93,17 @@ class DuplicateDetectionService
      */
     public static function analyzeFileUpload(string $filePath, int $userId): array
     {
-        $userDuplicate = self::findUserDuplicate($filePath, $userId);
-        $globalDuplicate = self::findGlobalDuplicate($filePath);
+        $fileHash = self::calculateFileHash($filePath);
+
+        $userDuplicate = self::findUserDuplicate($filePath, $userId, $fileHash);
+        $globalDuplicate = self::findGlobalDuplicate($filePath, $fileHash);
 
         return [
             'is_user_duplicate' => (bool) $userDuplicate,
             'is_global_duplicate' => (bool) $globalDuplicate,
             'user_duplicate_media_file' => $userDuplicate,
             'global_duplicate_media_file' => $globalDuplicate,
-            'file_hash' => self::calculateFileHash($filePath),
+            'file_hash' => $fileHash,
             'should_link_to_user_duplicate' => (bool) $userDuplicate,
             'should_link_to_global_duplicate' => ! $userDuplicate && (bool) $globalDuplicate,
             'should_create_new_file' => ! $userDuplicate && ! $globalDuplicate,

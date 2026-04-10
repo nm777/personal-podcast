@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\FeedRequest;
 use App\Models\Feed;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -15,11 +15,11 @@ class FeedController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $feeds = Auth::user()->feeds()->latest()->get();
+        $feeds = $request->user()->feeds()->latest()->get();
 
-        if (request()->expectsJson()) {
+        if ($request->expectsJson()) {
             return response()->json($feeds);
         }
 
@@ -35,12 +35,12 @@ class FeedController extends Controller
 
         $slug = $this->generateUniqueSlug($validated['title']);
 
-        $feed = Auth::user()->feeds()->create([
+        $feed = $request->user()->feeds()->create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
             'slug' => $slug,
             'user_guid' => Str::uuid(),
-            'token' => Str::random(32),
+            'token' => Str::random(64),
             'is_public' => $validated['is_public'] ?? false,
         ]);
 
@@ -50,13 +50,13 @@ class FeedController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Feed $feed)
+    public function edit(Request $request, Feed $feed)
     {
         Gate::authorize('update', $feed);
 
         $feed->load(['items.libraryItem', 'items.libraryItem.mediaFile']);
 
-        $userLibraryItems = Auth::user()->libraryItems()->with('mediaFile')->get();
+        $userLibraryItems = $request->user()->libraryItems()->with('mediaFile')->get();
 
         return Inertia::render('feeds/edit', [
             'feed' => $feed,
@@ -95,7 +95,7 @@ class FeedController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Feed $feed)
+    public function destroy(Request $request, Feed $feed)
     {
         Gate::authorize('delete', $feed);
 
@@ -104,7 +104,7 @@ class FeedController extends Controller
 
         $feed->delete();
 
-        if (request()->expectsJson()) {
+        if ($request->expectsJson()) {
             return response()->json(null, 204);
         }
 
@@ -140,14 +140,15 @@ class FeedController extends Controller
         $originalSlug = $slug;
         $count = 1;
 
-        $query = Auth::user()->feeds()->where('slug', $slug);
+        $user = request()->user();
+        $query = $user->feeds()->where('slug', $slug);
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
 
         while ($query->exists()) {
             $slug = $originalSlug.'-'.$count++;
-            $query = Auth::user()->feeds()->where('slug', $slug);
+            $query = $user->feeds()->where('slug', $slug);
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }

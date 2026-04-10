@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\ProcessingStatusType;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -28,6 +29,8 @@ class LibraryItemFactory extends Factory
             'description' => $this->faker->paragraph(2),
             'source_type' => $this->faker->randomElement(['upload', 'url', 'youtube']),
             'source_url' => $this->faker->optional(0.7)->url(),
+            'processing_status' => ProcessingStatusType::COMPLETED,
+            'is_duplicate' => false,
             'published_at' => null,
         ];
     }

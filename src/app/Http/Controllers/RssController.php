@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Feed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 
 class RssController extends Controller
@@ -27,14 +28,28 @@ class RssController extends Controller
         $cacheKey = "rss.{$feed->id}";
         $cacheDuration = config('constants.cache.rss_feed_duration_seconds');
 
-        $xml = Cache::remember($cacheKey, $cacheDuration, function() use ($feed) {
+        $xml = Cache::remember($cacheKey, $cacheDuration, function () use ($feed) {
             $rssXml = view('rss', compact('feed'))->render();
 
             $dom = new \DOMDocument('1.0');
             $dom->preserveWhiteSpace = false;
             $dom->formatOutput = true;
-            $dom->loadXML($rssXml);
-            
+
+            $previousUseErrors = libxml_use_internal_errors(true);
+            $loaded = $dom->loadXML($rssXml);
+            $xmlErrors = libxml_get_errors();
+            libxml_clear_errors();
+            libxml_use_internal_errors($previousUseErrors);
+
+            if (! $loaded || count($xmlErrors) > 0) {
+                Log::error('RSS feed generated malformed XML', [
+                    'feed_id' => $feed->id,
+                    'errors' => collect($xmlErrors)->map->message->all(),
+                ]);
+
+                return $rssXml;
+            }
+
             return $dom->saveXML();
         });
 

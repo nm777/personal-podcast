@@ -75,7 +75,7 @@ describe('API Resources', function () {
         $array = $resource->toArray(request());
 
         expect($array)->toHaveKey('id');
-        expect($array)->toHaveKey('file_path');
+        expect($array)->not->toHaveKey('file_path');
         expect($array)->toHaveKey('public_url');
         expect($array)->toHaveKey('file_hash');
         expect($array)->toHaveKey('mime_type');

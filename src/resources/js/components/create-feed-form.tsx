@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -13,6 +14,7 @@ interface CreateFeedFormProps {
 
 export default function CreateFeedForm({ renderTrigger, showCard = true }: CreateFeedFormProps) {
     const [isExpanded, setIsExpanded] = useState(false);
+    const { toast } = useToast();
 
     const { data, setData, post, processing, errors, reset } = useForm<{
         title: string;
@@ -31,6 +33,13 @@ export default function CreateFeedForm({ renderTrigger, showCard = true }: Creat
             onSuccess: () => {
                 reset();
                 setIsExpanded(false);
+            },
+            onError: () => {
+                toast({
+                    title: 'Error',
+                    description: 'Failed to create feed. Please try again.',
+                    variant: 'destructive',
+                });
             },
         });
     };

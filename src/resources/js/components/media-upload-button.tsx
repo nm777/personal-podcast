@@ -25,6 +25,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     const [isFetchingYouTubeTitle, setIsFetchingYouTubeTitle] = useState(false);
     const [urlDuplicateWarning, setUrlDuplicateWarning] = useState<string | null>(null);
     const urlCheckTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const youTubeAbortController = useRef<AbortController | null>(null);
 
     const { data, setData, post, processing, errors, reset, transform } = useForm({
         title: '',
@@ -42,9 +43,15 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     };
 
     const fetchYouTubeVideoTitle = async (videoId: string): Promise<string | null> => {
+        youTubeAbortController.current?.abort();
+        const controller = new AbortController();
+        youTubeAbortController.current = controller;
+
         try {
             setIsFetchingYouTubeTitle(true);
-            const response = await fetch(`/youtube/video-info/${videoId}`);
+            const response = await fetch(`/youtube/video-info/${videoId}`, {
+                signal: controller.signal,
+            });
 
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
@@ -53,10 +60,16 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             const data = await response.json();
             return data.title || null;
         } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+                return null;
+            }
             console.error('Failed to fetch YouTube video title:', error);
             return null;
         } finally {
-            setIsFetchingYouTubeTitle(false);
+            if (youTubeAbortController.current === controller) {
+                setIsFetchingYouTubeTitle(false);
+                youTubeAbortController.current = null;
+            }
         }
     };
 
