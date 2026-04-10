@@ -519,10 +519,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - `pm.max_children = 5` is insufficient for production media upload workloads.
 - **Fix:** Increase to 20+ based on available RAM.
 
-### 9.9 [ ] MEDIUM — APP_DEBUG=true in example env
+### 9.9 [x] MEDIUM — APP_DEBUG=true in example env
 - **File:** `src/.env.example:4`
-- If someone copies this to production without changing it, detailed error messages with stack traces are exposed.
-- **Fix:** Add a prominent comment or default to `false`.
+- Changed default to `false`. Production copies won't accidentally expose stack traces.
 
 ### 9.10 [ ] MEDIUM — Build packages remain in production image
 - **File:** `src/Dockerfile:4`
