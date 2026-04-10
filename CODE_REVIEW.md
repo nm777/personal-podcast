@@ -152,10 +152,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/components/app-sidebar.tsx:84-85`
 - `footerNavItems` is `[]` but `NavFooter` still rendered wrapping elements. Added conditional: `{footerNavItems.length > 0 && ...}`.
 
-### 2.14 [ ] LOW — FeedController and LibraryController lack return type declarations
-- **Files:** `src/app/Http/Controllers/FeedController.php:18,32,51`, `src/app/Http/Controllers/LibraryController.php:17,32`
-- Several controller methods lack return type declarations.
-- **Fix:** Add return types (e.g., `: RedirectResponse|Response`).
+### 2.14 [x] LOW — FeedController and LibraryController lack return type declarations
+- **Files:** `src/app/Http/Controllers/FeedController.php`, `src/app/Http/Controllers/LibraryController.php`
+- Added explicit return type declarations to all public and private methods in both controllers.
 
 ---
 
@@ -346,7 +345,8 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/resources/js/components/media-player.tsx:1`, `src/resources/js/hooks/use-toast.ts:1`
 - Removed `'use client'` from both files.
 
-### 6.12 [ ] LOW — FeedController and LibraryController lack return type declarations
+### 6.12 [x] LOW — FeedController and LibraryController lack return type declarations
+- Same as 2.14.
 
 ### 7.1 [x] HIGH — YouTube tests disable all middleware
 - **File:** `src/tests/Feature/YouTubeTest.php:10,38,60`

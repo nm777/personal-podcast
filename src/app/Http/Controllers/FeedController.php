@@ -4,18 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\FeedRequest;
 use App\Models\Feed;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
+use Inertia\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class FeedController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): RedirectResponse|JsonResponse
     {
         $feeds = $request->user()->feeds()->latest()->get();
 
@@ -29,7 +33,7 @@ class FeedController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(FeedRequest $request)
+    public function store(FeedRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -50,7 +54,7 @@ class FeedController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Request $request, Feed $feed)
+    public function edit(Request $request, Feed $feed): Response
     {
         Gate::authorize('update', $feed);
 
@@ -67,7 +71,7 @@ class FeedController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(FeedRequest $request, Feed $feed)
+    public function update(FeedRequest $request, Feed $feed): RedirectResponse
     {
         Gate::authorize('update', $feed);
 
@@ -95,7 +99,7 @@ class FeedController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, Feed $feed)
+    public function destroy(Request $request, Feed $feed): RedirectResponse|JsonResponse
     {
         Gate::authorize('delete', $feed);
 

@@ -7,15 +7,17 @@ use App\Http\Requests\UpdateLibraryItemRequest;
 use App\Models\LibraryItem;
 use App\Enums\ProcessingStatusType;
 use App\Services\SourceProcessors\SourceProcessorFactory;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Inertia\Response;
 
 class LibraryController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
         $libraryItems = $request->user()->libraryItems()
             ->with('mediaFile')
@@ -30,7 +32,7 @@ class LibraryController extends Controller
         ]);
     }
 
-    public function store(LibraryItemRequest $request)
+    public function store(LibraryItemRequest $request): RedirectResponse
     {
         $validated = $request->validated();
 
@@ -54,7 +56,7 @@ class LibraryController extends Controller
             ->with('success', $message);
     }
 
-    public function destroy($id)
+    public function destroy($id): RedirectResponse
     {
         $libraryItem = LibraryItem::findOrFail($id);
 
@@ -80,7 +82,7 @@ class LibraryController extends Controller
             ->with('success', 'Media file removed from your library.');
     }
 
-    public function retry($id)
+    public function retry($id): RedirectResponse
     {
         $libraryItem = LibraryItem::findOrFail($id);
 
@@ -109,7 +111,7 @@ class LibraryController extends Controller
             ->with('success', 'Processing has been restarted.');
     }
 
-    public function update(UpdateLibraryItemRequest $request, $id)
+    public function update(UpdateLibraryItemRequest $request, $id): RedirectResponse
     {
         $libraryItem = LibraryItem::findOrFail($id);
 
@@ -122,9 +124,6 @@ class LibraryController extends Controller
         return back()->with('success', 'Media file details updated successfully.');
     }
 
-    /**
-     * Get source type and URL from request, handling backward compatibility.
-     */
     private function getSourceTypeAndUrl(LibraryItemRequest $request): array
     {
         $sourceType = $request->input('source_type', $request->hasFile('file') ? 'upload' : 'url');
