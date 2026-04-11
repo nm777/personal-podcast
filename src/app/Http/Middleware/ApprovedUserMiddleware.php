@@ -23,6 +23,8 @@ class ApprovedUserMiddleware
 
         if (! $user->isApproved()) {
             auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             return redirect()->route('login')
                 ->with('status', 'Your account is pending approval. Please wait for an administrator to approve your registration.')
@@ -31,6 +33,8 @@ class ApprovedUserMiddleware
 
         if ($user->isRejected()) {
             auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
 
             return redirect()->route('login')
                 ->with('status', 'Your registration has been rejected. '.($user->rejection_reason ? 'Reason: '.$user->rejection_reason : ''))

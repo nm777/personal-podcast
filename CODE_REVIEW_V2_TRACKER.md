@@ -85,7 +85,7 @@
 - **File:** `UserManagementController.php:14-18`
 - Constructor registers `auth` + `admin` middleware, but routes already apply them. Remove constructor middleware.
 
-### H12. [ ] HIGH — Session not invalidated on forced logout
+### H12. [x] HIGH — Session not invalidated on forced logout
 - **File:** `ApprovedUserMiddleware.php:25,33`
 - Add `$request->session()->invalidate()` and `$request->session()->regenerateToken()` after `auth()->logout()`.
 
