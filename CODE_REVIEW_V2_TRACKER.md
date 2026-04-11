@@ -17,7 +17,7 @@
 - **File:** `database/migrations/2026_04_11_151839_change_media_file_id_fk_to_set_null.php`
 - Changed FK constraint from `cascadeOnDelete()` to `nullOnDelete()`. Now when a MediaFile is deleted, linked LibraryItems have `media_file_id` set to NULL instead of being cascade-deleted. This prevents one user's file deletion from removing another user's library items in the dedup scenario.
 
-### C3. [ ] CRITICAL — SSRF vulnerability in MediaDownloader
+### C3. [x] CRITICAL — SSRF vulnerability in MediaDownloader
 - **File:** `MediaDownloader.php:63-72`
 - User-supplied URLs passed to `Http::get()` without private IP validation. Add blocklist for `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`, `169.254.0.0/16`, `0.0.0.0/8`, `::1`, and `file://` scheme.
 

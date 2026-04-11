@@ -13,6 +13,8 @@ class MediaDownloader
      */
     public function downloadFromUrl(string $url): ?string
     {
+        $this->validateUrlSafety($url);
+
         try {
             $response = $this->executeDownload($url);
             $contents = $response->body();
@@ -157,6 +159,62 @@ class MediaDownloader
 
         if (! $isValidMedia && strlen($content) > 100) {
             throw new \Exception('Content does not appear to be a valid audio file');
+        }
+    }
+
+    private function validateUrlSafety(string $url): void
+    {
+        $parsed = parse_url($url);
+
+        if (! $parsed || ! isset($parsed['host'])) {
+            throw new \InvalidArgumentException('Invalid URL: no host');
+        }
+
+        if (! isset($parsed['scheme']) || ! in_array($parsed['scheme'], ['http', 'https'], true)) {
+            throw new \InvalidArgumentException('Invalid URL: only http and https schemes are allowed');
+        }
+
+        $host = $parsed['host'];
+
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            $ip = $host;
+        } else {
+            $ip = gethostbyname($host);
+            if ($ip === $host) {
+                throw new \InvalidArgumentException('Invalid URL: could not resolve host');
+            }
+        }
+
+        $blockedRanges = [
+            '0.0.0.0/8',
+            '10.0.0.0/8',
+            '100.64.0.0/10',
+            '127.0.0.0/8',
+            '169.254.0.0/16',
+            '172.16.0.0/12',
+            '192.0.0.0/24',
+            '192.0.2.0/24',
+            '192.168.0.0/16',
+            '198.18.0.0/15',
+            '198.51.100.0/24',
+            '203.0.113.0/24',
+            '224.0.0.0/4',
+            '240.0.0.0/4',
+        ];
+
+        $ipLong = ip2long($ip);
+        if ($ipLong === false) {
+            throw new \InvalidArgumentException('Invalid URL: could not resolve host');
+        }
+
+        foreach ($blockedRanges as $range) {
+            [$subnet, $bits] = explode('/', $range);
+            $subnetLong = ip2long($subnet);
+            $mask = ~((1 << (32 - (int) $bits)) - 1);
+
+            if (($ipLong & $mask) === ($subnetLong & $mask)) {
+                throw new \InvalidArgumentException('URL resolves to a private/internal IP address');
+            }
         }
     }
 }
