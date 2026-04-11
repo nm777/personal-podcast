@@ -65,7 +65,7 @@
 - **File:** `MediaValidator.php:46`
 - Short files that don't match any signature pass instead of failing. Change condition to throw on any unrecognized file regardless of size.
 
-### H7. [ ] HIGH — No timeout on yt-dlp metadata extraction
+### H7. [x] HIGH — No timeout on yt-dlp metadata extraction
 - **File:** `YouTubeMetadataExtractor.php:28`
 - Unlike `YouTubeDownloader` (300s timeout), this process hangs indefinitely. Add `$process->setTimeout(120)`.
 

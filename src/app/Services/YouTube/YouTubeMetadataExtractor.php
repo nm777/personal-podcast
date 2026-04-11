@@ -25,6 +25,7 @@ class YouTubeMetadataExtractor
             ]);
 
             $process = new Process($metadataCommand);
+            $process->setTimeout(120);
             $process->run();
             $metadata = null;
 
