@@ -470,7 +470,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `docker-entrypoint.sh:11`
 - Wrapped `php artisan migrate --force` behind `RUN_MIGRATIONS=true` env var check. Dev docker-compose sets `RUN_MIGRATIONS=true` for convenience. Production must opt in explicitly.
 
-### 9.4 [ ] HIGH — Permissive CSP in nginx (also listed in Security)
+### 9.4 [x] HIGH — Permissive CSP in nginx
+- **File:** `docker/nginx/default.conf`
+- CSP was already tightened in earlier commit (removed wildcard sources, added specific bunny.net fonts, restricted script-src to 'self' 'unsafe-inline' 'unsafe-eval').
 - **File:** `src/docker/nginx/default.conf:39`
 - Content-Security-Policy allows `http: https: data: blob: 'unsafe-inline'`.
 - **Fix:** Restrict to specific known domains.
