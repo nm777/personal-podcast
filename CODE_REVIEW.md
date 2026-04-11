@@ -453,9 +453,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 ### 8.15 [x] LOW — Login status message rendered in wrong position
 - Same as 8.13. Fixed in commit 85e09ff.
 
-### 9.1 [x] HIGH — Docker entrypoint runs as www-data — chown will fail
+### 9.1 [x] HIGH — Docker entrypoint privilege management
 - **Files:** `Dockerfile`, `docker-entrypoint.sh`
-- Added `gosu` to base image. Removed `USER www-data` from Dockerfile. Entrypoint now runs as root, performs `chown`/`chmod`, then drops privileges via `exec gosu www-data "$@"` before running the CMD.
+- Entrypoint runs as root, performs `chown`/`chmod` on storage, bootstrap/cache, and database dirs. Installs composer deps if missing (bind-mount dev scenario). Creates SQLite database if missing. Uses `gosu www-data` for migrations and non-php-fpm commands. PHP-FPM master runs as root (required for child process management) while pool config sets children to www-data.
 
 ### 9.2 [ ] HIGH — No health checks in any Docker service
 - **Files:** `src/docker-compose.prod.yml`, `src/docker-compose.yml`
