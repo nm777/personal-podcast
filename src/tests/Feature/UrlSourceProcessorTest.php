@@ -1,46 +1,65 @@
 <?php
 
-use App\Models\User;
+use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\SourceProcessors\LibraryItemFactory;
 use App\Services\SourceProcessors\SourceStrategyInterface;
 use App\Services\SourceProcessors\UrlSourceProcessor;
 
 describe('UrlSourceProcessor', function () {
     beforeEach(function () {
-        $this->user = User::factory()->create();
+        $this->user = \App\Models\User::factory()->create();
         $this->actingAs($this->user);
     });
 
     it('can be instantiated with dependencies', function () {
         $libraryItemFactory = new LibraryItemFactory;
         $strategy = Mockery::mock(SourceStrategyInterface::class);
+        $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
 
-        $processor = new UrlSourceProcessor($libraryItemFactory, $strategy);
+        $processor = new UrlSourceProcessor($libraryItemFactory, $strategy, $duplicateProcessor);
 
         expect($processor)->toBeInstanceOf(UrlSourceProcessor::class);
     });
 
-    it('has correct method signatures', function () {
-        $libraryItemFactory = new LibraryItemFactory;
+    it('delegates duplicate detection to UnifiedDuplicateProcessor', function () {
+        $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
+        $duplicateProcessor->shouldReceive('analyzeUrlDuplicate')
+            ->once()
+            ->andReturn([
+                'should_link_to_user_duplicate' => false,
+                'should_link_to_user_media_file' => false,
+                'should_link_to_global_duplicate' => false,
+                'should_create_new_file' => true,
+                'user_duplicate_library_item' => null,
+                'global_duplicate_media_file' => null,
+                'is_user_duplicate' => false,
+                'is_global_duplicate' => false,
+                'user_media_file_only' => false,
+            ]);
+
         $strategy = Mockery::mock(SourceStrategyInterface::class);
+        $strategy->shouldReceive('processNewSource')->once();
+        $strategy->shouldReceive('getProcessingMessage')->once()->andReturn('Processing...');
 
-        $processor = new UrlSourceProcessor($libraryItemFactory, $strategy);
+        $processor = new UrlSourceProcessor(
+            new LibraryItemFactory,
+            $strategy,
+            $duplicateProcessor
+        );
 
-        $reflection = new ReflectionClass($processor);
-        expect($reflection->hasMethod('process'))->toBeTrue();
+        $result = $processor->process(
+            ['title' => 'Test', 'description' => 'Desc'],
+            'url',
+            'https://example.com/test.mp3'
+        );
 
-        $method = $reflection->getMethod('process');
-        expect($method->getNumberOfParameters())->toBe(3);
-        expect($method->getNumberOfRequiredParameters())->toBe(3);
+        expect($result)->toHaveCount(2);
     });
 
-    it('requires strategy dependency', function () {
-        $libraryItemFactory = new LibraryItemFactory;
-
-        // Constructor should require strategy parameter
+    it('requires duplicate processor, factory, and strategy dependencies', function () {
         $reflection = new ReflectionClass(UrlSourceProcessor::class);
         $constructor = $reflection->getConstructor();
-        expect($constructor->getNumberOfParameters())->toBe(2);
-        expect($constructor->getNumberOfRequiredParameters())->toBe(2);
+        expect($constructor->getNumberOfParameters())->toBe(3);
+        expect($constructor->getNumberOfRequiredParameters())->toBe(3);
     });
 });

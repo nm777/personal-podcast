@@ -32,13 +32,13 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
             'description' => 'Test Description',
         ];
 
-        // Should throw exception when no user is authenticated
+        // Should throw exception when no user is authenticated (auth()->id() returns null → TypeError on int param)
         expect(fn () => $processor->process(
             new LibraryItemRequest,
             $validated,
             'url',
             'https://example.com/test.mp3'
-        ))->toThrow(TypeError::class);
+        ))->toThrow(\TypeError::class);
     });
 
     it('validates input data structure', function () {

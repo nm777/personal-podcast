@@ -28,6 +28,7 @@ class SourceProcessorFactory
         $urlSourceProcessor = app(UrlSourceProcessor::class, [
             'libraryItemFactory' => $libraryItemFactory,
             'strategy' => $strategy,
+            'duplicateProcessor' => $duplicateProcessor,
         ]);
 
         return app(UnifiedSourceProcessor::class, [

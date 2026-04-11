@@ -2,14 +2,14 @@
 
 namespace App\Services\SourceProcessors;
 
-use App\Models\LibraryItem;
-use App\Services\DuplicateDetectionService;
+use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 
 class UrlSourceProcessor
 {
     public function __construct(
         private LibraryItemFactory $libraryItemFactory,
-        private SourceStrategyInterface $strategy
+        private SourceStrategyInterface $strategy,
+        private UnifiedDuplicateProcessor $duplicateProcessor
     ) {}
 
     /**
@@ -19,51 +19,36 @@ class UrlSourceProcessor
     {
         $userId = auth()->id();
 
-        // Check for user duplicates first (before creating any library item)
-        $userDuplicate = DuplicateDetectionService::findUrlDuplicateForUser($sourceUrl, $userId);
+        $analysis = $this->duplicateProcessor->analyzeUrlDuplicate($sourceUrl, $userId);
 
-        if ($userDuplicate) {
-            // User already has this URL - update existing library item with new data, mark as duplicate, and return duplicate message
-            $userDuplicate->update([
-                'title' => $validated['title'] ?? $userDuplicate->title,
-                'description' => $validated['description'] ?? $userDuplicate->description,
+        if ($analysis['should_link_to_user_duplicate']) {
+            $existingItem = $analysis['user_duplicate_library_item'];
+            $existingItem->update([
+                'title' => $validated['title'] ?? $existingItem->title,
+                'description' => $validated['description'] ?? $existingItem->description,
                 'is_duplicate' => true,
             ]);
 
-            return [$userDuplicate, $this->strategy->getSuccessMessage(true)];
+            return [$existingItem, $this->strategy->getSuccessMessage(true)];
         }
 
-        // Check for user media file only (edge case where user has MediaFile but no LibraryItem)
-        $globalDuplicate = DuplicateDetectionService::findGlobalUrlDuplicate($sourceUrl);
-        if ($globalDuplicate && $globalDuplicate->user_id === $userId && ! DuplicateDetectionService::findUrlDuplicateForUser($sourceUrl, $userId)) {
-            // Create library item linking to existing user media file
+        if ($analysis['should_link_to_user_media_file'] || $analysis['should_link_to_global_duplicate']) {
+            $mediaFile = $analysis['global_duplicate_media_file'];
             $libraryItem = $this->libraryItemFactory->createFromValidatedWithMediaFile(
-                $globalDuplicate,
+                $mediaFile,
                 $validated,
                 $sourceType,
                 $sourceUrl,
                 $userId
             );
 
-            return [$libraryItem, $this->strategy->getSuccessMessage(true)];
-        }
-
-        // Check for global duplicates from other users
-        if ($globalDuplicate && $globalDuplicate->user_id !== $userId) {
-            // Create library item linking to global duplicate and mark as cross-user duplicate
-            $libraryItem = $this->libraryItemFactory->createFromValidatedWithMediaFile(
-                $globalDuplicate,
-                $validated,
-                $sourceType,
-                $sourceUrl,
-                $userId
-            );
-            $libraryItem->update(['is_duplicate' => true]);
+            if ($analysis['should_link_to_global_duplicate']) {
+                $libraryItem->update(['is_duplicate' => true]);
+            }
 
             return [$libraryItem, $this->strategy->getSuccessMessage(true)];
         }
 
-        // No duplicates found - create new library item and process
         $libraryItem = $this->libraryItemFactory->createFromValidated($validated, $sourceType, $sourceUrl, $userId);
         $this->strategy->processNewSource($libraryItem, $sourceUrl);
 

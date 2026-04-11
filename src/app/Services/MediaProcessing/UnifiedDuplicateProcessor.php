@@ -12,6 +12,15 @@ use Illuminate\Support\Facades\Log;
 class UnifiedDuplicateProcessor
 {
     /**
+     * Analyze URL source for duplicates without modifying any records.
+     * Used by sync path (UrlSourceProcessor) to check before creating items.
+     */
+    public function analyzeUrlDuplicate(string $sourceUrl, int $userId, ?int $excludeLibraryItemId = null): array
+    {
+        return DuplicateDetectionService::analyzeUrlSource($sourceUrl, $userId, $excludeLibraryItemId);
+    }
+
+    /**
      * Process duplicate detection and handling for URL sources.
      */
     public function processUrlDuplicate(LibraryItem $libraryItem, string $sourceUrl): array

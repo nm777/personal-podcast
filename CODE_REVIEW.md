@@ -103,10 +103,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Services/SourceProcessors/SourceProcessorFactory.php:11-28`
 - Replaced `new` instantiation with `app()` resolution for all dependencies. Strategies and processors are now resolved through the DI container, improving testability.
 
-### 2.3 [ ] HIGH — Duplicate detection logic scattered across UrlSourceProcessor and UnifiedDuplicateProcessor
-- **Files:** `src/app/Services/SourceProcessors/UrlSourceProcessor.php:22-64`, `src/app/Services/MediaProcessing/UnifiedDuplicateProcessor.php:17-38`
-- URL duplicate detection happens in both `UrlSourceProcessor` and `UnifiedDuplicateProcessor`. Two parallel paths for duplicate handling that can diverge.
-- **Fix:** Consolidate all duplicate detection into `UnifiedDuplicateProcessor`.
+### 2.3 [x] HIGH — Duplicate detection logic consolidated into UnifiedDuplicateProcessor
+- **Files:** `src/app/Services/SourceProcessors/UrlSourceProcessor.php`, `src/app/Services/MediaProcessing/UnifiedDuplicateProcessor.php`, `src/app/Services/SourceProcessors/SourceProcessorFactory.php`
+- `UrlSourceProcessor` was calling `DuplicateDetectionService` static methods directly, duplicating the detection path used by `UnifiedDuplicateProcessor`. Added `analyzeUrlDuplicate()` method to `UnifiedDuplicateProcessor` for side-effect-free analysis. `UrlSourceProcessor` now delegates all duplicate detection through `UnifiedDuplicateProcessor`, ensuring a single code path for duplicate analysis. Sync-path handling (updating existing items for user duplicates) is preserved.
 
 ### 2.4 [x] HIGH — Massive dashboard form duplication with CreateFeedForm
 - **Files:** `src/resources/js/pages/dashboard.tsx:91-146`, `src/resources/js/components/create-feed-form.tsx`
