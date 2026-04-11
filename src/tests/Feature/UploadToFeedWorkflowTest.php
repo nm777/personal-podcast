@@ -63,7 +63,7 @@ test('complete workflow: upload file → process → add to feed → generate rs
     $xml = $response->getContent();
 
     expect($xml)->toContain('<title>Test Episode</title>');
-    expect($xml)->toContain('<description>Test Description</description>');
+    expect($xml)->toContain('<description><![CDATA[Test Description]]></description>');
     expect($xml)->toContain('test-audio.mp3');
 });
 
