@@ -534,7 +534,6 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `docker/nginx/default.conf:36`
 - Removed `X-XSS-Protection: 1; mode=block`. Modern browsers rely on CSP instead; this header is deprecated and can introduce vulnerabilities.
 
-### 9.18 [ ] LOW — `latest` tag makes rollbacks difficult
-- **File:** `src/docker-compose.prod.yml:6`
-- Image tagged `podkeep-app:latest` is overwritten on every build.
-- **Fix:** Use versioned tags or Git SHA-based tags.
+### 9.18 [x] LOW — `latest` tag makes rollbacks difficult
+- **Files:** `Dockerfile`, `docker-compose.yml`
+- Pinned `composer:latest` → `composer:2`, `nginx:alpine` → `nginx:1.27-alpine` in both Dockerfile and docker-compose.yml.

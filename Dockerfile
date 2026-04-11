@@ -38,7 +38,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     xml \
     zip
 
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY custom-www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY src/php.ini /usr/local/etc/php/conf.d/custom.ini
@@ -80,7 +80,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && chown -R www-data:www-data /var/www/html/storage/app/public/temp-youtube \
     && chmod -R 775 /var/www/html/storage/app/public/temp-youtube
 
-FROM nginx:alpine AS web
+FROM nginx:1.27-alpine AS web
 
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 COPY --from=app /var/www/html/public /var/www/html/public

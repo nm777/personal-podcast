@@ -13,7 +13,7 @@ services:
       - app
 
   web:
-    image: nginx:alpine
+    image: nginx:1.27-alpine
     ports:
       - "${APP_PORT:-8000}:80"
     volumes:
