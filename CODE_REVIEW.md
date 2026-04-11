@@ -453,7 +453,8 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/hooks/use-toast.ts:8`
 - Changed `TOAST_REMOVE_DELAY` from `1000000` (~16.7 min) to `5000` (5 seconds).
 
-### 8.15 [ ] LOW — Login status message rendered in wrong position
+### 8.15 [x] LOW — Login status message rendered in wrong position
+- Same as 8.13. Fixed in commit 85e09ff.
 
 ### 9.1 [ ] HIGH — Docker entrypoint runs as www-data — chown will fail
 - **Files:** `src/docker-entrypoint.sh:7`, `src/Dockerfile:80`
