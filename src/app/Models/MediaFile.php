@@ -38,7 +38,7 @@ class MediaFile extends Model
 
     public function getRssUrlAttribute(): string
     {
-        return url('/files/'.$this->file_path);
+        return route('files.show', ['file_path' => $this->file_path]);
     }
 
     /**
