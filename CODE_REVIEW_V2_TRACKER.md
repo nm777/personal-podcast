@@ -45,15 +45,15 @@
 - **File:** `database/migrations/2025_07_14_011002_create_media_files_table.php`
 - Every `MediaController::show()` request does a full table scan. Add `$table->index('file_path')` via a new migration.
 
-### H2. [ ] HIGH — No rate limiting on media file endpoint
+### H2. [x] HIGH — No rate limiting on media file endpoint
 - **File:** `routes/web.php:20`
 - The `files.show` route serves files (DB + file I/O) with zero throttling. Add `->middleware('throttle:60,1')`.
 
-### H3. [ ] HIGH — No rate limiting on RSS endpoint
+### H3. [x] HIGH — No rate limiting on RSS endpoint
 - **File:** `routes/web.php:18`
 - `rss.show` has no middleware at all. Add `->middleware('throttle:120,1')` (podcast clients refresh frequently).
 
-### H4. [ ] HIGH — No rate limiting on YouTube video info endpoint
+### H4. [x] HIGH — No rate limiting on YouTube video info endpoint
 - **File:** `routes/web.php:24`
 - Cache misses trigger external YouTube API calls. Add `->middleware('throttle:30,1')`.
 

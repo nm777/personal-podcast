@@ -15,13 +15,13 @@ Route::get('', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name('rss.show');
+Route::get('rss/{user_guid}/{feed_slug}', [RssController::class, 'show'])->name('rss.show')->middleware('throttle:120,1');
 
-Route::get('files/{file_path}', [MediaController::class, 'show'])->name('files.show')->where('file_path', '.*');
+Route::get('files/{file_path}', [MediaController::class, 'show'])->name('files.show')->where('file_path', '.*')->middleware('throttle:60,1');
 
 Route::post('check-url-duplicate', [UrlDuplicateCheckController::class, 'check'])
     ->middleware(['auth', 'verified', 'throttle:30,1']);
-Route::get('youtube/video-info/{videoId}', [YouTubeController::class, 'getVideoInfo'])->middleware(['auth', 'verified']);
+Route::get('youtube/video-info/{videoId}', [YouTubeController::class, 'getVideoInfo'])->middleware(['auth', 'verified', 'throttle:30,1']);
 
 Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     Route::get('dashboard', function () {
