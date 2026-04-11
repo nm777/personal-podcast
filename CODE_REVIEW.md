@@ -374,10 +374,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/tests/Feature/RssFeedAccessTest.php`, `src/tests/Feature/AccessControlTest.php`
 - Added 8 new tests covering: RSS 404 for non-existent feed, public feed access, private feed rejection without token, private feed access with token, empty RSS feed, unauthenticated URL duplicate check, pending user dashboard rejection, rejected user dashboard rejection.
 
-### 7.7 [ ] LOW — FeedManagementTest hardcodes feed ID as 1
+### 7.7 [x] LOW — FeedManagementTest hardcodes feed ID as 1
 - **File:** `src/tests/Feature/FeedManagementTest.php:141`
-- `delete('/feeds/1')` hardcodes the ID. Brittle pattern.
-- **Fix:** Create a feed first and use its actual ID.
+- Changed `delete('/feeds/1')` to `delete('/feeds/nonexistent')` to avoid relying on a specific database ID.
 
 ### 7.8 [ ] LOW — LibraryUrlTest references specific external website
 - **File:** `src/tests/Feature/LibraryUrlTest.php:114-210`

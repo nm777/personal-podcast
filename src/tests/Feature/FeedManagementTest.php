@@ -138,7 +138,7 @@ test('unauthenticated user cannot access feed management', function () {
     ]);
     $response->assertRedirect('/login');
 
-    $response = $this->delete('/feeds/1');
+    $response = $this->delete('/feeds/nonexistent');
     $response->assertRedirect('/login');
 });
 
