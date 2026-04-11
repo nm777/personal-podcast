@@ -181,9 +181,9 @@ test('private feed enclosure URL requires feed_token to access', function () {
 
     $this->get($path)->assertForbidden();
 
-    $this->get($path . '?feed_token=wrong-token')->assertForbidden();
+    $this->get($path.'?feed_token=wrong-token')->assertForbidden();
 
-    $this->get($path . '?feed_token=secret-feed-token-12345')->assertSuccessful();
+    $this->get($path.'?feed_token=secret-feed-token-12345')->assertSuccessful();
 });
 
 test('multiple items in RSS feed all have accessible enclosure URLs', function () {
