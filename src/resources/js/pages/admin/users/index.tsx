@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
@@ -89,9 +90,17 @@ export default function UserManagement() {
                     </div>
                 </div>
 
-                {flash?.success && <div className="mb-4 rounded border border-green-400 bg-green-100 p-4 text-green-700">{flash.success}</div>}
+                {flash?.success && (
+                    <Alert>
+                        <AlertDescription>{flash.success}</AlertDescription>
+                    </Alert>
+                )}
 
-                {flash?.error && <div className="mb-4 rounded border border-red-400 bg-red-100 p-4 text-red-700">{flash.error}</div>}
+                {flash?.error && (
+                    <Alert variant="destructive">
+                        <AlertDescription>{flash.error}</AlertDescription>
+                    </Alert>
+                )}
 
                 <Card>
                     <CardHeader>

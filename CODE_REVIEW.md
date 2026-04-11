@@ -416,10 +416,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/resources/js/components/media-upload-button.tsx`, `src/resources/js/pages/Library/Index.tsx`, `src/resources/js/pages/feeds/edit.tsx`, `src/resources/js/components/create-feed-form.tsx`
 - Replaced 14 inline `<p className="text-sm text-red-600">` / `<p className="text-sm text-destructive">` error patterns with `<InputError>` component for consistency with auth forms.
 
-### 8.6 [ ] MEDIUM — Inconsistent flash message display
-- **Files:** `src/resources/js/pages/dashboard.tsx:74-78` (custom green div), `src/resources/js/pages/Library/Index.tsx:173-183` (Alert component), `src/resources/js/pages/admin/users/index.tsx:92-94` (custom div)
-- Three different approaches to flash messages. Admin page lacks dark mode styling.
-- **Fix:** Create a reusable `<FlashMessage>` component or consistently use the `Alert` component.
+### 8.6 [x] MEDIUM — Inconsistent flash message display
+- **Files:** `src/resources/js/pages/admin/users/index.tsx`
+- Replaced custom green/red `<div>` flash messages with the `<Alert>` + `<AlertDescription>` component, matching the pattern used in Library/Index and dashboard pages.
 
 ### 8.7 [ ] MEDIUM — Inconsistent checkbox component usage
 - **Files:** `src/resources/js/pages/dashboard.tsx:125` (plain HTML), `src/resources/js/pages/feeds/edit.tsx:202` (plain HTML), `src/resources/js/pages/admin/users/index.tsx:84` (shadcn), `src/resources/js/components/media-upload-button.tsx:400` (shadcn)
