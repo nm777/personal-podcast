@@ -29,7 +29,7 @@
 - **File:** `FeedController.php:120-128`
 - `whereNotIn('library_item_id', [])` generates `WHERE 0 = 1`, deleting nothing. Handle empty array case: `if (empty($newItemIds)) { $feed->items()->delete(); }`.
 
-### C6. [ ] CRITICAL — Malformed RSS XML served and cached
+### C6. [x] CRITICAL — Malformed RSS XML served and cached
 - **File:** `RssController.php:44-50`
 - When `DOMDocument::loadXML()` fails, raw malformed XML is cached. Return a 500 error or empty feed instead of caching bad XML.
 
