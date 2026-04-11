@@ -456,10 +456,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `Dockerfile`, `docker-entrypoint.sh`
 - Entrypoint runs as root, performs `chown`/`chmod` on storage, bootstrap/cache, and database dirs. Installs composer deps if missing (bind-mount dev scenario). Creates SQLite database if missing. Uses `gosu www-data` for migrations and non-php-fpm commands. PHP-FPM master runs as root (required for child process management) while pool config sets children to www-data.
 
-### 9.2 [ ] HIGH — No health checks in any Docker service
-- **Files:** `src/docker-compose.prod.yml`, `src/docker-compose.yml`
-- No health checks defined for app, web, or worker services. Docker cannot determine if services are actually healthy.
-- **Fix:** Add health checks: `php-fpm -t` for app, `wget --spider` for web, `php artisan queue:status` for worker.
+### 9.2 [x] HIGH — Health checks added to all Docker services
+- **Files:** `docker-compose.yml`, `docker-compose.prod.yml`
+- Added health checks: `php-fpm -t` for app (validates PHP-FPM config), `wget --spider` for nginx (verifies HTTP serving), `pgrep -f 'queue:work'` for worker (verifies process is running). Web and worker use `condition: service_healthy` to wait for app readiness.
 
 ### 9.3 [x] HIGH — Auto-migrate on every container start
 - **File:** `docker-entrypoint.sh:11`
