@@ -70,10 +70,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/pages/Library/Index.tsx:104-113`
 - Added `setDeleteDialogOpen(false)` and `setItemToDelete(null)` to the `onSuccess` callback.
 
-### 1.15 [ ] MEDIUM — Shared Inertia form for delete, update, and retry operations
-- **File:** `src/resources/js/pages/Library/Index.tsx:70-81`
-- A single `useForm` instance is used for delete, retry, and edit operations. Shared `processing` state could cause confusing UI behavior.
-- **Fix:** Use separate `useForm` instances for the edit form and the delete/retry operations.
+### 1.15 [x] MEDIUM — Separate useForm instances for delete, retry, and edit
+- **File:** `src/resources/js/pages/Library/Index.tsx`
+- A single `useForm` was shared between delete, retry, and edit operations, causing `processing`/`errors` state to bleed between them. Delete and retry now use `router.delete()`/`router.post()` directly (no form data needed). Edit dialog has its own dedicated `useForm` instance (`editForm`).
 
 ### 1.16 [x] MEDIUM — Drag-and-drop list uses array index as React key
 - **File:** `src/resources/js/pages/feeds/edit.tsx:240`

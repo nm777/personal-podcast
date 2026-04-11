@@ -38,15 +38,8 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     const [playingItem, setPlayingItem] = useState<LibraryItem | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [itemToEdit, setItemToEdit] = useState<LibraryItem | null>(null);
-    const {
-        delete: destroyForm,
-        post: retryForm,
-        put,
-        processing,
-        errors,
-        data,
-        setData,
-    } = useForm({
+
+    const editForm = useForm({
         title: '',
         description: '',
         published_at: '',
@@ -78,7 +71,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
 
     const handleDeleteConfirm = () => {
         if (itemToDelete) {
-            destroyForm(route('library.destroy', itemToDelete), {
+            router.delete(route('library.destroy', itemToDelete), {
                 onSuccess: () => {
                     setDeleteDialogOpen(false);
                     setItemToDelete(null);
@@ -89,9 +82,8 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     };
 
     const handleRetry = (itemId: number) => {
-        retryForm(route('library.retry', itemId), {
+        router.post(route('library.retry', itemId), {}, {
             onSuccess: () => {
-                // Item retry initiated
                 router.reload({ only: ['libraryItems'] });
             },
         });
@@ -99,16 +91,16 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
 
     const handleEditClick = (item: LibraryItem) => {
         setItemToEdit(item);
-        setData('title', item.title);
-        setData('description', item.description || '');
-        setData('published_at', item.published_at ? new Date(item.published_at).toISOString().split('T')[0] : '');
+        editForm.setData('title', item.title);
+        editForm.setData('description', item.description || '');
+        editForm.setData('published_at', item.published_at ? new Date(item.published_at).toISOString().split('T')[0] : '');
         setEditDialogOpen(true);
     };
 
     const handleEditSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (itemToEdit) {
-            put(route('library.update', itemToEdit.id), {
+            editForm.put(route('library.update', itemToEdit.id), {
                 onSuccess: () => {
                     setEditDialogOpen(false);
                     setItemToEdit(null);
@@ -121,9 +113,9 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     const handleEditDialogClose = () => {
         setEditDialogOpen(false);
         setItemToEdit(null);
-        setData('title', '');
-        setData('description', '');
-        setData('published_at', '');
+        editForm.setData('title', '');
+        editForm.setData('description', '');
+        editForm.setData('published_at', '');
     };
 
     const formatDisplayDate = (dateString: string) => {
@@ -303,41 +295,41 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                 <Label htmlFor="title">Title</Label>
                                 <Input
                                     id="title"
-                                    value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
+                                    value={editForm.data.title}
+                                    onChange={(e) => editForm.setData('title', e.target.value)}
                                     placeholder="Enter title"
                                     required
                                 />
-                                {errors.title && <InputError message={errors.title} />}
+                                {editForm.errors.title && <InputError message={editForm.errors.title} />}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="description">Description</Label>
                                 <Textarea
                                     id="description"
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
+                                    value={editForm.data.description}
+                                    onChange={(e) => editForm.setData('description', e.target.value)}
                                     placeholder="Enter description (optional)"
                                     rows={3}
                                 />
-                                {errors.description && <InputError message={errors.description} />}
+                                {editForm.errors.description && <InputError message={editForm.errors.description} />}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="published_at">Published Date</Label>
                                 <Input
                                     id="published_at"
                                     type="date"
-                                    value={data.published_at}
-                                    onChange={(e) => setData('published_at', e.target.value)}
+                                    value={editForm.data.published_at}
+                                    onChange={(e) => editForm.setData('published_at', e.target.value)}
                                 />
-                                {errors.published_at && <InputError message={errors.published_at} />}
+                                {editForm.errors.published_at && <InputError message={editForm.errors.published_at} />}
                             </div>
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={handleEditDialogClose}>
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={processing}>
-                                {processing ? 'Saving...' : 'Save Changes'}
+                            <Button type="submit" disabled={editForm.processing}>
+                                {editForm.processing ? 'Saving...' : 'Save Changes'}
                             </Button>
                         </DialogFooter>
                     </form>
