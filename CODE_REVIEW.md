@@ -445,10 +445,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** Various
 - All components already use `export default function ComponentName`. No anonymous arrow functions found. No changes needed.
 
-### 8.13 [ ] LOW — Login status message rendered in wrong position
-- **File:** `src/resources/js/pages/auth/login.tsx:112-120`
-- The status message is rendered after the closing `</form>` tag, below the "Sign up" text. Easily missed by users.
-- **Fix:** Move above the form or as the first child of the form.
+### 8.13 [x] LOW — Login status message rendered in wrong position
+- **File:** `src/resources/js/pages/auth/login.tsx:110-118`
+- Moved status message from below the form (after "Sign up") to above the form so users see it immediately on page load.
 
 ### 8.14 [x] LOW — Magic number for TOAST_REMOVE_DELAY
 - **File:** `src/resources/js/hooks/use-toast.ts:8`
