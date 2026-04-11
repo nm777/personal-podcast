@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
@@ -94,12 +95,10 @@ export default function CreateFeedForm({ renderTrigger, showCard = true }: Creat
             </div>
 
             <div className="flex items-center space-x-2">
-                <input
-                    type="checkbox"
+                <Checkbox
                     id="is_public"
                     checked={data.is_public}
-                    onChange={(e) => setData('is_public', e.target.checked)}
-                    className="rounded border-gray-300"
+                    onCheckedChange={(checked) => setData('is_public', checked === true)}
                 />
                 <Label htmlFor="is_public">Make this feed public</Label>
             </div>

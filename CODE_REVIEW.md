@@ -418,9 +418,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/resources/js/pages/admin/users/index.tsx`
 - Replaced custom green/red `<div>` flash messages with the `<Alert>` + `<AlertDescription>` component, matching the pattern used in Library/Index and dashboard pages.
 
-### 8.7 [ ] MEDIUM — Inconsistent checkbox component usage
-- **Files:** `src/resources/js/pages/dashboard.tsx:125` (plain HTML), `src/resources/js/pages/feeds/edit.tsx:202` (plain HTML), `src/resources/js/pages/admin/users/index.tsx:84` (shadcn), `src/resources/js/components/media-upload-button.tsx:400` (shadcn)
-- **Fix:** Standardize on the shadcn `Checkbox` component.
+### 8.7 [x] MEDIUM — Inconsistent checkbox component usage
+- **Files:** `src/resources/js/components/create-feed-form.tsx`, `src/resources/js/pages/feeds/edit.tsx`
+- Replaced plain `<input type="checkbox">` with shadcn `<Checkbox>` component using `onCheckedChange`, matching the pattern used in login.tsx and admin/users.
 
 ### 8.8 [x] MEDIUM — `feed-list.tsx` uses `<a>` for internal navigation
 - **File:** `src/resources/js/components/feed-list.tsx`
