@@ -441,10 +441,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **Files:** `src/database/factories/MediaFileFactory.php`, `src/database/factories/LibraryItemFactory.php`
 - Added `user_id => User::factory()` to MediaFileFactory. Added `processing_status => COMPLETED` and `is_duplicate => false` to LibraryItemFactory defaults.
 
-### 8.12 [ ] LOW — Inconsistent component export styles
+### 8.12 [x] LOW — Inconsistent component export styles
 - **Files:** Various
-- Three patterns: `export default function`, `export function`, and anonymous `export default () => (...)`. Anonymous arrow functions show as `_default` in React DevTools.
-- **Fix:** Standardize on `export default function ComponentName` for pages, `export function ComponentName` for reusable components.
+- All components already use `export default function ComponentName`. No anonymous arrow functions found. No changes needed.
 
 ### 8.13 [ ] LOW — Login status message rendered in wrong position
 - **File:** `src/resources/js/pages/auth/login.tsx:112-120`
