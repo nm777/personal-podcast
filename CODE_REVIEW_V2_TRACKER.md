@@ -89,7 +89,7 @@
 - **File:** `ApprovedUserMiddleware.php:25,33`
 - Add `$request->session()->invalidate()` and `$request->session()->regenerateToken()` after `auth()->logout()`.
 
-### H13. [ ] HIGH — RSS descriptions not wrapped in CDATA
+### H13. [x] HIGH — RSS descriptions not wrapped in CDATA
 - **File:** `resources/views/rss.blade.php:7,22`
 - HTML in descriptions breaks XML parsing. Use `<description><![CDATA[{{ $description }}]]></description>`.
 

@@ -4,7 +4,7 @@
     xmlns:atom="http://www.w3.org/2005/Atom">
     <channel>
         <title>{{ $feed->title }}</title>
-        <description>{{ $feed->description }}</description>
+        <description><![CDATA[{!! $feed->description !!}]]></description>
         <image>
             <url>{{ $feed->cover_image_url ?? asset('logo.svg') }}</url>
             <title>{{ $feed->title }}</title>
@@ -19,7 +19,7 @@
             @if($item->libraryItem->mediaFile)
         <item>
             <title>{{ $item->libraryItem->title }}</title>
-            <description>{{ $item->libraryItem->description }}</description>
+            <description><![CDATA[{!! $item->libraryItem->description !!}]]></description>
             <pubDate>{{ $item->created_at->toRfc822String() }}</pubDate>
             <guid isPermaLink="false">{{ $item->id }}</guid>
             <enclosure url="{{ $item->libraryItem->mediaFile->rss_url }}{{ $feed->is_public ? '' : '?feed_token=' . $feed->token }}"

@@ -50,7 +50,7 @@ test('rss feed includes items with proper enclosure', function () {
     $content = $response->getContent();
 
     expect($content)->toContain('<title>Test Episode</title>');
-    expect($content)->toContain('<description>Test Description</description>');
+    expect($content)->toContain('<description><![CDATA[Test Description]]></description>');
     expect($content)->toContain('/files/media/test-audio.mp3');
     expect($content)->toContain('audio/mpeg');
 });
