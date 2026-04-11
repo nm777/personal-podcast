@@ -430,10 +430,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/app/Services/SourceProcessors/UploadStrategy.php:23`
 - Replaced hardcoded "5 minutes" with `config('constants.duplicate.cleanup_delay_minutes')` to stay consistent with other strategies.
 
-### 8.10 [ ] MEDIUM — Inconsistent success message patterns between strategies
-- **Files:** `src/app/Services/SourceProcessors/UploadStrategy.php:20-27`, `src/app/Services/SourceProcessors/UrlStrategy.php:24-36`, `src/app/Services/SourceProcessors/YouTubeStrategy.php:24-36`, `src/app/Services/SourceProcessors/FileUploadProcessor.php:71-81`
-- Each strategy and processor has its own message methods that can diverge.
-- **Fix:** Have all processors delegate to the strategy for messages, or centralize in one location.
+### 8.10 [x] MEDIUM — Inconsistent success message patterns between strategies
+- **File:** `src/app/Services/SourceProcessors/FileUploadProcessor.php`
+- Removed duplicated private `getSuccessMessage()`/`getProcessingMessage()` from `FileUploadProcessor`. Now injects `UploadStrategy` and delegates message generation, ensuring a single source of truth per strategy.
 
 ### 8.11 [x] MEDIUM — MediaFileFactory missing user_id, LibraryItemFactory missing processing_status
 - **Files:** `src/database/factories/MediaFileFactory.php`, `src/database/factories/LibraryItemFactory.php`

@@ -3,48 +3,35 @@
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\SourceProcessors\FileUploadProcessor;
 use App\Services\SourceProcessors\LibraryItemFactory;
+use App\Services\SourceProcessors\UploadStrategy;
 
 describe('FileUploadProcessor', function () {
     it('can be instantiated with dependencies', function () {
         $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
         $libraryItemFactory = new LibraryItemFactory;
+        $strategy = new UploadStrategy;
 
-        $processor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory);
+        $processor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory, $strategy);
 
         expect($processor)->toBeInstanceOf(FileUploadProcessor::class);
     });
 
-    it('has correct success message for new files', function () {
+    it('delegates processing message to strategy', function () {
         $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
         $libraryItemFactory = new LibraryItemFactory;
+        $strategy = new UploadStrategy;
 
-        $processor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory);
-
-        // Use reflection to test private method
-        $reflection = new ReflectionClass($processor);
-        $method = $reflection->getMethod('getProcessingMessage');
-        $method->setAccessible(true);
-
-        $message = $method->invoke($processor);
-
-        expect($message)->toBe('Media file uploaded successfully. Processing...');
+        expect($strategy->getProcessingMessage())->toBe('Media file uploaded successfully. Processing...');
     });
 
-    it('has correct success message for duplicates', function () {
-        $duplicateProcessor = Mockery::mock(UnifiedDuplicateProcessor::class);
-        $libraryItemFactory = new LibraryItemFactory;
+    it('delegates success messages to strategy', function () {
+        $strategy = new UploadStrategy;
 
-        $processor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory);
-
-        // Use reflection to test private method
-        $reflection = new ReflectionClass($processor);
-        $method = $reflection->getMethod('getSuccessMessage');
-        $method->setAccessible(true);
-
-        $duplicateMessage = $method->invoke($processor, true);
-        $newFileMessage = $method->invoke($processor, false);
+        $duplicateMessage = $strategy->getSuccessMessage(true);
+        $newFileMessage = $strategy->getSuccessMessage(false);
 
         expect($duplicateMessage)->toContain('Duplicate file detected');
+        expect($duplicateMessage)->toContain(config('constants.duplicate.cleanup_delay_minutes').' minutes.');
         expect($newFileMessage)->toBe('Media file uploaded successfully. Processing...');
     });
 });
