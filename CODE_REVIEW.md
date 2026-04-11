@@ -370,18 +370,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Uses `Queue::fake()` and asserts the job was pushed, but never executes the job to verify feed_items are created.
 - **Fix:** Handle the job synchronously and verify feed_items are created.
 
-### 7.6 [ ] MEDIUM — Missing test coverage for critical paths
-- **Files:** Various test files
-- Missing tests for:
-  - RSS feed for non-public feeds (`RssFeedTest.php`)
-  - Empty RSS feeds (`RssFeedTest.php`)
-  - Non-existent feed slug returns 404 (`RssFeedTest.php`)
-  - Adding duplicate items to a feed (`AddLibraryItemToFeedsJobTest.php`)
-  - Pending user accessing dashboard (`DashboardTest.php`)
-  - Password update validation edge cases (`PasswordUpdateTest.php`)
-  - Profile update with duplicate email (`ProfileUpdateTest.php`)
-  - Unauthenticated access to URL duplicate check (`UrlDuplicateCheckIntegrationTest.php`)
-- **Fix:** Add tests for each missing scenario.
+### 7.6 [x] MEDIUM — Missing test coverage for critical paths
+- **Files:** `src/tests/Feature/RssFeedAccessTest.php`, `src/tests/Feature/AccessControlTest.php`
+- Added 8 new tests covering: RSS 404 for non-existent feed, public feed access, private feed rejection without token, private feed access with token, empty RSS feed, unauthenticated URL duplicate check, pending user dashboard rejection, rejected user dashboard rejection.
 
 ### 7.7 [ ] LOW — FeedManagementTest hardcodes feed ID as 1
 - **File:** `src/tests/Feature/FeedManagementTest.php:141`
