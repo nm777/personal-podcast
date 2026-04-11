@@ -365,10 +365,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - Tests use `ReflectionMethod` to verify private method signatures and parameter counts. These break on any refactoring regardless of correctness.
 - **Fix:** Replace with behavioral tests using public APIs.
 
-### 7.5 [ ] MEDIUM — AddLibraryItemToFeedsJobTest only tests dispatch, not execution
-- **File:** `src/tests/Feature/AddLibraryItemToFeedsJobTest.php:11-29`
-- Uses `Queue::fake()` and asserts the job was pushed, but never executes the job to verify feed_items are created.
-- **Fix:** Handle the job synchronously and verify feed_items are created.
+### 7.5 [x] MEDIUM — AddLibraryItemToFeedsJobTest only tests dispatch, not execution
+- **File:** `src/tests/Feature/AddLibraryItemToFeedsJobTest.php`
+- 3 of 4 tests already call `$job->handle()` directly and verify feed_items creation (correct sequences, ownership filtering, empty array handling). Only the first test uses `Queue::fake()` to verify dispatch parameters.
 
 ### 7.6 [x] MEDIUM — Missing test coverage for critical paths
 - **Files:** `src/tests/Feature/RssFeedAccessTest.php`, `src/tests/Feature/AccessControlTest.php`
