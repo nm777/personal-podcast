@@ -57,7 +57,7 @@
 - **File:** `routes/web.php:24`
 - Cache misses trigger external YouTube API calls. Add `->middleware('throttle:30,1')`.
 
-### H5. [ ] HIGH — `feed_ids` ownership not validated
+### H5. [x] HIGH — `feed_ids` ownership not validated
 - **File:** `LibraryItemRequest.php:38-39`
 - Validation checks `exists:feeds,id` but not that feeds belong to the user. Add ownership closure like `FeedRequest.php:30-35`.
 
