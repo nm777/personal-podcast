@@ -358,10 +358,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/tests/Feature/FeedEditTest.php:190-213`
 - Already covered by existing test `it('prevents adding another users library item to own feed')` which uses a valid library item owned by a different user and asserts it's rejected with validation errors.
 
-### 7.4 [ ] MEDIUM — Reflection-based tests are brittle
-- **Files:** `src/tests/Feature/LibraryItemFactoryTest.php:25-78`, `src/tests/Feature/FileUploadProcessorTest.php`
-- Tests use `ReflectionMethod` to verify private method signatures and parameter counts. These break on any refactoring regardless of correctness.
-- **Fix:** Replace with behavioral tests using public APIs.
+### 7.4 [x] MEDIUM — Reflection-based tests replaced with behavioral tests
+- **Files:** `src/tests/Feature/LibraryItemFactoryTest.php`, `src/tests/Feature/UrlSourceProcessorTest.php`
+- Removed `ReflectionMethod`/`ReflectionClass` assertions (parameter counts, default values) from both files. Replaced with behavioral tests that create items through the factory and verify database state: duplicate marking, cross-user linking, status handling, and user-media-file-only edge case.
 
 ### 7.5 [x] MEDIUM — AddLibraryItemToFeedsJobTest only tests dispatch, not execution
 - **File:** `src/tests/Feature/AddLibraryItemToFeedsJobTest.php`
