@@ -93,7 +93,7 @@
 - **File:** `resources/views/rss.blade.php:7,22`
 - HTML in descriptions breaks XML parsing. Use `<description><![CDATA[{{ $description }}]]></description>`.
 
-### H14. [ ] HIGH — YouTube video ID not validated
+### H14. [x] HIGH — YouTube video ID not validated
 - **File:** `YouTubeController.php:19`
 - Add `regex:/^[a-zA-Z0-9_-]{11}$/` validation on `$videoId` before API calls.
 

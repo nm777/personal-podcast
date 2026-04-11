@@ -39,7 +39,11 @@ class YouTubeUrlValidator
 
         foreach ($patterns as $pattern) {
             if (preg_match($pattern, $url, $matches)) {
-                return $matches[1];
+                $id = $matches[1];
+
+                if (preg_match('/^[a-zA-Z0-9_-]{11}$/', $id)) {
+                    return $id;
+                }
             }
         }
 
