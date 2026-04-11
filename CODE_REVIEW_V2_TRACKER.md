@@ -41,7 +41,7 @@
 
 ## Phase 2 — Security Hardening
 
-### H1. [ ] HIGH — No index on `media_files.file_path`
+### H1. [x] HIGH — No index on `media_files.file_path`
 - **File:** `database/migrations/2025_07_14_011002_create_media_files_table.php`
 - Every `MediaController::show()` request does a full table scan. Add `$table->index('file_path')` via a new migration.
 
