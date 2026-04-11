@@ -8,6 +8,7 @@ RUN apk add --no-cache \
     freetype-dev \
     g++ \
     git \
+    gosu \
     icu-data-full \
     icu-dev \
     libjpeg-turbo-dev \
@@ -78,8 +79,6 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && mkdir -p /var/www/html/storage/app/public/temp-youtube \
     && chown -R www-data:www-data /var/www/html/storage/app/public/temp-youtube \
     && chmod -R 775 /var/www/html/storage/app/public/temp-youtube
-
-USER www-data
 
 FROM nginx:alpine AS web
 

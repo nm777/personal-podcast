@@ -453,10 +453,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 ### 8.15 [x] LOW — Login status message rendered in wrong position
 - Same as 8.13. Fixed in commit 85e09ff.
 
-### 9.1 [ ] HIGH — Docker entrypoint runs as www-data — chown will fail
-- **Files:** `src/docker-entrypoint.sh:7`, `src/Dockerfile:80`
-- `USER www-data` is set before `ENTRYPOINT`, so `chown -R www-data:www-data` in the entrypoint will fail with permission denied in production.
-- **Fix:** Run entrypoint as root and drop privileges in CMD, or restructure the Dockerfile.
+### 9.1 [x] HIGH — Docker entrypoint runs as www-data — chown will fail
+- **Files:** `Dockerfile`, `docker-entrypoint.sh`
+- Added `gosu` to base image. Removed `USER www-data` from Dockerfile. Entrypoint now runs as root, performs `chown`/`chmod`, then drops privileges via `exec gosu www-data "$@"` before running the CMD.
 
 ### 9.2 [ ] HIGH — No health checks in any Docker service
 - **Files:** `src/docker-compose.prod.yml`, `src/docker-compose.yml`
