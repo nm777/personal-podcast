@@ -336,10 +336,9 @@ Status legend: `[ ]` pending | `[x]` completed | `[-]` skipped
 - **File:** `src/resources/js/hooks/use-appearance.tsx:37,42,66`
 - Added `isValidAppearance()` type guard and `getStoredAppearance()` helper. All three `as Appearance` casts replaced with validated reads. Invalid stored values default to `'system'`.
 
-### 6.10 [ ] LOW — `ProcessingStatusHelper.from()` accepts any string
-- **File:** `src/resources/js/lib/processing-status.tsx:83`
-- `static from(status: string)` accepts any string and silently creates a helper returning "Unknown" for invalid values.
-- **Fix:** Change parameter type to `ProcessingStatusType` or add runtime validation.
+### 6.10 [x] LOW — `ProcessingStatusHelper.from()` accepts any string
+- **File:** `src/resources/js/lib/processing-status.tsx:83-85`
+- Added runtime validation: invalid status values now fall back to `PENDING` instead of being cast blindly.
 
 ### 6.11 [x] LOW — `'use client'` directives are Next.js conventions, not needed here
 - **Files:** `src/resources/js/components/media-player.tsx:1`, `src/resources/js/hooks/use-toast.ts:1`
