@@ -21,7 +21,7 @@
 - **File:** `MediaDownloader.php:63-72`
 - User-supplied URLs passed to `Http::get()` without private IP validation. Add blocklist for `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`, `169.254.0.0/16`, `0.0.0.0/8`, `::1`, and `file://` scheme.
 
-### C4. [ ] CRITICAL — Exception handler `renderable` intercepts all exceptions
+### C4. [x] CRITICAL — Exception handler `renderable` intercepts all exceptions
 - **File:** `Exceptions/Handler.php:49-51`
 - The `renderable` callback fires for every exception, not just API routes. Scope it to `$request->is('api/*')` by checking inside the callback or moving it to an API-specific middleware.
 

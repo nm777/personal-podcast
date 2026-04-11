@@ -61,20 +61,10 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (Throwable $e, Request $request) {
-            return $this->handleApiException($e, $request);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return $this->renderApiJsonResponse($e);
+            }
         });
-    }
-
-    /**
-     * Render an exception into an HTTP response for API requests.
-     */
-    protected function handleApiException(Throwable $e, Request $request): JsonResponse
-    {
-        if ($request->is('api/*')) {
-            return $this->renderApiJsonResponse($e);
-        }
-
-        return parent::render($request, $e);
     }
 
     /**
