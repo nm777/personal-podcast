@@ -1,11 +1,13 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
 import { type Feed } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
 import { router, Link } from '@inertiajs/react';
-import { Copy, Edit, Eye, EyeOff, FileAudio, Rss, Trash2 } from 'lucide-react';
+import { Copy, Edit, Eye, EyeOff, FileAudio, Podcast, Rss, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 interface FeedListProps {
@@ -15,7 +17,6 @@ interface FeedListProps {
 
 export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     const { toast } = useToast();
-    const [revealedFeeds, setRevealedFeeds] = useState<Set<number>>(new Set());
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [feedToDelete, setFeedToDelete] = useState<number | null>(null);
 
@@ -45,7 +46,7 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     };
 
     const handleCopyUrl = async (feed: Feed) => {
-        const fullUrl = window.location.origin + getFeedUrl(feed);
+        const fullUrl = getAbsoluteRssUrl(feed);
 
         const fallbackCopyTextToClipboard = (text: string) => {
             const textArea = document.createElement('textarea');
@@ -89,34 +90,6 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
             console.error('Failed to copy URL:', err);
             fallbackCopyTextToClipboard(fullUrl);
         }
-    };
-
-    const getFeedUrl = (feed: Feed) => {
-        const baseUrl = `/rss/${feed.user_guid}/${feed.slug}`;
-        if (!feed.is_public && feed.token) {
-            return `${baseUrl}?token=${feed.token}`;
-        }
-        return baseUrl;
-    };
-
-    const getDisplayUrl = (feed: Feed) => {
-        const baseUrl = `/rss/${feed.user_guid}/${feed.slug}`;
-        if (!feed.is_public && feed.token && !revealedFeeds.has(feed.id)) {
-            return `${baseUrl}?token=••••••••`;
-        }
-        return getFeedUrl(feed);
-    };
-
-    const toggleReveal = (feedId: number) => {
-        setRevealedFeeds((prev) => {
-            const next = new Set(prev);
-            if (next.has(feedId)) {
-                next.delete(feedId);
-            } else {
-                next.add(feedId);
-            }
-            return next;
-        });
     };
 
     if (feeds.length === 0) {
@@ -164,34 +137,61 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                         </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="space-y-3">
-                            <div className="text-sm break-all text-muted-foreground">
-                                <a href={getFeedUrl(feed)} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
-                                    {getDisplayUrl(feed)}
-                                </a>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                {!feed.is_public && feed.token && (
-                                    <Button variant="outline" size="sm" onClick={() => toggleReveal(feed.id)}>
-                                        {revealedFeeds.has(feed.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <a href={getApplePodcastsUrl(feed)} target="_blank" rel="noopener noreferrer">
+                                            <Podcast className="h-4 w-4" />
+                                        </a>
                                     </Button>
-                                )}
-                                <Button variant="outline" size="sm" onClick={() => handleCopyUrl(feed)}>
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                                {canEdit && (
-                                    <>
-                                        <Button variant="outline" size="sm" asChild>
-                                            <Link href={route('feeds.edit', feed.id)}>
-                                                <Edit className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(feed.id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
+                                </TooltipTrigger>
+                                <TooltipContent>Apple Podcasts</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <a href={getGooglePodcastsUrl(feed)} target="_blank" rel="noopener noreferrer">
+                                            <Smartphone className="h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Google Podcasts / Android</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" onClick={() => handleCopyUrl(feed)}>
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Copy RSS URL</TooltipContent>
+                            </Tooltip>
+
+                            {canEdit && (
+                                <>
+                                    <div className="mx-1 h-4 w-px bg-border" />
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={route('feeds.edit', feed.id)}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Edit Feed</TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(feed.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Delete Feed</TooltipContent>
+                                    </Tooltip>
+                                </>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
