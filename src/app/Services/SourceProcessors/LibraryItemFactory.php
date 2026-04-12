@@ -4,7 +4,7 @@ namespace App\Services\SourceProcessors;
 
 use App\Jobs\AddLibraryItemToFeedsJob;
 use App\Models\LibraryItem;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 
 class LibraryItemFactory
 {

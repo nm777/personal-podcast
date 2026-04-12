@@ -73,7 +73,7 @@ it('processes media file from URL correctly', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -102,7 +102,7 @@ it('handles URL download failures gracefully', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/not-found.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     // Library item should be marked as failed
     $this->assertDatabaseHas('library_items', [
@@ -133,7 +133,7 @@ it('handles JavaScript redirect pages correctly', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -163,7 +163,7 @@ it('fails when JavaScript redirect cannot be resolved', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/redirect.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -171,31 +171,30 @@ it('fails when JavaScript redirect cannot be resolved', function () {
     expect($libraryItem->processing_error)->toContain('Got HTML redirect page instead of media file');
 });
 
-it('handles file-examples.com JavaScript redirect pattern correctly', function () {
+it('handles JavaScript redirect with URL substring replacement pattern', function () {
     Storage::fake('public');
 
     $user = User::factory()->create();
     $libraryItem = LibraryItem::factory()->create([
         'user_id' => $user->id,
         'source_type' => 'url',
-        'source_url' => 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3',
+        'source_url' => 'https://example.com/storage/audio.mp3',
     ]);
 
-    // Simulate the exact HTML redirect pattern from file-examples.com
-    $htmlRedirectPage = '<!DOCTYPE html><html><head><title>File Examples | Download redirect...</title></head><body><script>document.addEventListener(\'DOMContentLoaded\', function(){setTimeout(function (){url=window.location.href.replace(\'file-examples.com/wp-content/storage/\',\'file-examples.com/storage/fef7fa310369115b497def4/\'); window.location.replace(url);}, 3000);}, false);</script></body></html>';
+    // Simulate an HTML redirect page that replaces a URL substring to get the real download URL
+    $htmlRedirectPage = '<!DOCTYPE html><html><head><title>Redirect</title></head><body><script>document.addEventListener(\'DOMContentLoaded\', function(){setTimeout(function (){url=window.location.href.replace(\'example.com/storage/\',\'example.com/cdn/abc123/\'); window.location.replace(url);}, 3000);}, false);</script></body></html>';
 
-    $mp3Content = 'ID3'.str_repeat('x', 100); // Valid MP3 content with ID3 tag
+    $mp3Content = 'ID3'.str_repeat('x', 100);
 
-    // Mock the redirect page and final MP3 file
     Http::fake([
-        'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3' => Http::response($htmlRedirectPage, 200),
-        'https://file-examples.com/storage/fef7fa310369115b497def4/2017/11/file_example_MP3_700KB.mp3' => Http::response($mp3Content, 200, [
+        'https://example.com/storage/audio.mp3' => Http::response($htmlRedirectPage, 200),
+        'https://example.com/cdn/abc123/audio.mp3' => Http::response($mp3Content, 200, [
             'Content-Type' => 'audio/mpeg',
         ]),
     ]);
 
-    $job = new ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
-    $job->handle();
+    $job = new ProcessMediaFile($libraryItem, 'https://example.com/storage/audio.mp3', null);
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -205,7 +204,6 @@ it('handles file-examples.com JavaScript redirect pattern correctly', function (
     $mediaFile = $libraryItem->mediaFile;
     expect($mediaFile->file_hash)->toBe(hash('sha256', $mp3Content));
     expect($mediaFile->filesize)->toBe(strlen($mp3Content));
-    // Storage::fake() returns text/plain for all files, so we check that it's not HTML
     expect($mediaFile->mime_type)->not->toBe('text/html');
 });
 
@@ -292,7 +290,7 @@ it('stores source URL when downloading new file', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/new-audio.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -301,6 +299,81 @@ it('stores source URL when downloading new file', function () {
     $mediaFile = $libraryItem->mediaFile;
     expect($mediaFile)->not->toBeNull();
     expect($mediaFile->source_url)->toBe('https://example.com/new-audio.mp3');
+});
+
+it('accepts URL with m4a file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test M4A Audio',
+        'url' => 'https://example.com/test-audio.m4a',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with mp4 file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test MP4 Audio',
+        'url' => 'https://example.com/test-audio.mp4',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with wav file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test WAV Audio',
+        'url' => 'https://example.com/test-audio.wav',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with ogg file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test OGG Audio',
+        'url' => 'https://example.com/test-audio.ogg',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
+});
+
+it('accepts URL with query parameters after file extension', function () {
+    Queue::fake();
+
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->post('/library', [
+        'title' => 'Test Audio With Query',
+        'url' => 'https://example.com/test-audio.mp3?token=abc123&expires=456',
+    ]);
+
+    $response->assertRedirect('/library');
+    $response->assertSessionHasNoErrors();
+    $response->assertSessionHas('success');
 });
 
 it('multiple users can reuse same file from same URL', function () {
@@ -326,7 +399,7 @@ it('multiple users can reuse same file from same URL', function () {
     // Process the job manually to create the media file
     $libraryItem = LibraryItem::where('title', 'User 1 Copy')->first();
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/shared-audio.mp3', null);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $mediaFile = MediaFile::where('source_url', 'https://example.com/shared-audio.mp3')->first();
     expect($mediaFile)->not->toBeNull();

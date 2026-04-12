@@ -1,7 +1,9 @@
 <?php
 
+use App\Enums\ProcessingStatusType;
+use App\Models\LibraryItem;
+use App\Models\MediaFile;
 use App\Models\User;
-use App\ProcessingStatusType;
 use App\Services\SourceProcessors\LibraryItemFactory;
 
 describe('LibraryItemFactory', function () {
@@ -10,100 +12,125 @@ describe('LibraryItemFactory', function () {
         $this->user = User::factory()->create();
     });
 
-    describe('basic functionality', function () {
-        it('can be instantiated', function () {
-            expect($this->factory)->toBeInstanceOf(LibraryItemFactory::class);
-        });
+    it('creates library item from validated data with all fields', function () {
+        $item = $this->factory->createFromValidated(
+            ['title' => 'My Podcast', 'description' => 'A great episode'],
+            'url',
+            'https://example.com/audio.mp3',
+            $this->user->id
+        );
 
-        it('has required methods', function () {
-            expect(method_exists($this->factory, 'createFromValidated'))->toBeTrue();
-            expect(method_exists($this->factory, 'createFromValidatedWithMediaData'))->toBeTrue();
-            expect(method_exists($this->factory, 'createFromValidatedWithMediaFile'))->toBeTrue();
-        });
+        expect($item)->toBeInstanceOf(LibraryItem::class);
+        expect($item->title)->toBe('My Podcast');
+        expect($item->description)->toBe('A great episode');
+        expect($item->source_type)->toBe('url');
+        expect($item->source_url)->toBe('https://example.com/audio.mp3');
+        expect($item->user_id)->toBe($this->user->id);
+        expect($item->processing_status)->toBe(ProcessingStatusType::PENDING);
+        $this->assertDatabaseHas('library_items', ['id' => $item->id, 'title' => 'My Podcast']);
     });
 
-    describe('method signatures', function () {
-        it('createFromValidated has correct parameters', function () {
-            $reflection = new ReflectionMethod($this->factory, 'createFromValidated');
+    it('creates library item with minimal data', function () {
+        $item = $this->factory->createFromValidated(
+            ['title' => 'Minimal'],
+            'upload',
+            null,
+            $this->user->id
+        );
 
-            expect($reflection->getNumberOfParameters())->toBe(4);
-            expect($reflection->getNumberOfRequiredParameters())->toBe(2);
-        });
-
-        it('createFromValidatedWithMediaData has correct parameters', function () {
-            $reflection = new ReflectionMethod($this->factory, 'createFromValidatedWithMediaData');
-
-            expect($reflection->getNumberOfParameters())->toBe(4);
-            expect($reflection->getNumberOfRequiredParameters())->toBe(3);
-        });
-
-        it('createFromValidatedWithMediaFile has correct parameters', function () {
-            $reflection = new ReflectionMethod($this->factory, 'createFromValidatedWithMediaFile');
-
-            expect($reflection->getNumberOfParameters())->toBe(5);
-            expect($reflection->getNumberOfRequiredParameters())->toBe(3);
-        });
+        expect($item->title)->toBe('Minimal');
+        expect($item->description)->toBeNull();
+        expect($item->source_url)->toBeNull();
+        $this->assertDatabaseHas('library_items', ['id' => $item->id]);
     });
 
-    describe('parameter validation', function () {
-        it('requires validated array', function () {
-            expect(fn () => $this->factory->createFromValidated('invalid', 'upload'))
-                ->toThrow(TypeError::class);
-        });
+    it('creates library item with media file data merged in', function () {
+        $item = $this->factory->createFromValidatedWithMediaData(
+            ['title' => 'With Media'],
+            'upload',
+            ['file_path' => 'uploads/test.mp3', 'file_hash' => 'abc123', 'mime_type' => 'audio/mpeg', 'filesize' => 1024],
+            $this->user->id
+        );
 
-        it('requires source type string', function () {
-            expect(fn () => $this->factory->createFromValidated([], 123))
-                ->toThrow(Exception::class);
-        });
-
-        it('accepts optional source URL', function () {
-            $reflection = new ReflectionMethod($this->factory, 'createFromValidated');
-            $parameters = $reflection->getParameters();
-
-            $sourceUrlParam = $parameters[2];
-            expect($sourceUrlParam->getName())->toBe('sourceUrl');
-            expect($sourceUrlParam->isDefaultValueAvailable())->toBeTrue();
-            expect($sourceUrlParam->getDefaultValue())->toBeNull();
-        });
-
-        it('accepts optional user ID', function () {
-            $reflection = new ReflectionMethod($this->factory, 'createFromValidated');
-            $parameters = $reflection->getParameters();
-
-            $userIdParam = $parameters[3];
-            expect($userIdParam->getName())->toBe('userId');
-            expect($userIdParam->isDefaultValueAvailable())->toBeTrue();
-            expect($userIdParam->getDefaultValue())->toBeNull();
-        });
+        expect($item)->toBeInstanceOf(LibraryItem::class);
+        expect($item->title)->toBe('With Media');
+        expect($item->source_type)->toBe('upload');
+        $this->assertDatabaseHas('library_items', ['id' => $item->id, 'title' => 'With Media']);
     });
 
-    describe('processing status handling', function () {
-        it('uses PENDING status for new items', function () {
-            // Test that the factory uses the correct status constant
-            $reflection = new ReflectionClass($this->factory);
-            $source = $reflection->getFileName();
+    it('creates library item linked to existing media file', function () {
+        $mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id]);
 
-            expect($source)->toContain('LibraryItemFactory.php');
-            expect(ProcessingStatusType::PENDING->value)->toBe('pending');
-            expect(ProcessingStatusType::COMPLETED->value)->toBe('completed');
-        });
+        $item = $this->factory->createFromValidatedWithMediaFile(
+            $mediaFile,
+            ['title' => 'Linked'],
+            'url',
+            'https://example.com/audio.mp3',
+            $this->user->id
+        );
+
+        expect($item->media_file_id)->toBe($mediaFile->id);
+        expect($item->processing_status)->toBe(ProcessingStatusType::COMPLETED);
+        expect($item->processing_completed_at)->not->toBeNull();
+        $this->assertDatabaseHas('library_items', ['id' => $item->id, 'media_file_id' => $mediaFile->id]);
     });
 
-    describe('edge cases', function () {
-        it('handles empty validated data gracefully', function () {
-            // Should not throw exceptions with minimal data
-            $result = $this->factory->createFromValidated(['title' => 'Test'], 'upload', null, $this->user->id);
-            expect($result)->not->toBeNull();
-        });
+    it('marks as duplicate when media file belongs to same user', function () {
+        $mediaFile = MediaFile::factory()->create(['user_id' => $this->user->id]);
 
-        it('handles null source URL gracefully', function () {
-            $result = $this->factory->createFromValidated(['title' => 'Test'], 'upload', null, $this->user->id);
-            expect($result)->not->toBeNull();
-        });
+        $item = $this->factory->createFromValidatedWithMediaFile(
+            $mediaFile,
+            ['title' => 'Dup'],
+            'url',
+            null,
+            $this->user->id
+        );
 
-        it('handles empty media data gracefully', function () {
-            $result = $this->factory->createFromValidatedWithMediaData(['title' => 'Test'], 'upload', [], $this->user->id);
-            expect($result)->not->toBeNull();
-        });
+        expect($item->is_duplicate)->toBeTrue();
+        expect($item->duplicate_detected_at)->not->toBeNull();
+    });
+
+    it('does not mark as duplicate when media file belongs to different user', function () {
+        $otherUser = User::factory()->create();
+        $mediaFile = MediaFile::factory()->create(['user_id' => $otherUser->id]);
+
+        $item = $this->factory->createFromValidatedWithMediaFile(
+            $mediaFile,
+            ['title' => 'Cross-user'],
+            'url',
+            null,
+            $this->user->id
+        );
+
+        expect($item->is_duplicate)->toBeFalse();
+        expect($item->duplicate_detected_at)->toBeNull();
+    });
+
+    it('requires validated array as first argument', function () {
+        expect(fn () => $this->factory->createFromValidated('invalid', 'upload'))
+            ->toThrow(TypeError::class);
+    });
+
+    it('sets pending status for new items', function () {
+        $item = $this->factory->createFromValidated(
+            ['title' => 'Pending Test'],
+            'upload',
+            null,
+            $this->user->id
+        );
+
+        expect($item->processing_status)->toBe(ProcessingStatusType::PENDING);
+        expect($item->processing_completed_at)->toBeNull();
+    });
+
+    it('uses authenticated user when userId is null', function () {
+        $this->actingAs($this->user);
+
+        $item = $this->factory->createFromValidated(
+            ['title' => 'Auth User'],
+            'upload'
+        );
+
+        expect($item->user_id)->toBe($this->user->id);
     });
 });

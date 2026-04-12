@@ -2,7 +2,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
@@ -30,7 +31,7 @@ interface PageProps {
 }
 
 export default function UserManagement() {
-    const { users, flash } = usePage().props as PageProps;
+    const { users, flash } = usePage<PageProps>().props;
     const [rejectingUser, setRejectingUser] = useState<User | null>(null);
     const [showRejected, setShowRejected] = useState(false);
 
@@ -39,13 +40,13 @@ export default function UserManagement() {
     const toggleAdminForm = useForm({});
 
     const handleApprove = (user: User) => {
-        approveForm.post(`/admin/users/${user.id}/approve`);
+        approveForm.post(route('admin.users.approve', user.id));
     };
 
     const handleReject = () => {
         if (!rejectingUser) return;
 
-        rejectForm.post(`/admin/users/${rejectingUser.id}/reject`, {
+        rejectForm.post(route('admin.users.reject', rejectingUser.id), {
             onSuccess: () => {
                 setRejectingUser(null);
                 rejectForm.setData('reason', '');
@@ -54,7 +55,7 @@ export default function UserManagement() {
     };
 
     const handleToggleAdmin = (user: User) => {
-        toggleAdminForm.post(`/admin/users/${user.id}/toggle-admin`);
+        toggleAdminForm.post(route('admin.users.toggle-admin', user.id));
     };
 
     const getStatusBadge = (status: string) => {
@@ -89,9 +90,17 @@ export default function UserManagement() {
                     </div>
                 </div>
 
-                {flash?.success && <div className="mb-4 rounded border border-green-400 bg-green-100 p-4 text-green-700">{flash.success}</div>}
+                {flash?.success && (
+                    <Alert>
+                        <AlertDescription>{flash.success}</AlertDescription>
+                    </Alert>
+                )}
 
-                {flash?.error && <div className="mb-4 rounded border border-red-400 bg-red-100 p-4 text-red-700">{flash.error}</div>}
+                {flash?.error && (
+                    <Alert variant="destructive">
+                        <AlertDescription>{flash.error}</AlertDescription>
+                    </Alert>
+                )}
 
                 <Card>
                     <CardHeader>
@@ -122,61 +131,16 @@ export default function UserManagement() {
                                             <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
                                             <td className="p-2">
                                                 <div className="flex gap-2">
-                                                    {user.approval_status === 'pending' && (
-                                                        <>
-                                                            <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
-                                                                {approveForm.processing ? 'Approving...' : 'Approve'}
-                                                            </Button>
-                                                            <Dialog>
-                                                                <DialogTrigger asChild>
-                                                                    <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
-                                                                        Reject
-                                                                    </Button>
-                                                                </DialogTrigger>
-                                                                <DialogContent>
-                                                                    <DialogHeader>
-                                                                        <DialogTitle>Reject User</DialogTitle>
-                                                                    </DialogHeader>
-                                                                    <div className="space-y-4">
-                                                                        <div>
-                                                                            <Label htmlFor="reason">Rejection Reason</Label>
-                                                                            <Textarea
-                                                                                id="reason"
-                                                                                value={rejectForm.data.reason}
-                                                                                onChange={(e) => rejectForm.setData('reason', e.target.value)}
-                                                                                placeholder="Enter reason for rejection..."
-                                                                                className="mt-1"
-                                                                            />
-                                                                            {rejectForm.errors.reason && (
-                                                                                <p className="mt-1 text-sm text-red-500">
-                                                                                    {rejectForm.errors.reason}
-                                                                                </p>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="flex justify-end gap-2">
-                                                                            <Button
-                                                                                variant="outline"
-                                                                                onClick={() => {
-                                                                                    setRejectingUser(null);
-                                                                                    rejectForm.setData('reason', '');
-                                                                                    rejectForm.clearErrors();
-                                                                                }}
-                                                                            >
-                                                                                Cancel
-                                                                            </Button>
-                                                                            <Button
-                                                                                variant="destructive"
-                                                                                onClick={handleReject}
-                                                                                disabled={!rejectForm.data.reason.trim() || rejectForm.processing}
-                                                                            >
-                                                                                {rejectForm.processing ? 'Rejecting...' : 'Reject'}
-                                                                            </Button>
-                                                                        </div>
-                                                                    </div>
-                                                                </DialogContent>
-                                                            </Dialog>
-                                                        </>
-                                                    )}
+                                        {user.approval_status === 'pending' && (
+                                                            <>
+                                                                <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
+                                                                    {approveForm.processing ? 'Approving...' : 'Approve'}
+                                                                </Button>
+                                                                <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
+                                                                    Reject
+                                                                </Button>
+                                                            </>
+                                                        )}
                                                     {user.approval_status !== 'rejected' && (
                                                         <Button
                                                             size="sm"
@@ -201,6 +165,50 @@ export default function UserManagement() {
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog open={!!rejectingUser} onOpenChange={(open) => { if (!open) { setRejectingUser(null); rejectForm.setData('reason', ''); rejectForm.clearErrors(); } }}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Reject User</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="reason">Rejection Reason</Label>
+                            <Textarea
+                                id="reason"
+                                value={rejectForm.data.reason}
+                                onChange={(e) => rejectForm.setData('reason', e.target.value)}
+                                placeholder="Enter reason for rejection..."
+                                className="mt-1"
+                            />
+                            {rejectForm.errors.reason && (
+                                <p className="mt-1 text-sm text-red-500">
+                                    {rejectForm.errors.reason}
+                                </p>
+                            )}
+                        </div>
+                        <div className="flex justify-end gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => {
+                                    setRejectingUser(null);
+                                    rejectForm.setData('reason', '');
+                                    rejectForm.clearErrors();
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleReject}
+                                disabled={!rejectForm.data.reason.trim() || rejectForm.processing}
+                            >
+                                {rejectForm.processing ? 'Rejecting...' : 'Reject'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }

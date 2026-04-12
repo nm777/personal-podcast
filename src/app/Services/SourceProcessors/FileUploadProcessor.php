@@ -11,7 +11,8 @@ class FileUploadProcessor
 {
     public function __construct(
         private UnifiedDuplicateProcessor $duplicateProcessor,
-        private LibraryItemFactory $libraryItemFactory
+        private LibraryItemFactory $libraryItemFactory,
+        private UploadStrategy $strategy
     ) {}
 
     /**
@@ -45,7 +46,7 @@ class FileUploadProcessor
                 $userId
             );
 
-            return [$libraryItem, $this->getSuccessMessage($duplicateResult['is_duplicate'])];
+            return [$libraryItem, $this->strategy->getSuccessMessage($duplicateResult['is_duplicate'])];
         }
 
         // Delete temporary library item and create new one for processing
@@ -65,18 +66,6 @@ class FileUploadProcessor
         // Process new file
         ProcessMediaFile::dispatch($libraryItem, null, $tempPath);
 
-        return [$libraryItem, $this->getProcessingMessage()];
-    }
-
-    private function getSuccessMessage(bool $isDuplicate): string
-    {
-        return $isDuplicate
-            ? 'Duplicate file detected. This file already exists in your library and will be removed automatically in '.config('constants.duplicate.cleanup_delay_minutes').' minutes.'
-            : 'Media file uploaded successfully. Processing...';
-    }
-
-    private function getProcessingMessage(): string
-    {
-        return 'Media file uploaded successfully. Processing...';
+        return [$libraryItem, $this->strategy->getProcessingMessage()];
     }
 }

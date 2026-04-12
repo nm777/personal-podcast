@@ -2,6 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 
 export type Appearance = 'light' | 'dark' | 'system';
 
+const VALID_APPEARANCES: Appearance[] = ['light', 'dark', 'system'];
+
+const isValidAppearance = (value: string | null): value is Appearance =>
+    value !== null && VALID_APPEARANCES.includes(value as Appearance);
+
+const getStoredAppearance = (): Appearance => {
+    const stored = localStorage.getItem('appearance');
+    return isValidAppearance(stored) ? stored : 'system';
+};
+
 const prefersDark = () => {
     if (typeof window === 'undefined') {
         return false;
@@ -34,16 +44,12 @@ const mediaQuery = () => {
 };
 
 const handleSystemThemeChange = () => {
-    const currentAppearance = localStorage.getItem('appearance') as Appearance;
-    applyTheme(currentAppearance || 'system');
+    applyTheme(getStoredAppearance());
 };
 
 export function initializeTheme() {
-    const savedAppearance = (localStorage.getItem('appearance') as Appearance) || 'system';
+    applyTheme(getStoredAppearance());
 
-    applyTheme(savedAppearance);
-
-    // Add the event listener for system theme changes...
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
 }
 
@@ -63,8 +69,7 @@ export function useAppearance() {
     }, []);
 
     useEffect(() => {
-        const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-        updateAppearance(savedAppearance || 'system');
+        updateAppearance(getStoredAppearance());
 
         return () => mediaQuery()?.removeEventListener('change', handleSystemThemeChange);
     }, [updateAppearance]);

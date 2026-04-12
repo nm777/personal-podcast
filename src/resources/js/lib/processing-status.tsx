@@ -81,6 +81,17 @@ export class ProcessingStatusHelper implements ProcessingStatusMethods {
     }
 
     static from(status: string): ProcessingStatusHelper {
-        return new ProcessingStatusHelper(status as ProcessingStatusType);
+        const validStatuses: ProcessingStatusType[] = [
+            ProcessingStatus.PENDING,
+            ProcessingStatus.PROCESSING,
+            ProcessingStatus.COMPLETED,
+            ProcessingStatus.FAILED,
+        ];
+
+        const validated = validStatuses.includes(status as ProcessingStatusType)
+            ? (status as ProcessingStatusType)
+            : ProcessingStatus.PENDING;
+
+        return new ProcessingStatusHelper(validated);
     }
 }

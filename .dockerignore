@@ -41,6 +41,10 @@ build
 # Temporary files
 *.tmp
 *.temp
+src/storage/app/private/temp-uploads
+src/storage/app/public/temp-youtube
+src/storage/framework/
+src/storage/logs
 
 # Data files
 *.sqlite

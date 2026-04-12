@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\LibraryItem;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use App\Services\YouTube\YouTubeProcessingService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 it('can add media file from YouTube URL', function () {
-    $this->withoutMiddleware();
     Storage::fake('public');
     Queue::fake();
 
@@ -35,7 +34,6 @@ it('can add media file from YouTube URL', function () {
 });
 
 it('validates YouTube URL requirements', function () {
-    $this->withoutMiddleware();
     $user = User::factory()->create();
 
     // Test missing URL
@@ -57,7 +55,6 @@ it('validates YouTube URL requirements', function () {
 });
 
 it('reuses existing media file when same YouTube URL is provided', function () {
-    $this->withoutMiddleware();
     Storage::fake('public');
     Queue::fake();
 

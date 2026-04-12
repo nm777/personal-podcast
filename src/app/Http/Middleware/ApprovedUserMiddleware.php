@@ -15,7 +15,7 @@ class ApprovedUserMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         if (! $user) {
             return redirect()->route('login');

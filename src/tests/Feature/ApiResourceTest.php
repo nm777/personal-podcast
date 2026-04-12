@@ -7,10 +7,7 @@ use App\Models\Feed;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Resources\MissingValue;
-
-uses(RefreshDatabase::class);
 
 describe('API Resources', function () {
     beforeEach(function () {
@@ -75,7 +72,7 @@ describe('API Resources', function () {
         $array = $resource->toArray(request());
 
         expect($array)->toHaveKey('id');
-        expect($array)->toHaveKey('file_path');
+        expect($array)->not->toHaveKey('file_path');
         expect($array)->toHaveKey('public_url');
         expect($array)->toHaveKey('file_hash');
         expect($array)->toHaveKey('mime_type');

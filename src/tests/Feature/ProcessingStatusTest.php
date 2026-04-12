@@ -4,6 +4,8 @@ use App\Jobs\ProcessMediaFile;
 use App\Models\LibraryItem;
 use App\Models\User;
 use App\ProcessingStatusType;
+use App\Services\MediaProcessing\MediaProcessingService;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -53,7 +55,7 @@ it('updates processing status when job completes', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
-    $job->handle();
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -76,13 +78,12 @@ it('updates processing status when job fails', function () {
         'processing_status' => ProcessingStatusType::PENDING,
     ]);
 
-    // Mock failed HTTP response
     Http::fake([
         'https://example.com/missing-file.mp3' => Http::response('Not Found', 404),
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/missing-file.mp3', null);
-    $job->handle();
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 

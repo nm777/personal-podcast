@@ -13,18 +13,29 @@ class SourceProcessorFactory
         $duplicateProcessor = app(UnifiedDuplicateProcessor::class);
         $libraryItemFactory = app(LibraryItemFactory::class);
 
-        $fileUploadProcessor = new FileUploadProcessor($duplicateProcessor, $libraryItemFactory);
+        $fileUploadProcessor = app(FileUploadProcessor::class, [
+            'duplicateProcessor' => $duplicateProcessor,
+            'libraryItemFactory' => $libraryItemFactory,
+        ]);
 
         $strategy = match ($sourceType) {
-            'upload' => new UploadStrategy,
-            'url' => new UrlStrategy,
-            'youtube' => new YouTubeStrategy,
+            'upload' => app(UploadStrategy::class),
+            'url' => app(UrlStrategy::class),
+            'youtube' => app(YouTubeStrategy::class),
             default => throw new \InvalidArgumentException("Unsupported source type: {$sourceType}"),
         };
 
-        $urlSourceProcessor = new UrlSourceProcessor($libraryItemFactory, $strategy);
+        $urlSourceProcessor = app(UrlSourceProcessor::class, [
+            'libraryItemFactory' => $libraryItemFactory,
+            'strategy' => $strategy,
+            'duplicateProcessor' => $duplicateProcessor,
+        ]);
 
-        return new UnifiedSourceProcessor($fileUploadProcessor, $urlSourceProcessor, $strategy);
+        return app(UnifiedSourceProcessor::class, [
+            'fileUploadProcessor' => $fileUploadProcessor,
+            'urlSourceProcessor' => $urlSourceProcessor,
+            'strategy' => $strategy,
+        ]);
     }
 
     public static function validate(string $sourceType, ?string $sourceUrl): ?RedirectResponse

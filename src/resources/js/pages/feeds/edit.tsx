@@ -1,51 +1,16 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, Link, useForm } from '@inertiajs/react';
+import { formatDuration, formatFileSize } from '@/lib/format';
 import { ArrowLeft, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-
-interface MediaFile {
-    id: number;
-    file_path: string;
-    file_hash: string;
-    mime_type: string;
-    filesize: number;
-    duration?: number;
-}
-
-interface LibraryItem {
-    id: number;
-    title: string;
-    description?: string;
-    source_type: string;
-    source_url?: string;
-    media_file?: MediaFile | null;
-}
-
-interface FeedItem {
-    id: number;
-    feed_id: number;
-    library_item_id: number;
-    sequence: number;
-    library_item: LibraryItem;
-}
-
-interface Feed {
-    id: number;
-    title: string;
-    description?: string;
-    is_public: boolean;
-    slug: string;
-    user_guid: string;
-    created_at: string;
-    updated_at: string;
-    items: FeedItem[];
-}
 
 interface EditFeedProps {
     feed: Feed;
@@ -84,7 +49,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
     const addLibraryItem = (libraryItemId: number) => {
         const newItem = {
-            id: 0,
+            id: Date.now(),
             library_item_id: libraryItemId,
             sequence: data.items.length,
         };
@@ -127,25 +92,6 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
         return userLibraryItems.find((item) => item.id === libraryItemId);
     };
 
-    const formatDuration = (seconds?: number) => {
-        if (!seconds) return 'Unknown';
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = Math.floor(seconds % 60);
-
-        if (hours > 0) {
-            return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-        }
-        return `${minutes}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    const formatFileSize = (bytes: number) => {
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        if (bytes === 0) return '0 B';
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
-    };
-
     const availableLibraryItems = userLibraryItems.filter((item) => !data.items.some((feedItem) => feedItem.library_item_id === item.id));
 
     return (
@@ -183,7 +129,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                             placeholder="Enter feed title"
                                             required
                                         />
-                                        {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+                                        {errors.title && <InputError message={errors.title} />}
                                     </div>
 
                                     <div className="space-y-2">
@@ -195,16 +141,14 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                             placeholder="Enter feed description (optional)"
                                             rows={3}
                                         />
-                                        {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                                        {errors.description && <InputError message={errors.description} />}
                                     </div>
 
                                     <div className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
+                                        <Checkbox
                                             id="is_public"
                                             checked={data.is_public}
-                                            onChange={(e) => setData('is_public', e.target.checked)}
-                                            className="rounded border-gray-300"
+                                            onCheckedChange={(checked) => setData('is_public', checked === true)}
                                         />
                                         <Label htmlFor="is_public">Make this feed public</Label>
                                     </div>
@@ -238,7 +182,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
 
                                             return (
                                                 <div
-                                                    key={index}
+                                                    key={item.library_item_id}
                                                     draggable
                                                     onDragStart={() => handleDragStart(index)}
                                                     onDragOver={handleDragOver}

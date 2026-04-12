@@ -187,6 +187,32 @@ it('validates library item exists when adding to feed', function () {
     $response->assertSessionHasErrors(['items.0.library_item_id']);
 });
 
+it('prevents adding another users library item to own feed', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $feed = Feed::factory()->create(['user_id' => $user->id]);
+    $mediaFile = MediaFile::factory()->create();
+    $otherUserItem = LibraryItem::factory()->create([
+        'user_id' => $otherUser->id,
+        'media_file_id' => $mediaFile->id,
+    ]);
+
+    $response = $this->actingAs($user)->put("/feeds/{$feed->id}", [
+        'title' => $feed->title,
+        'description' => $feed->description,
+        'is_public' => $feed->is_public,
+        'items' => [
+            ['library_item_id' => $otherUserItem->id, 'sequence' => 0],
+        ],
+    ]);
+
+    $response->assertSessionHasErrors(['items.0.library_item_id']);
+    $this->assertDatabaseMissing('feed_items', [
+        'feed_id' => $feed->id,
+        'library_item_id' => $otherUserItem->id,
+    ]);
+});
+
 it('shows user library items on edit page', function () {
     $user = User::factory()->create();
     $feed = Feed::factory()->create(['user_id' => $user->id]);

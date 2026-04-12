@@ -138,8 +138,36 @@ test('unauthenticated user cannot access feed management', function () {
     ]);
     $response->assertRedirect('/login');
 
-    $response = $this->delete('/feeds/1');
+    $response = $this->delete('/feeds/nonexistent');
     $response->assertRedirect('/login');
+});
+
+test('user can create feeds with titles that produce the same slug', function () {
+    $user = User::factory()->create();
+
+    $response1 = $this->actingAs($user)->post('/feeds', [
+        'title' => 'Hello World',
+        'description' => 'First feed',
+    ]);
+
+    $feed1 = $user->feeds()->latest()->first();
+    $response1->assertRedirect("/feeds/{$feed1->id}/edit");
+    $response1->assertSessionHas('success');
+
+    $response2 = $this->actingAs($user)->post('/feeds', [
+        'title' => 'Hello-World',
+        'description' => 'Second feed with same slug',
+    ]);
+
+    $response2->assertSessionHasNoErrors();
+    $response2->assertSessionHas('success');
+
+    $this->assertDatabaseHas('feeds', [
+        'user_id' => $user->id,
+        'title' => 'Hello-World',
+    ]);
+
+    expect($user->feeds()->count())->toBe(2);
 });
 
 test('user can get list of their feeds via API', function () {

@@ -27,7 +27,12 @@ class FeedRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'is_public' => ['boolean'],
             'items' => ['nullable', 'array'],
-            'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id'],
+            'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id', function ($attribute, $value, $fail) {
+                $item = \App\Models\LibraryItem::find($value);
+                if ($item && $item->user_id !== $this->user()->id) {
+                    $fail('You can only add your own library items to feeds.');
+                }
+            }],
             'items.*.sequence' => ['required', 'integer', 'min:0'],
         ];
     }

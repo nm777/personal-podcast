@@ -7,6 +7,7 @@ use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use App\ProcessingStatusType;
+use App\Services\DuplicateDetectionService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -20,6 +21,25 @@ it('displays library page for authenticated users', function () {
     $response->assertInertia(
         fn ($page) => $page->component('Library/Index')
     );
+});
+
+it('has a named route for library.store', function () {
+    expect(route('library.store'))->toBeUrl(url('/library'));
+});
+
+it('can post to library store endpoint', function () {
+    Storage::fake('public');
+    Queue::fake();
+
+    $user = User::factory()->create();
+    $file = UploadedFile::fake()->create('test.mp3', 100, 'audio/mpeg');
+
+    $response = $this->actingAs($user)->post(route('library.store'), [
+        'title' => 'Test Upload',
+        'file' => $file,
+    ]);
+
+    $response->assertRedirect('/library');
 });
 
 it('shows only authenticated user library items', function () {
@@ -292,12 +312,11 @@ it('MediaFile model can check file duplicates', function () {
     ]);
 
     // Test duplicate detection
-    $duplicate = MediaFile::isDuplicate($tempPath);
+    $duplicate = DuplicateDetectionService::findGlobalDuplicate($tempPath);
     expect($duplicate)->not->toBeNull();
     expect($duplicate->id)->toBe($mediaFile->id);
 
-    // Test with non-existent file
-    $nonDuplicate = MediaFile::isDuplicate('/non/existent/file.mp3');
+    $nonDuplicate = DuplicateDetectionService::findGlobalDuplicate('/non/existent/file.mp3');
     expect($nonDuplicate)->toBeNull();
 
     // Clean up
@@ -339,7 +358,7 @@ it('marks duplicate library items and schedules cleanup', function () {
 
     // Process the file
     $job = new ProcessMediaFile($libraryItem, null, $tempPath);
-    $job->handle();
+    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
 
     $libraryItem->refresh();
 

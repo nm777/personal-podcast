@@ -40,6 +40,16 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
         <AuthLayout title="Log in to your account" description="Enter your email and password below to log in">
             <Head title="Log in" />
 
+            {status && (
+                <div
+                    className={`mb-4 text-center text-sm font-medium ${
+                        statusType === 'error' ? 'text-red-600' : statusType === 'warning' ? 'text-yellow-600' : 'text-green-600'
+                    }`}
+                >
+                    {status}
+                </div>
+            )}
+
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
@@ -54,7 +64,6 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            onInput={(e) => setData('email', (e.target as HTMLInputElement).value)}
                             placeholder="email@example.com"
                         />
                         <InputError message={errors.email} />
@@ -78,7 +87,6 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            onInput={(e) => setData('password', (e.target as HTMLInputElement).value)}
                             placeholder="Password"
                         />
                         <InputError message={errors.password} />
@@ -108,16 +116,6 @@ export default function Login({ status, statusType, canResetPassword }: LoginPro
                     </TextLink>
                 </div>
             </form>
-
-            {status && (
-                <div
-                    className={`mb-4 text-center text-sm font-medium ${
-                        statusType === 'error' ? 'text-red-600' : statusType === 'warning' ? 'text-yellow-600' : 'text-green-600'
-                    }`}
-                >
-                    {status}
-                </div>
-            )}
         </AuthLayout>
     );
 }

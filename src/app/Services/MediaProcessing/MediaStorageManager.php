@@ -11,15 +11,12 @@ class MediaStorageManager
      */
     public function storeFile(string $content, string $extension, ?string $sourceUrl = null): array
     {
-        // Store to temp location first to calculate hash efficiently
         $tempPath = 'temp-hash-'.uniqid().'.'.$extension;
         Storage::disk('public')->put($tempPath, $content);
 
-        // Calculate hash using native function (no memory loading)
         $fullPath = Storage::disk('public')->path($tempPath);
         $fileHash = hash_file('sha256', $fullPath);
 
-        // Move to final location
         $finalPath = 'media/'.$fileHash.'.'.$extension;
         Storage::disk('public')->move($tempPath, $finalPath);
 
@@ -32,15 +29,25 @@ class MediaStorageManager
     }
 
     /**
-     * Move temporary file to permanent location.
+     * Move temporary file to permanent location using hash-based naming.
+     * Avoids loading file contents into memory.
      */
     public function moveTempFile(string $tempPath, ?string $sourceUrl = null): array
     {
         $fullPath = Storage::disk('public')->path($tempPath);
-        $content = file_get_contents($fullPath);
         $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
+        $fileHash = hash_file('sha256', $fullPath);
+        $filesize = filesize($fullPath);
 
-        return $this->storeFile($content, $extension, $sourceUrl);
+        $finalPath = 'media/'.$fileHash.'.'.$extension;
+        Storage::disk('public')->move($tempPath, $finalPath);
+
+        return [
+            'file_path' => $finalPath,
+            'file_hash' => $fileHash,
+            'filesize' => $filesize,
+            'source_url' => $sourceUrl,
+        ];
     }
 
     /**

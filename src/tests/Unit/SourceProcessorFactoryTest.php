@@ -63,3 +63,21 @@ it('validates youtube url with mobile subdomain', function () {
 
     expect($isValid)->toBeTrue();
 });
+
+it('validates youtube live url', function () {
+    $isValid = YouTubeUrlValidator::isValidYouTubeUrl('https://youtube.com/live/gbW9_DxgBsE');
+
+    expect($isValid)->toBeTrue();
+});
+
+it('extracts video id from youtube live url', function () {
+    $videoId = YouTubeUrlValidator::extractVideoId('https://youtube.com/live/gbW9_DxgBsE?si=d-c_3pQ3VbQS9VNk');
+
+    expect($videoId)->toBe('gbW9_DxgBsE');
+});
+
+it('extracts video id from youtube live url with www', function () {
+    $videoId = YouTubeUrlValidator::extractVideoId('https://www.youtube.com/live/abc123');
+
+    expect($videoId)->toBe('abc123');
+});

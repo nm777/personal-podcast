@@ -13,29 +13,16 @@ class CleanupDuplicateLibraryItem implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $libraryItem;
+    public function __construct(public LibraryItem $libraryItem) {}
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(LibraryItem $libraryItem)
-    {
-        $this->libraryItem = $libraryItem;
-    }
-
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        // Refresh the library item to get current state
         $libraryItem = $this->libraryItem->fresh();
 
         if (! $libraryItem || ! $libraryItem->is_duplicate) {
             return;
         }
 
-        // Delete the duplicate library item
         $libraryItem->delete();
     }
 }

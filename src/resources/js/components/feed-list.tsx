@@ -1,22 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
+import { type Feed } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { router } from '@inertiajs/react';
-import { Copy, Edit, Eye, EyeOff, FileAudio, Rss, Trash2 } from 'lucide-react';
-
-interface Feed {
-    id: number;
-    title: string;
-    description?: string;
-    is_public: boolean;
-    slug: string;
-    user_guid: string;
-    token?: string;
-    items_count: number;
-    created_at: string;
-    updated_at: string;
-}
+import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
+import { router, Link } from '@inertiajs/react';
+import { Copy, Edit, Eye, EyeOff, FileAudio, Podcast, Rss, Smartphone, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 interface FeedListProps {
     feeds: Feed[];
@@ -25,22 +17,36 @@ interface FeedListProps {
 
 export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     const { toast } = useToast();
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [feedToDelete, setFeedToDelete] = useState<number | null>(null);
 
-    const handleDelete = (feedId: number) => {
-        if (confirm('Are you sure you want to delete this feed?')) {
-            router.delete(`/feeds/${feedId}`, {
+    const handleDeleteClick = (feedId: number) => {
+        setFeedToDelete(feedId);
+        setDeleteDialogOpen(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        if (feedToDelete) {
+            router.delete(route('feeds.destroy', feedToDelete), {
                 onSuccess: () => {
-                    // Feed deleted successfully
+                    setDeleteDialogOpen(false);
+                    setFeedToDelete(null);
                 },
-                onError: (errors) => {
-                    console.error('Error deleting feed:', errors);
+                onError: () => {
+                    toast({
+                        title: 'Error',
+                        description: 'Failed to delete feed. Please try again.',
+                        variant: 'destructive',
+                    });
+                    setDeleteDialogOpen(false);
+                    setFeedToDelete(null);
                 },
             });
         }
     };
 
     const handleCopyUrl = async (feed: Feed) => {
-        const fullUrl = window.location.origin + getFeedUrl(feed);
+        const fullUrl = getAbsoluteRssUrl(feed);
 
         const fallbackCopyTextToClipboard = (text: string) => {
             const textArea = document.createElement('textarea');
@@ -86,14 +92,6 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
         }
     };
 
-    const getFeedUrl = (feed: Feed) => {
-        const baseUrl = `/rss/${feed.user_guid}/${feed.slug}`;
-        if (!feed.is_public && feed.token) {
-            return `${baseUrl}?token=${feed.token}`;
-        }
-        return baseUrl;
-    };
-
     if (feeds.length === 0) {
         return (
             <Card>
@@ -107,6 +105,7 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
     }
 
     return (
+        <>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {feeds.map((feed) => (
                 <Card key={feed.id} className="min-w-0">
@@ -138,33 +137,76 @@ export default function FeedList({ feeds, canEdit = true }: FeedListProps) {
                         </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                        <div className="space-y-3">
-                            <div className="text-sm break-all text-muted-foreground">
-                                <a href={getFeedUrl(feed)} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
-                                    {getFeedUrl(feed)}
-                                </a>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" onClick={() => handleCopyUrl(feed)}>
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                                {canEdit && (
-                                    <>
-                                        <Button variant="outline" size="sm" asChild>
-                                            <a href={`/feeds/${feed.id}/edit`}>
-                                                <Edit className="h-4 w-4" />
-                                            </a>
-                                        </Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(feed.id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <a href={getApplePodcastsUrl(feed)} target="_blank" rel="noopener noreferrer">
+                                            <Podcast className="h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Apple Podcasts</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" asChild>
+                                        <a href={getGooglePodcastsUrl(feed)} target="_blank" rel="noopener noreferrer">
+                                            <Smartphone className="h-4 w-4" />
+                                        </a>
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Google Podcasts / Android</TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="outline" size="sm" onClick={() => handleCopyUrl(feed)}>
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Copy RSS URL</TooltipContent>
+                            </Tooltip>
+
+                            {canEdit && (
+                                <>
+                                    <div className="mx-1 h-4 w-px bg-border" />
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="outline" size="sm" asChild>
+                                                <Link href={route('feeds.edit', feed.id)}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Edit Feed</TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="destructive" size="sm" onClick={() => handleDeleteClick(feed.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Delete Feed</TooltipContent>
+                                    </Tooltip>
+                                </>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
             ))}
         </div>
+
+        <DeleteConfirmDialog
+            isOpen={deleteDialogOpen}
+            onClose={() => { setDeleteDialogOpen(false); setFeedToDelete(null); }}
+            onConfirm={handleDeleteConfirm}
+            title="Delete Feed"
+            description="Are you sure you want to delete this feed? This action cannot be undone."
+            confirmText="Delete Feed"
+            variant="destructive"
+        />
+        </>
     );
 }

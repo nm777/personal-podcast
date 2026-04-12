@@ -4,7 +4,7 @@ namespace App\Services\MediaProcessing;
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use Illuminate\Support\Facades\Storage;
 
 class MediaProcessingService
@@ -22,24 +22,24 @@ class MediaProcessingService
     public function processFromUrl(LibraryItem $libraryItem, string $sourceUrl): array
     {
         try {
-            // Mark as processing
             $this->markAsProcessing($libraryItem);
 
-            // Check for URL duplicates first
             $duplicateResult = $this->duplicateProcessor->processUrlDuplicate($libraryItem, $sourceUrl);
             if ($duplicateResult['media_file']) {
                 return $duplicateResult;
             }
 
-            // Download the file
-            $content = $this->downloader->downloadFromUrl($sourceUrl);
+            $tempPath = $this->downloader->downloadFromUrl($sourceUrl);
 
-            // Store to temporary location for processing
-            $tempPath = 'temp-uploads/'.uniqid().'_'.basename(parse_url($sourceUrl, PHP_URL_PATH) ?: 'download');
-            Storage::disk('public')->put($tempPath, $content);
+            try {
+                return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
+            } catch (\Exception $e) {
+                if (Storage::disk('public')->exists($tempPath)) {
+                    Storage::disk('public')->delete($tempPath);
+                }
 
-            // Process the downloaded file
-            return $this->processFromFile($libraryItem, $tempPath, $sourceUrl);
+                throw $e;
+            }
 
         } catch (\Exception $e) {
             return $this->handleProcessingError($libraryItem, $e);

@@ -52,6 +52,7 @@ class YouTubeMetadataExtractor
             return [
                 'title' => $metadata['title'] ?? null,
                 'description' => $metadata['description'] ?? null,
+                'upload_date' => $metadata['upload_date'] ?? null,
             ];
 
         } catch (\Exception $e) {

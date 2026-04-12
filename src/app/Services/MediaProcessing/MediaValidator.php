@@ -7,44 +7,43 @@ use Illuminate\Support\Facades\File;
 class MediaValidator
 {
     /**
-     * Validate media file content and return metadata.
+     * Validate media file and return metadata.
+     * Only reads the file header for signature validation, not the entire file.
      */
-    public function validate(string $filePath, ?string $content = null): array
+    public function validate(string $filePath): array
     {
-        if ($content === null) {
-            $content = file_get_contents($filePath);
-        }
+        $header = file_get_contents($filePath, false, null, 0, 4096);
 
-        $this->validateMediaContent($content);
+        $this->validateMediaContent($header);
 
         return [
-            'mime_type' => $this->detectMimeType($filePath, $content),
-            'filesize' => strlen($content),
+            'mime_type' => $this->detectMimeType($filePath, $header),
+            'filesize' => file_exists($filePath) ? filesize($filePath) : 0,
             'is_valid' => true,
         ];
     }
 
     /**
-     * Validate that content is valid media.
+     * Validate that content is valid media based on file signature.
      */
-    private function validateMediaContent(string $content): void
+    private function validateMediaContent(string $header): void
     {
         $validMediaSignatures = [
-            'RIFF' => true, // WAV/AVI
-            'OggS' => true, // OGG
-            'fLaC' => true, // FLAC
-            'MP4' => true,  // M4A/MP4
-            "\xFF\xFB" => true, // MP3
-            "\xFF\xF3" => true, // MP3
-            "\xFF\xF2" => true, // MP3
+            'RIFF' => true,
+            'OggS' => true,
+            'fLaC' => true,
+            'MP4' => true,
+            "\xFF\xFB" => true,
+            "\xFF\xF3" => true,
+            "\xFF\xF2" => true,
         ];
 
-        $fileSignature = substr($content, 0, 4);
+        $fileSignature = substr($header, 0, 4);
         $isValidMedia = isset($validMediaSignatures[$fileSignature]) ||
-                       isset($validMediaSignatures[substr($content, 0, 2)]) ||
-                       str_starts_with($fileSignature, 'ID3'); // MP3 with ID3 tag
+                       isset($validMediaSignatures[substr($header, 0, 2)]) ||
+                       str_starts_with($fileSignature, 'ID3');
 
-        if (! $isValidMedia && strlen($content) > 100) {
+        if (! $isValidMedia && strlen($header) > 100) {
             throw new \InvalidArgumentException('Content does not appear to be a valid audio file');
         }
     }
@@ -52,9 +51,8 @@ class MediaValidator
     /**
      * Detect MIME type for media file.
      */
-    private function detectMimeType(string $filePath, string $content): string
+    private function detectMimeType(string $filePath, string $header): string
     {
-        // Try to get MIME type from file system first
         if (file_exists($filePath)) {
             $mimeType = File::mimeType($filePath);
             if ($mimeType && $mimeType !== 'text/plain') {
@@ -62,14 +60,13 @@ class MediaValidator
             }
         }
 
-        // Fallback to content-based detection
-        return $this->detectMimeTypeFromContent($content);
+        return $this->detectMimeTypeFromContent($header);
     }
 
     /**
      * Detect MIME type from content signature.
      */
-    private function detectMimeTypeFromContent(string $content): string
+    private function detectMimeTypeFromContent(string $header): string
     {
         $signatures = [
             'RIFF' => 'audio/wav',
@@ -83,12 +80,11 @@ class MediaValidator
         ];
 
         foreach ($signatures as $signature => $mimeType) {
-            if (str_starts_with($content, $signature)) {
+            if (str_starts_with($header, $signature)) {
                 return $mimeType;
             }
         }
 
-        // Default fallback
         return 'application/octet-stream';
     }
 }

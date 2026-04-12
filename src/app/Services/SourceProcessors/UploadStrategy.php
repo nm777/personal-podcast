@@ -20,7 +20,7 @@ class UploadStrategy implements SourceStrategyInterface
     public function getSuccessMessage(bool $isDuplicate): string
     {
         if ($isDuplicate) {
-            return 'Duplicate file detected. This file already exists in your library and will be removed automatically in 5 minutes.';
+            return 'Duplicate file detected. This file already exists in your library and will be removed automatically in '.config('constants.duplicate.cleanup_delay_minutes').' minutes.';
         }
 
         return 'Media file uploaded successfully. Processing...';

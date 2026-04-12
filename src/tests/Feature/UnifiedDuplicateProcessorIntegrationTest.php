@@ -91,12 +91,15 @@ describe('UnifiedDuplicateProcessor Integration', function () {
             ]);
 
             // Mock downloader to return fake content
-            $fakeContent = 'fake audio content';
-            $mockDownloader = $this->mock(MediaDownloader::class, function ($mock) use ($fakeContent) {
+            $fakeContent = 'ID3'.str_repeat("\0", 100).'fake audio data';
+            Storage::fake('public');
+            $tempPath = 'temp-downloads/test-audio.mp3';
+            Storage::disk('public')->put($tempPath, $fakeContent);
+            $mockDownloader = $this->mock(MediaDownloader::class, function ($mock) use ($tempPath) {
                 $mock->shouldReceive('downloadFromUrl')
                     ->with('https://example.com/new-audio.mp3')
                     ->once()
-                    ->andReturn($fakeContent);
+                    ->andReturn($tempPath);
             });
 
             // Create new service with mocked downloader

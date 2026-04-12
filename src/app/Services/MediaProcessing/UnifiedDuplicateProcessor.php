@@ -5,12 +5,21 @@ namespace App\Services\MediaProcessing;
 use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
-use App\ProcessingStatusType;
+use App\Enums\ProcessingStatusType;
 use App\Services\DuplicateDetectionService;
 use Illuminate\Support\Facades\Log;
 
 class UnifiedDuplicateProcessor
 {
+    /**
+     * Analyze URL source for duplicates without modifying any records.
+     * Used by sync path (UrlSourceProcessor) to check before creating items.
+     */
+    public function analyzeUrlDuplicate(string $sourceUrl, int $userId, ?int $excludeLibraryItemId = null): array
+    {
+        return DuplicateDetectionService::analyzeUrlSource($sourceUrl, $userId, $excludeLibraryItemId);
+    }
+
     /**
      * Process duplicate detection and handling for URL sources.
      */
