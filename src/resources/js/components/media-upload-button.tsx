@@ -36,7 +36,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     });
 
     const extractYouTubeVideoId = (url: string): string | null => {
-        const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/;
+        const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/live\/)([^&\n?#]+)/;
         const match = url.match(regex);
         return match ? match[1] : null;
     };
