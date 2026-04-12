@@ -217,7 +217,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                                     {item.title}
                                                 </button>
                                                 <CardDescription className="text-xs">
-                                                    {new Date(item.created_at).toLocaleDateString()}
+                                                    {(item.published_at || item.created_at).split('T')[0]}
                                                 </CardDescription>
                                             </div>
                                         </div>
