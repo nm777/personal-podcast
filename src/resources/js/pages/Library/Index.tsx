@@ -41,6 +41,7 @@ interface LibraryItem {
     processing_started_at?: string;
     processing_completed_at?: string;
     processing_error?: string;
+    published_at?: string;
     created_at: string;
     updated_at: string;
     media_file?: MediaFile;
@@ -78,6 +79,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
     } = useForm({
         title: '',
         description: '',
+        published_at: '',
     });
 
     // Auto-refresh for processing items using custom polling
@@ -125,6 +127,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         setItemToEdit(item);
         setData('title', item.title);
         setData('description', item.description || '');
+        setData('published_at', item.published_at ? item.published_at.split('T')[0] : '');
         setEditDialogOpen(true);
     };
 
@@ -146,6 +149,7 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
         setItemToEdit(null);
         setData('title', '');
         setData('description', '');
+        setData('published_at', '');
     };
 
     const formatFileSize = (bytes: number) => {
@@ -347,6 +351,16 @@ export default function LibraryIndex({ libraryItems, flash }: LibraryIndexProps)
                                     rows={3}
                                 />
                                 {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-published_at">Publish Date</Label>
+                                <Input
+                                    id="edit-published_at"
+                                    type="date"
+                                    value={data.published_at}
+                                    onChange={(e) => setData('published_at', e.target.value)}
+                                />
+                                {errors.published_at && <p className="text-sm text-destructive">{errors.published_at}</p>}
                             </div>
                         </div>
                         <DialogFooter>

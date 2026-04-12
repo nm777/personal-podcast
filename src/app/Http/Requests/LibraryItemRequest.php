@@ -38,6 +38,7 @@ class LibraryItemRequest extends FormRequest
             'source_url' => 'required_without_all:file,url|prohibits:file,url|url|max:2048',
             'feed_ids' => 'nullable|array',
             'feed_ids.*' => ['integer', Rule::exists('feeds', 'id')->where('user_id', $this->user()?->id)],
+            'published_at' => 'nullable|date',
         ];
     }
 

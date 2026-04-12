@@ -25,6 +25,7 @@ class UpdateLibraryItemRequest extends FormRequest
         return [
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'published_at' => 'nullable|date',
         ];
     }
 

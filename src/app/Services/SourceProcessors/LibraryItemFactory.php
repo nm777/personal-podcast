@@ -16,6 +16,7 @@ class LibraryItemFactory
         $libraryItem = LibraryItem::create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            'published_at' => $validated['published_at'] ?? null,
             'user_id' => $userId ?? auth()->id(),
             'source_type' => $sourceType,
             'source_url' => $sourceUrl,
@@ -35,6 +36,7 @@ class LibraryItemFactory
         $libraryItem = LibraryItem::create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            'published_at' => $validated['published_at'] ?? null,
             'user_id' => $userId ?? auth()->id(),
             'source_type' => $sourceType,
             'processing_status' => ProcessingStatusType::PENDING,
@@ -54,6 +56,7 @@ class LibraryItemFactory
         $libraryItem = LibraryItem::create([
             'title' => $validated['title'],
             'description' => $validated['description'] ?? null,
+            'published_at' => $validated['published_at'] ?? null,
             'user_id' => $currentUserId,
             'source_type' => $sourceType,
             'source_url' => $sourceUrl,

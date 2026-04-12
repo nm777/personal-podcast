@@ -20,7 +20,7 @@
         <item>
             <title>{{ $item->libraryItem->title }}</title>
             <description><![CDATA[{!! $item->libraryItem->description !!}]]></description>
-            <pubDate>{{ $item->created_at->toRfc822String() }}</pubDate>
+            <pubDate>{{ ($item->libraryItem->published_at ?? $item->created_at)->toRfc822String() }}</pubDate>
             <guid isPermaLink="false">{{ $item->id }}</guid>
             <enclosure url="{{ $item->libraryItem->mediaFile->rss_url }}{{ $feed->is_public ? '' : '?feed_token=' . $feed->token }}"
                 length="{{ $item->libraryItem->mediaFile->filesize }}"

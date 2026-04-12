@@ -29,6 +29,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     const { data, setData, post, processing, errors, reset, transform } = useForm({
         title: '',
         description: '',
+        published_at: '',
         file: null as File | null,
         url: '',
         source_url: '',
@@ -120,6 +121,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
         setData('source_url', '');
         setData('title', '');
         setData('description', '');
+        setData('published_at', '');
         setSelectedFile(null);
         setUrlDuplicateWarning(null);
     };
@@ -202,6 +204,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             const baseData = {
                 title: data.title,
                 description: data.description,
+                published_at: data.published_at || undefined,
                 feed_ids: data.feed_ids,
             };
 
@@ -389,6 +392,20 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                             rows={3}
                         />
                         {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+                    </div>
+
+                    <div>
+                        <Label htmlFor="published_at">Publish Date</Label>
+                        <Input
+                            id="published_at"
+                            type="date"
+                            value={data.published_at}
+                            onChange={(e) => setData('published_at', e.target.value)}
+                        />
+                        {errors.published_at && <p className="mt-1 text-sm text-red-600">{errors.published_at}</p>}
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Defaults to today if not set
+                        </p>
                     </div>
 
                     {feeds.length > 0 && (

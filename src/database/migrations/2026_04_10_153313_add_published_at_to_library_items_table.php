@@ -6,24 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('library_items', function (Blueprint $table) {
-            $table->boolean('is_duplicate')->default(false)->after('media_file_id');
-            $table->timestamp('duplicate_detected_at')->nullable()->after('is_duplicate');
+            $table->date('published_at')->nullable()->after('processing_error');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('library_items', function (Blueprint $table) {
-            $table->dropColumn(['is_duplicate', 'duplicate_detected_at']);
+            $table->dropColumn('published_at');
         });
     }
 };

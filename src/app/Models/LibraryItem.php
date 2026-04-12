@@ -23,6 +23,7 @@ class LibraryItem extends Model
         'processing_started_at',
         'processing_completed_at',
         'processing_error',
+        'published_at',
     ];
 
     protected function casts(): array
@@ -33,6 +34,7 @@ class LibraryItem extends Model
             'processing_started_at' => 'datetime',
             'processing_completed_at' => 'datetime',
             'processing_status' => ProcessingStatusType::class,
+            'published_at' => 'date',
         ];
     }
 
