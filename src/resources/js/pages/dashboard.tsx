@@ -121,6 +121,8 @@ export default function Dashboard() {
         if (itemToDelete) {
             destroyItemForm(route('library.destroy', itemToDelete), {
                 onSuccess: () => {
+                    setDeleteItemDialogOpen(false);
+                    setItemToDelete(null);
                     router.reload({ only: ['libraryItems'] });
                 },
             });
