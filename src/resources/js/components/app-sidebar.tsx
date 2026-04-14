@@ -14,14 +14,14 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Music, Users } from 'lucide-react';
+import { Music, Rss, Users } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Dashboard',
-        href: '/dashboard',
-        icon: LayoutGrid,
+        title: 'Feeds',
+        href: '/feeds',
+        icon: Rss,
     },
     {
         title: 'Library',
@@ -52,7 +52,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <Link href="/feeds" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

@@ -34,7 +34,7 @@ class LibraryController extends Controller
             $message .= " Item will be added to {$feedCount} feed".($feedCount > 1 ? 's' : '').' once processing completes.';
         }
 
-        return redirect()->route('dashboard')
+        return redirect()->route('library.index')
             ->with('success', $message);
     }
 
@@ -58,7 +58,7 @@ class LibraryController extends Controller
             $mediaFile->delete();
         }
 
-        return redirect()->route('dashboard')
+        return redirect()->route('library.index')
             ->with('success', 'Media file removed from your library.');
     }
 
@@ -69,7 +69,7 @@ class LibraryController extends Controller
         Gate::authorize('retry', $libraryItem);
 
         if (! $libraryItem->hasFailed()) {
-            return redirect()->route('dashboard')
+            return redirect()->route('library.index')
                 ->with('warning', 'Only failed items can be retried.');
         }
 
@@ -84,7 +84,7 @@ class LibraryController extends Controller
         $processor = SourceProcessorFactory::create($sourceType);
         $processor->retry($libraryItem);
 
-        return redirect()->route('dashboard')
+        return redirect()->route('library.index')
             ->with('success', 'Processing has been restarted.');
     }
 

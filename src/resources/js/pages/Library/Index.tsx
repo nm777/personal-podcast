@@ -6,7 +6,7 @@ export default function LibraryIndex() {
         <AppLayout>
             <Head title="Library" />
             <div className="py-16 text-center">
-                <p className="text-muted-foreground">This page has moved. <a href={route('dashboard')} className="underline">Go to Dashboard</a>.</p>
+                <p className="text-muted-foreground">This page has moved. <a href={route('dashboard')} className="underline">Go to Feeds</a>.</p>
             </div>
         </AppLayout>
     );

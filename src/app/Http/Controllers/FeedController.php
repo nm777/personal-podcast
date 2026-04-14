@@ -23,7 +23,7 @@ class FeedController extends Controller
             return response()->json($feeds);
         }
 
-        return redirect()->route('dashboard');
+        return redirect()->route('feeds.index');
     }
 
     /**
@@ -85,7 +85,7 @@ class FeedController extends Controller
         // Clear RSS cache when feed is updated
         Cache::forget("rss.{$feed->id}");
 
-        return redirect()->route('dashboard')->with('success', 'Feed updated successfully!');
+        return redirect()->route('feeds.index')->with('success', 'Feed updated successfully!');
     }
 
     /**
@@ -104,7 +104,7 @@ class FeedController extends Controller
             return response()->json(null, 204);
         }
 
-        return redirect()->route('dashboard')->with('success', 'Feed deleted successfully!');
+        return redirect()->route('feeds.index')->with('success', 'Feed deleted successfully!');
     }
 
     private function syncFeedItems(Feed $feed, array $items): void

@@ -22,7 +22,7 @@ import { useEffect, useState } from 'react';
 
 type Tab = 'feeds' | 'library';
 
-export default function Dashboard() {
+export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Tab }) {
     const isMobile = useIsMobile();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const pageProps = usePage<any>().props;
@@ -30,7 +30,7 @@ export default function Dashboard() {
     const libraryItems: LibraryItem[] = pageProps.libraryItems;
     const flash: { success?: string; warning?: string } | undefined = pageProps.flash;
 
-    const [activeTab, setActiveTab] = useState<Tab>('feeds');
+    const activeTab = activeTabProp ?? 'feeds';
     const [deleteFeedDialogOpen, setDeleteFeedDialogOpen] = useState(false);
     const [feedToDelete, setFeedToDelete] = useState<number | null>(null);
     const [deleteItemDialogOpen, setDeleteItemDialogOpen] = useState(false);
@@ -186,8 +186,8 @@ export default function Dashboard() {
             )}
 
             <div className="flex items-center gap-1 border-b">
-                <button
-                    onClick={() => setActiveTab('feeds')}
+                <Link
+                    href={route('dashboard')}
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
                         activeTab === 'feeds'
                             ? 'border-b-2 border-foreground text-foreground'
@@ -195,9 +195,9 @@ export default function Dashboard() {
                     }`}
                 >
                     Feeds
-                </button>
-                <button
-                    onClick={() => setActiveTab('library')}
+                </Link>
+                <Link
+                    href={route('library.index')}
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
                         activeTab === 'library'
                             ? 'border-b-2 border-foreground text-foreground'
@@ -205,7 +205,7 @@ export default function Dashboard() {
                     }`}
                 >
                     Library
-                </button>
+                </Link>
 
                 <div className="ml-auto flex items-center gap-2">
                     <CreateFeedForm

@@ -24,7 +24,7 @@ Route::post('check-url-duplicate', [UrlDuplicateCheckController::class, 'check']
 Route::get('youtube/video-info/{videoId}', [YouTubeController::class, 'getVideoInfo'])->middleware(['auth', 'verified', 'throttle:30,1']);
 
 Route::middleware(['auth', 'verified', 'approved'])->group(function () {
-    Route::get('dashboard', function () {
+    $dashboardData = function () {
         $feeds = Auth::user()->feeds()
             ->withCount('items')
             ->latest()
@@ -34,13 +34,21 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
             ->latest()
             ->get();
 
-        return Inertia::render('dashboard', [
+        return [
             'feeds' => $feeds,
             'libraryItems' => $libraryItems,
-        ]);
+        ];
+    };
+
+    Route::get('feeds', function () use ($dashboardData) {
+        return Inertia::render('dashboard', array_merge($dashboardData(), ['activeTab' => 'feeds']));
     })->name('dashboard');
 
-    Route::resource('feeds', FeedController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('library', function () use ($dashboardData) {
+        return Inertia::render('dashboard', array_merge($dashboardData(), ['activeTab' => 'library']));
+    })->name('library.index');
+
+    Route::resource('feeds', FeedController::class)->only(['store', 'update', 'destroy']);
     Route::get('feeds/{feed}/edit', [FeedController::class, 'edit'])->name('feeds.edit');
 
     Route::resource('library', LibraryController::class)->only(['store', 'update', 'destroy']);
