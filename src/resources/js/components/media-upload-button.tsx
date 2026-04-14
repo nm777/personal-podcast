@@ -483,7 +483,8 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             <SheetTrigger asChild>{trigger}</SheetTrigger>
             <SheetContent
                 side={isMobile ? 'bottom' : 'right'}
-                className={isMobile ? 'h-[96svh] w-full rounded-t-lg overflow-x-hidden p-0' : 'w-full sm:max-w-md overflow-x-hidden p-0'}
+                hideClose
+                className={isMobile ? 'h-svh w-full overflow-x-hidden p-0 rounded-none' : 'w-full sm:max-w-md overflow-x-hidden p-0'}
             >
                 <div className="flex h-full max-w-full flex-col overflow-hidden">
                     <div className="flex items-center justify-between border-b px-4 py-3">
