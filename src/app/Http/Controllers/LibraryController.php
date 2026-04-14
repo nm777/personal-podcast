@@ -8,30 +8,12 @@ use App\Models\LibraryItem;
 use App\Enums\ProcessingStatusType;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class LibraryController extends Controller
 {
-    public function index(Request $request): Response
-    {
-        $libraryItems = $request->user()->libraryItems()
-            ->with('mediaFile')
-            ->latest()
-            ->get();
-
-        $feeds = $request->user()->feeds()->latest()->get();
-
-        return Inertia::render('Library/Index', [
-            'libraryItems' => $libraryItems,
-            'feeds' => $feeds,
-        ]);
-    }
-
     public function store(LibraryItemRequest $request): RedirectResponse
     {
         $validated = $request->validated();
@@ -52,7 +34,7 @@ class LibraryController extends Controller
             $message .= " Item will be added to {$feedCount} feed".($feedCount > 1 ? 's' : '').' once processing completes.';
         }
 
-        return redirect()->route('library.index')
+        return redirect()->route('dashboard')
             ->with('success', $message);
     }
 
@@ -64,7 +46,6 @@ class LibraryController extends Controller
 
         $mediaFile = $libraryItem->mediaFile;
 
-        // Clear RSS cache for feeds that contain this item
         $feedIds = $libraryItem->feedItems()->pluck('feed_id');
         foreach ($feedIds as $feedId) {
             Cache::forget("rss.{$feedId}");
@@ -72,13 +53,12 @@ class LibraryController extends Controller
 
         $libraryItem->delete();
 
-        // Check if this was the last reference to the media file
         if ($mediaFile && $mediaFile->libraryItems()->count() === 0) {
             Storage::disk('public')->delete($mediaFile->file_path);
             $mediaFile->delete();
         }
 
-        return redirect()->route('library.index')
+        return redirect()->route('dashboard')
             ->with('success', 'Media file removed from your library.');
     }
 
@@ -88,13 +68,11 @@ class LibraryController extends Controller
 
         Gate::authorize('retry', $libraryItem);
 
-        // Only allow retry for failed items
         if (! $libraryItem->hasFailed()) {
-            return redirect()->route('library.index')
+            return redirect()->route('dashboard')
                 ->with('warning', 'Only failed items can be retried.');
         }
 
-        // Reset status to pending and clear error
         $libraryItem->update([
             'processing_status' => ProcessingStatusType::PENDING,
             'processing_error' => null,
@@ -102,12 +80,11 @@ class LibraryController extends Controller
             'processing_completed_at' => null,
         ]);
 
-        // Re-dispatch the processing job based on source type
         $sourceType = $libraryItem->source_type;
         $processor = SourceProcessorFactory::create($sourceType);
         $processor->retry($libraryItem);
 
-        return redirect()->route('library.index')
+        return redirect()->route('dashboard')
             ->with('success', 'Processing has been restarted.');
     }
 
