@@ -3,9 +3,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import SheetPanel from '@/components/sheet-panel';
 import { Textarea } from '@/components/ui/textarea';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from '@inertiajs/react';
 import { useState } from 'react';
@@ -15,7 +14,6 @@ interface CreateFeedFormProps {
 }
 
 export default function CreateFeedForm({ renderTrigger }: CreateFeedFormProps) {
-    const isMobile = useIsMobile();
     const [isOpen, setIsOpen] = useState(false);
     const { toast } = useToast();
 
@@ -57,64 +55,56 @@ export default function CreateFeedForm({ renderTrigger }: CreateFeedFormProps) {
     );
 
     return (
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>{trigger}</SheetTrigger>
-            <SheetContent
-                side={isMobile ? 'bottom' : 'right'}
-                hideClose
-                className={isMobile ? 'h-svh w-full overflow-x-hidden p-0 rounded-none' : 'w-full sm:max-w-md overflow-x-hidden p-0'}
-            >
-                <div className="flex h-full max-w-full flex-col overflow-hidden">
-                    <div className="border-b px-4 py-3">
-                        <SheetTitle className="text-base">New Feed</SheetTitle>
-                    </div>
-                    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-                        <div className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 py-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="feed-title">Title</Label>
-                                <Input
-                                    id="feed-title"
-                                    type="text"
-                                    value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
-                                    placeholder="Enter feed title"
-                                    required
-                                />
-                                {errors.title && <InputError message={errors.title} />}
-                            </div>
+        <SheetPanel
+            open={isOpen}
+            onOpenChange={setIsOpen}
+            trigger={trigger}
+            title="New Feed"
+            onSubmit={handleSubmit}
+            footer={
+                <>
+                    <Button type="button" variant="outline" onClick={handleCancel}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" disabled={processing}>
+                        {processing ? 'Creating...' : 'Create Feed'}
+                    </Button>
+                </>
+            }
+        >
+            <div className="space-y-2">
+                <Label htmlFor="feed-title">Title</Label>
+                <Input
+                    id="feed-title"
+                    type="text"
+                    value={data.title}
+                    onChange={(e) => setData('title', e.target.value)}
+                    placeholder="Enter feed title"
+                    required
+                />
+                {errors.title && <InputError message={errors.title} />}
+            </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="feed-description">Description</Label>
-                                <Textarea
-                                    id="feed-description"
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Enter feed description (optional)"
-                                    rows={3}
-                                />
-                                {errors.description && <InputError message={errors.description} />}
-                            </div>
+            <div className="space-y-2">
+                <Label htmlFor="feed-description">Description</Label>
+                <Textarea
+                    id="feed-description"
+                    value={data.description}
+                    onChange={(e) => setData('description', e.target.value)}
+                    placeholder="Enter feed description (optional)"
+                    rows={3}
+                />
+                {errors.description && <InputError message={errors.description} />}
+            </div>
 
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="is_public"
-                                    checked={data.is_public}
-                                    onCheckedChange={(checked) => setData('is_public', checked === true)}
-                                />
-                                <Label htmlFor="is_public">Make this feed public</Label>
-                            </div>
-                        </div>
-                        <div className="flex justify-end gap-2 border-t px-4 py-3">
-                            <Button type="button" variant="outline" onClick={handleCancel}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={processing}>
-                                {processing ? 'Creating...' : 'Create Feed'}
-                            </Button>
-                        </div>
-                    </form>
-                </div>
-            </SheetContent>
-        </Sheet>
+            <div className="flex items-center space-x-2">
+                <Checkbox
+                    id="is_public"
+                    checked={data.is_public}
+                    onCheckedChange={(checked) => setData('is_public', checked === true)}
+                />
+                <Label htmlFor="is_public">Make this feed public</Label>
+            </div>
+        </SheetPanel>
     );
 }

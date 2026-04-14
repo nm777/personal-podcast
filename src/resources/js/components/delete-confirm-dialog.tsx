@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import SheetPanel from '@/components/sheet-panel';
 import { AlertTriangle } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -26,29 +26,28 @@ export default function DeleteConfirmDialog({
     variant = 'default',
     icon,
 }: DeleteConfirmDialogProps) {
-    const handleConfirm = () => {
-        onConfirm();
-    };
-
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <div className="flex items-center gap-3">
-                        {icon || <AlertTriangle className="h-5 w-5 text-orange-500" />}
-                        <DialogTitle>{title}</DialogTitle>
-                    </div>
-                    <DialogDescription>{description}</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
+        <SheetPanel
+            open={isOpen}
+            onOpenChange={onClose}
+            title={
+                <div className="flex items-center gap-3">
+                    {icon || <AlertTriangle className="h-5 w-5 text-orange-500" />}
+                    <span>{title}</span>
+                </div>
+            }
+            footer={
+                <>
                     <Button variant="outline" onClick={onClose}>
                         {cancelText}
                     </Button>
-                    <Button variant={variant} onClick={handleConfirm}>
+                    <Button variant={variant} onClick={onConfirm}>
                         {confirmText}
                     </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+                </>
+            }
+        >
+            <p className="text-sm text-muted-foreground">{description}</p>
+        </SheetPanel>
     );
 }

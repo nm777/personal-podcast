@@ -2,9 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
+import SheetPanel from '@/components/sheet-panel';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
@@ -166,49 +166,47 @@ export default function UserManagement() {
                 </Card>
             </div>
 
-            <Dialog open={!!rejectingUser} onOpenChange={(open) => { if (!open) { setRejectingUser(null); rejectForm.setData('reason', ''); rejectForm.clearErrors(); } }}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Reject User</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label htmlFor="reason">Rejection Reason</Label>
-                            <Textarea
-                                id="reason"
-                                value={rejectForm.data.reason}
-                                onChange={(e) => rejectForm.setData('reason', e.target.value)}
-                                placeholder="Enter reason for rejection..."
-                                className="mt-1"
-                            />
-                            {rejectForm.errors.reason && (
-                                <p className="mt-1 text-sm text-red-500">
-                                    {rejectForm.errors.reason}
-                                </p>
-                            )}
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => {
-                                    setRejectingUser(null);
-                                    rejectForm.setData('reason', '');
-                                    rejectForm.clearErrors();
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                variant="destructive"
-                                onClick={handleReject}
-                                disabled={!rejectForm.data.reason.trim() || rejectForm.processing}
-                            >
-                                {rejectForm.processing ? 'Rejecting...' : 'Reject'}
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <SheetPanel
+                open={!!rejectingUser}
+                onOpenChange={(open) => { if (!open) { setRejectingUser(null); rejectForm.setData('reason', ''); rejectForm.clearErrors(); } }}
+                title="Reject User"
+                footer={
+                    <>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setRejectingUser(null);
+                                rejectForm.setData('reason', '');
+                                rejectForm.clearErrors();
+                            }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleReject}
+                            disabled={!rejectForm.data.reason.trim() || rejectForm.processing}
+                        >
+                            {rejectForm.processing ? 'Rejecting...' : 'Reject'}
+                        </Button>
+                    </>
+                }
+            >
+                <div className="space-y-2">
+                    <Label htmlFor="reason">Rejection Reason</Label>
+                    <Textarea
+                        id="reason"
+                        value={rejectForm.data.reason}
+                        onChange={(e) => rejectForm.setData('reason', e.target.value)}
+                        placeholder="Enter reason for rejection..."
+                    />
+                    {rejectForm.errors.reason && (
+                        <p className="text-sm text-red-500">
+                            {rejectForm.errors.reason}
+                        </p>
+                    )}
+                </div>
+            </SheetPanel>
         </AdminLayout>
     );
 }

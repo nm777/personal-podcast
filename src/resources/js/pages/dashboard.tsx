@@ -2,9 +2,9 @@ import CreateFeedForm from '@/components/create-feed-form';
 import DeleteConfirmDialog from '@/components/delete-confirm-dialog';
 import MediaPlayer from '@/components/media-player';
 import MediaUploadButton from '@/components/media-upload-button';
+import SheetPanel from '@/components/sheet-panel';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -439,58 +439,55 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                 <MediaPlayer libraryItem={playingItem as any} isOpen={true} onClose={() => setPlayingItem(null)} />
             )}
 
-            <Dialog open={editDialogOpen} onOpenChange={handleEditDialogClose}>
-                <DialogContent className="sm:max-w-[500px]">
-                    <DialogHeader>
-                        <DialogTitle>Edit Media Details</DialogTitle>
-                        <DialogDescription>Update the title and description for this media file</DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={handleEditSubmit}>
-                        <div className="space-y-4 py-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
-                                    placeholder="Enter title"
-                                    required
-                                />
-                                {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    placeholder="Enter description (optional)"
-                                    rows={3}
-                                />
-                                {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="edit-published_at">Publish Date</Label>
-                                <Input
-                                    id="edit-published_at"
-                                    type="date"
-                                    value={data.published_at}
-                                    onChange={(e) => setData('published_at', e.target.value)}
-                                />
-                                {errors.published_at && <p className="text-sm text-destructive">{errors.published_at}</p>}
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={handleEditDialogClose}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={itemProcessing}>
-                                {itemProcessing ? 'Saving...' : 'Save Changes'}
-                            </Button>
-                        </DialogFooter>
-                    </form>
-                </DialogContent>
-            </Dialog>
+            <SheetPanel
+                open={editDialogOpen}
+                onOpenChange={handleEditDialogClose}
+                title="Edit Media"
+                onSubmit={handleEditSubmit}
+                footer={
+                    <>
+                        <Button type="button" variant="outline" onClick={handleEditDialogClose}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={itemProcessing}>
+                            {itemProcessing ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                    </>
+                }
+            >
+                <div className="space-y-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                        id="title"
+                        value={data.title}
+                        onChange={(e) => setData('title', e.target.value)}
+                        placeholder="Enter title"
+                        required
+                    />
+                    {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                        id="description"
+                        value={data.description}
+                        onChange={(e) => setData('description', e.target.value)}
+                        placeholder="Enter description (optional)"
+                        rows={3}
+                    />
+                    {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="edit-published_at">Publish Date</Label>
+                    <Input
+                        id="edit-published_at"
+                        type="date"
+                        value={data.published_at}
+                        onChange={(e) => setData('published_at', e.target.value)}
+                    />
+                    {errors.published_at && <p className="text-sm text-destructive">{errors.published_at}</p>}
+                </div>
+            </SheetPanel>
         </AppLayout>
     );
 }
