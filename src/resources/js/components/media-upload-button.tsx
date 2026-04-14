@@ -235,7 +235,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             onSuccess: () => {
                 reset();
                 setSelectedFile(null);
-                setIsUploadDialogOpen(false);
+                setIsOpen(false);
                 onUploadSuccess?.();
             },
         });
