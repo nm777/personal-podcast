@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { type Feed } from '@/types';
 import { useForm } from '@inertiajs/react';
-import { AlertCircle, Globe, Loader2, Plus, Upload, Volume2, Youtube } from 'lucide-react';
+import { AlertCircle, Globe, Loader2, Upload, Volume2, Youtube } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 interface MediaUploadButtonProps {
@@ -252,10 +252,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
     const trigger = (
         <Button variant={variant} size={size}>
             {iconOnly ? (
-                <span className="relative">
-                    <Volume2 className="h-4 w-4" />
-                    <Plus className="absolute -bottom-0.5 -left-0.5 h-2 w-2" />
-                </span>
+                <Volume2 className="h-4 w-4" />
             ) : (
                 <>
                     + Media
