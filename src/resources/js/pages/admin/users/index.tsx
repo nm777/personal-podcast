@@ -107,6 +107,7 @@ export default function UserManagement() {
                         <CardTitle>All Users</CardTitle>
                     </CardHeader>
                     <CardContent>
+<<<<<<< Updated upstream
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
@@ -161,6 +162,52 @@ export default function UserManagement() {
                                     ))}
                                 </tbody>
                             </table>
+=======
+                        <div className="divide-y">
+                            {filteredUsers.map((user) => (
+                                <div key={user.id} className="py-3">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                            <p className="font-medium">{user.name}</p>
+                                            <p className="text-sm text-muted-foreground">{user.email}</p>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-1.5">
+                                            {getStatusBadge(user.approval_status)}
+                                            <Badge variant={user.is_admin ? 'default' : 'secondary'}>{user.is_admin ? 'Admin' : 'User'}</Badge>
+                                        </div>
+                                    </div>
+                                    <div className="mt-1 text-xs text-muted-foreground">
+                                        Joined {new Date(user.created_at).toLocaleDateString()}
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap gap-2">
+                                        {user.approval_status === 'pending' && (
+                                            <>
+                                                <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
+                                                    {approveForm.processing ? 'Approving...' : 'Approve'}
+                                                </Button>
+                                                <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
+                                                    Reject
+                                                </Button>
+                                            </>
+                                        )}
+                                        {user.approval_status !== 'rejected' && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => handleToggleAdmin(user)}
+                                                disabled={toggleAdminForm.processing}
+                                            >
+                                                {toggleAdminForm.processing
+                                                    ? 'Updating...'
+                                                    : user.is_admin
+                                                      ? 'Remove Admin'
+                                                      : 'Make Admin'}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+>>>>>>> Stashed changes
                         </div>
                     </CardContent>
                 </Card>
