@@ -4,8 +4,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { useInitials } from '@/hooks/use-initials';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { useAppearance } from '@/hooks/use-appearance';
+import { useColorScheme, type ColorScheme } from '@/hooks/use-color-scheme';
 import { Link, router, usePage } from '@inertiajs/react';
-import { LogOut, Moon, Settings, Sun, User } from 'lucide-react';
+import { LogOut, Moon, Palette, Settings, Sun, User } from 'lucide-react';
 
 export default function AppTopbar() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,12 +14,20 @@ export default function AppTopbar() {
     const getInitials = useInitials();
     const cleanup = useMobileNavigation();
     const { appearance, updateAppearance } = useAppearance();
+    const { colorScheme, updateColorScheme } = useColorScheme();
 
     const isDark = appearance === 'dark' || (appearance === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const toggleTheme = () => {
         updateAppearance(isDark ? 'light' : 'dark');
     };
+
+    const schemeOptions: { value: ColorScheme; label: string; color: string }[] = [
+        { value: 'default', label: 'Default', color: 'bg-neutral-400' },
+        { value: 'ocean', label: 'Ocean', color: 'bg-blue-500' },
+        { value: 'forest', label: 'Forest', color: 'bg-green-600' },
+        { value: 'ember', label: 'Ember', color: 'bg-orange-500' },
+    ];
 
     const handleLogout = () => {
         cleanup();
@@ -36,6 +45,28 @@ export default function AppTopbar() {
                     {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                     <span className="sr-only">Toggle theme</span>
                 </Button>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9">
+                            <Palette className="h-4 w-4" />
+                            <span className="sr-only">Color scheme</span>
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        {schemeOptions.map((option) => (
+                            <DropdownMenuItem
+                                key={option.value}
+                                onClick={() => updateColorScheme(option.value)}
+                                className="flex items-center gap-2"
+                            >
+                                <span className={`inline-block h-3 w-3 rounded-full ${option.color}`} />
+                                {option.label}
+                                {colorScheme === option.value && <span className="ml-auto text-xs">✓</span>}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>

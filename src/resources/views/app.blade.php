@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark'=> ($appearance ??
-'system') == 'dark'])>
+'system') == 'dark']) @if(isset($colorScheme) && $colorScheme !== 'default') data-theme="{{ $colorScheme }}" @endif>
 
 <head>
     <meta charset="utf-8">
@@ -18,17 +18,17 @@
                         document.documentElement.classList.add('dark');
                     }
                 }
+
+                const colorScheme = localStorage.getItem('color-scheme');
+                if (colorScheme && colorScheme !== 'default') {
+                    document.documentElement.setAttribute('data-theme', colorScheme);
+                }
             })();
     </script>
 
-    {{-- Inline style to set the HTML background color based on our theme in app.css --}}
     <style>
         html {
-            background-color: oklch(1 0 0);
-        }
-
-        html.dark {
-            background-color: oklch(0.145 0 0);
+            background-color: var(--background);
         }
     </style>
 
