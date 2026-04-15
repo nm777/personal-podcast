@@ -5,8 +5,4 @@ interface AdminLayoutProps {
     children: ReactNode;
 }
 
-export default ({ children }: AdminLayoutProps) => (
-    <AppLayout>
-        {children}
-    </AppLayout>
-);
+export default ({ children }: AdminLayoutProps) => <AppLayout>{children}</AppLayout>;

@@ -18,7 +18,13 @@ interface MediaUploadButtonProps {
     iconOnly?: boolean;
 }
 
-export default function MediaUploadButton({ onUploadSuccess, variant = 'default', size = 'default', feeds = [], iconOnly = false }: MediaUploadButtonProps) {
+export default function MediaUploadButton({
+    onUploadSuccess,
+    variant = 'default',
+    size = 'default',
+    feeds = [],
+    iconOnly = false,
+}: MediaUploadButtonProps) {
     const isMobile = useIsMobile();
     const [isOpen, setIsOpen] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
@@ -251,13 +257,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
 
     const trigger = (
         <Button variant={variant} size={size}>
-            {iconOnly ? (
-                <Volume2 className="h-4 w-4" />
-            ) : (
-                <>
-                    + Media
-                </>
-            )}
+            {iconOnly ? <Volume2 className="h-4 w-4" /> : <>+ Media</>}
         </Button>
     );
 
@@ -364,16 +364,9 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
 
             <div>
                 <Label htmlFor="published_at">Publish Date</Label>
-                <Input
-                    id="published_at"
-                    type="date"
-                    value={data.published_at}
-                    onChange={(e) => setData('published_at', e.target.value)}
-                />
+                <Input id="published_at" type="date" value={data.published_at} onChange={(e) => setData('published_at', e.target.value)} />
                 {errors.published_at && <p className="mt-1 text-sm text-red-600">{errors.published_at}</p>}
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Defaults to today if not set
-                </p>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Defaults to today if not set</p>
             </div>
 
             {feeds.length > 0 && (
@@ -484,7 +477,7 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
             <SheetContent
                 side={isMobile ? 'bottom' : 'right'}
                 hideClose
-                className={isMobile ? 'h-svh w-full overflow-x-hidden p-0 rounded-none' : 'w-full sm:max-w-md overflow-x-hidden p-0'}
+                className={isMobile ? 'h-svh w-full overflow-x-hidden rounded-none p-0' : 'w-full overflow-x-hidden p-0 sm:max-w-md'}
             >
                 <div className="flex h-full max-w-full flex-col overflow-hidden">
                     <div className="flex items-center justify-between border-b px-4 py-3">
@@ -492,12 +485,8 @@ export default function MediaUploadButton({ onUploadSuccess, variant = 'default'
                         {sourceButtons}
                     </div>
                     <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-                        <div className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 py-4">
-                            {formFields}
-                        </div>
-                        <div className="border-t px-4 py-3">
-                            {formActions}
-                        </div>
+                        <div className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 py-4">{formFields}</div>
+                        <div className="border-t px-4 py-3">{formActions}</div>
                     </form>
                 </div>
             </SheetContent>

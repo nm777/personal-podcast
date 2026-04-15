@@ -1,12 +1,12 @@
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
-import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { formatDuration, formatFileSize } from '@/lib/format';
+import { type Feed, type FeedItem, type LibraryItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -116,11 +116,7 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        <Checkbox
-                            id="is_public"
-                            checked={data.is_public}
-                            onCheckedChange={(checked) => setData('is_public', checked === true)}
-                        />
+                        <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
                         <Label htmlFor="is_public">Make this feed public</Label>
                     </div>
 
@@ -159,7 +155,8 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                             <p className="text-xs text-muted-foreground">
                                                 {libraryItem.media_file ? (
                                                     <>
-                                                        {formatDuration(libraryItem.media_file.duration)} · {formatFileSize(libraryItem.media_file.filesize)}
+                                                        {formatDuration(libraryItem.media_file.duration)} ·{' '}
+                                                        {formatFileSize(libraryItem.media_file.filesize)}
                                                     </>
                                                 ) : (
                                                     'Processing...'
@@ -191,7 +188,8 @@ export default function EditFeed({ feed, userLibraryItems }: EditFeedProps) {
                                             <p className="text-xs text-muted-foreground">
                                                 {libraryItem.media_file ? (
                                                     <>
-                                                        {formatDuration(libraryItem.media_file.duration)} · {formatFileSize(libraryItem.media_file.filesize)}
+                                                        {formatDuration(libraryItem.media_file.duration)} ·{' '}
+                                                        {formatFileSize(libraryItem.media_file.filesize)}
                                                     </>
                                                 ) : (
                                                     'Processing...'

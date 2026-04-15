@@ -4,7 +4,10 @@ use App\Jobs\ProcessYouTubeAudio;
 use App\Models\LibraryItem;
 use App\Models\User;
 use App\ProcessingStatusType;
+use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
+use App\Services\YouTube\YouTubeDownloader;
 use App\Services\YouTube\YouTubeFileProcessor;
+use App\Services\YouTube\YouTubeMetadataExtractor;
 use App\Services\YouTube\YouTubeProcessingService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -71,13 +74,13 @@ it('marks library item as failed when download fails instead of deleting', funct
         'source_url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     ]);
 
-    $downloader = mock(\App\Services\YouTube\YouTubeDownloader::class);
+    $downloader = mock(YouTubeDownloader::class);
     $downloader->shouldReceive('downloadAudio')->andReturn(null);
     $downloader->shouldReceive('cleanupTempDirectory');
 
-    $metadataExtractor = mock(\App\Services\YouTube\YouTubeMetadataExtractor::class);
+    $metadataExtractor = mock(YouTubeMetadataExtractor::class);
     $fileProcessor = mock(YouTubeFileProcessor::class);
-    $duplicateProcessor = mock(\App\Services\MediaProcessing\UnifiedDuplicateProcessor::class);
+    $duplicateProcessor = mock(UnifiedDuplicateProcessor::class);
     $duplicateProcessor->shouldReceive('processUrlDuplicate')->andReturn(['is_duplicate' => false]);
 
     $service = new YouTubeProcessingService($downloader, $metadataExtractor, $fileProcessor, $duplicateProcessor);

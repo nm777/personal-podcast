@@ -49,7 +49,7 @@ it('updates processing status when job completes', function () {
 
     // Mock HTTP response
     Http::fake([
-        'https://example.com/test-audio.mp3' => Http::response("ID3".str_repeat("\x00", 100)."fake audio content", 200, [
+        'https://example.com/test-audio.mp3' => Http::response('ID3'.str_repeat("\x00", 100).'fake audio content', 200, [
             'Content-Type' => 'audio/mpeg',
         ]),
     ]);

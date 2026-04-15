@@ -2,10 +2,10 @@
 
 namespace App\Services\MediaProcessing;
 
+use App\Enums\ProcessingStatusType;
 use App\Jobs\CleanupDuplicateLibraryItem;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
-use App\Enums\ProcessingStatusType;
 use App\Services\DuplicateDetectionService;
 use Illuminate\Support\Facades\Log;
 

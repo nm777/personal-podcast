@@ -1,10 +1,10 @@
+import SheetPanel from '@/components/sheet-panel';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
-import SheetPanel from '@/components/sheet-panel';
 import { Textarea } from '@/components/ui/textarea';
 import AdminLayout from '@/layouts/admin-layout';
 import { Head, useForm, usePage } from '@inertiajs/react';
@@ -131,16 +131,16 @@ export default function UserManagement() {
                                             <td className="p-2">{new Date(user.created_at).toLocaleDateString()}</td>
                                             <td className="p-2">
                                                 <div className="flex gap-2">
-                                        {user.approval_status === 'pending' && (
-                                                            <>
-                                                                <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
-                                                                    {approveForm.processing ? 'Approving...' : 'Approve'}
-                                                                </Button>
-                                                                <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
-                                                                    Reject
-                                                                </Button>
-                                                            </>
-                                                        )}
+                                                    {user.approval_status === 'pending' && (
+                                                        <>
+                                                            <Button size="sm" onClick={() => handleApprove(user)} disabled={approveForm.processing}>
+                                                                {approveForm.processing ? 'Approving...' : 'Approve'}
+                                                            </Button>
+                                                            <Button size="sm" variant="destructive" onClick={() => setRejectingUser(user)}>
+                                                                Reject
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                     {user.approval_status !== 'rejected' && (
                                                         <Button
                                                             size="sm"
@@ -168,7 +168,13 @@ export default function UserManagement() {
 
             <SheetPanel
                 open={!!rejectingUser}
-                onOpenChange={(open) => { if (!open) { setRejectingUser(null); rejectForm.setData('reason', ''); rejectForm.clearErrors(); } }}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setRejectingUser(null);
+                        rejectForm.setData('reason', '');
+                        rejectForm.clearErrors();
+                    }
+                }}
                 title="Reject User"
                 footer={
                     <>
@@ -182,11 +188,7 @@ export default function UserManagement() {
                         >
                             Cancel
                         </Button>
-                        <Button
-                            variant="destructive"
-                            onClick={handleReject}
-                            disabled={!rejectForm.data.reason.trim() || rejectForm.processing}
-                        >
+                        <Button variant="destructive" onClick={handleReject} disabled={!rejectForm.data.reason.trim() || rejectForm.processing}>
                             {rejectForm.processing ? 'Rejecting...' : 'Reject'}
                         </Button>
                     </>
@@ -200,11 +202,7 @@ export default function UserManagement() {
                         onChange={(e) => rejectForm.setData('reason', e.target.value)}
                         placeholder="Enter reason for rejection..."
                     />
-                    {rejectForm.errors.reason && (
-                        <p className="text-sm text-red-500">
-                            {rejectForm.errors.reason}
-                        </p>
-                    )}
+                    {rejectForm.errors.reason && <p className="text-sm text-red-500">{rejectForm.errors.reason}</p>}
                 </div>
             </SheetPanel>
         </AdminLayout>

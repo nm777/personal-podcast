@@ -3,6 +3,7 @@
 use App\Models\LibraryItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 
 uses(RefreshDatabase::class);
 
@@ -13,7 +14,7 @@ describe('published_at date field', function () {
         $response = $this->actingAs($user)->post('/library', [
             'title' => 'Test item',
             'source_type' => 'upload',
-            'file' => \Illuminate\Http\UploadedFile::fake()->create('test.mp3', 100),
+            'file' => UploadedFile::fake()->create('test.mp3', 100),
             'published_at' => '2026-01-15',
         ]);
 

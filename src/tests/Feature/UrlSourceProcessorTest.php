@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\MediaFile;
+use App\Models\User;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
 use App\Services\SourceProcessors\LibraryItemFactory;
 use App\Services\SourceProcessors\SourceStrategyInterface;
@@ -8,7 +9,7 @@ use App\Services\SourceProcessors\UrlSourceProcessor;
 
 describe('UrlSourceProcessor', function () {
     beforeEach(function () {
-        $this->user = \App\Models\User::factory()->create();
+        $this->user = User::factory()->create();
         $this->actingAs($this->user);
     });
 

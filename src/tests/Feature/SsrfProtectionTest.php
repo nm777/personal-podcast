@@ -29,7 +29,7 @@ describe('SSRF protection in MediaDownloader', function () {
             $downloader = new MediaDownloader;
 
             expect(fn () => $downloader->downloadFromUrl($url))
-                ->toThrow(\InvalidArgumentException::class, 'private');
+                ->toThrow(InvalidArgumentException::class, 'private');
         });
     }
 

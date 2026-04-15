@@ -4,8 +4,7 @@ export type Appearance = 'light' | 'dark' | 'system';
 
 const VALID_APPEARANCES: Appearance[] = ['light', 'dark', 'system'];
 
-const isValidAppearance = (value: string | null): value is Appearance =>
-    value !== null && VALID_APPEARANCES.includes(value as Appearance);
+const isValidAppearance = (value: string | null): value is Appearance => value !== null && VALID_APPEARANCES.includes(value as Appearance);
 
 const getStoredAppearance = (): Appearance => {
     const stored = localStorage.getItem('appearance');

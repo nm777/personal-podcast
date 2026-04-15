@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Requests\LibraryItemRequest;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
@@ -8,6 +9,7 @@ use App\Services\SourceProcessors\LibraryItemFactory;
 use App\Services\SourceProcessors\SourceProcessorFactory;
 use App\Services\SourceProcessors\UrlSourceProcessor;
 use App\Services\SourceProcessors\UrlStrategy;
+
 describe('UrlSourceProcessor consolidation', function () {
     beforeEach(function () {
         $this->user = User::factory()->create();
@@ -155,7 +157,7 @@ describe('UrlSourceProcessor consolidation', function () {
         $processor = SourceProcessorFactory::create('url');
 
         $result = $processor->process(
-            new \App\Http\Requests\LibraryItemRequest,
+            new LibraryItemRequest,
             ['title' => 'Duplicate Test', 'description' => 'Desc'],
             'url',
             'https://example.com/dup.mp3'

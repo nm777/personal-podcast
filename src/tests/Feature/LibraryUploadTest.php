@@ -8,6 +8,7 @@ use App\Models\MediaFile;
 use App\Models\User;
 use App\ProcessingStatusType;
 use App\Services\DuplicateDetectionService;
+use App\Services\MediaProcessing\MediaProcessingService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -358,7 +359,7 @@ it('marks duplicate library items and schedules cleanup', function () {
 
     // Process the file
     $job = new ProcessMediaFile($libraryItem, null, $tempPath);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 

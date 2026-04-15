@@ -10,13 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useToast } from '@/hooks/use-toast';
 import AppLayout from '@/layouts/app-layout';
 import { formatDuration, formatFileSize } from '@/lib/format';
 import { ProcessingStatusHelper } from '@/lib/processing-status';
 import { getAbsoluteRssUrl, getApplePodcastsUrl, getGooglePodcastsUrl } from '@/lib/subscribe-urls';
 import { type Feed, type LibraryItem } from '@/types';
-import { useToast } from '@/hooks/use-toast';
-import { Head, Link, router, usePage, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AlertCircle, Copy, Edit, Eye, EyeOff, FileAudio, FolderPlus, Pencil, Play, RefreshCw, Rss, Smartphone, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -57,8 +57,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
     useEffect(() => {
         const hasProcessingItems = libraryItems.some(
             (item) =>
-                ProcessingStatusHelper.from(item.processing_status).isPending() ||
-                ProcessingStatusHelper.from(item.processing_status).isProcessing(),
+                ProcessingStatusHelper.from(item.processing_status).isPending() || ProcessingStatusHelper.from(item.processing_status).isProcessing(),
         );
 
         if (!hasProcessingItems) return;
@@ -189,9 +188,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                 <Link
                     href={route('dashboard')}
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        activeTab === 'feeds'
-                            ? 'border-b-2 border-foreground text-foreground'
-                            : 'text-muted-foreground hover:text-foreground'
+                        activeTab === 'feeds' ? 'border-b-2 border-foreground text-foreground' : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                     Feeds
@@ -199,9 +196,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                 <Link
                     href={route('library.index')}
                     className={`px-4 py-2 text-sm font-medium transition-colors ${
-                        activeTab === 'library'
-                            ? 'border-b-2 border-foreground text-foreground'
-                            : 'text-muted-foreground hover:text-foreground'
+                        activeTab === 'library' ? 'border-b-2 border-foreground text-foreground' : 'text-muted-foreground hover:text-foreground'
                     }`}
                 >
                     Library
@@ -345,10 +340,9 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                                             {(item.published_at || item.created_at).split('T')[0]}
                                             {item.media_file && (
                                                 <>
-                                                    {' '}· {formatFileSize(item.media_file.filesize)}
-                                                    {item.media_file.duration && (
-                                                        <> · {formatDuration(item.media_file.duration)}</>
-                                                    )}
+                                                    {' '}
+                                                    · {formatFileSize(item.media_file.filesize)}
+                                                    {item.media_file.duration && <> · {formatDuration(item.media_file.duration)}</>}
                                                 </>
                                             )}
                                         </p>
@@ -362,11 +356,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                                     )}
 
                                     <div className="flex items-center gap-1">
-                                        {isComplete && (
-                                            <span className="text-xs text-green-600 dark:text-green-400">
-                                                {status.getIcon()}
-                                            </span>
-                                        )}
+                                        {isComplete && <span className="text-xs text-green-600 dark:text-green-400">{status.getIcon()}</span>}
                                         {isActive && (
                                             <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
                                                 {status.getIcon()}
@@ -416,7 +406,10 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
 
             <DeleteConfirmDialog
                 isOpen={deleteFeedDialogOpen}
-                onClose={() => { setDeleteFeedDialogOpen(false); setFeedToDelete(null); }}
+                onClose={() => {
+                    setDeleteFeedDialogOpen(false);
+                    setFeedToDelete(null);
+                }}
                 onConfirm={handleDeleteFeedConfirm}
                 title="Delete Feed"
                 description="Are you sure you want to delete this feed? This action cannot be undone."
@@ -426,7 +419,10 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
 
             <DeleteConfirmDialog
                 isOpen={deleteItemDialogOpen}
-                onClose={() => { setDeleteItemDialogOpen(false); setItemToDelete(null); }}
+                onClose={() => {
+                    setDeleteItemDialogOpen(false);
+                    setItemToDelete(null);
+                }}
                 onConfirm={handleDeleteItemConfirm}
                 title="Delete Media Item"
                 description="Are you sure you want to remove this item from your library? This action cannot be undone."
@@ -457,13 +453,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
             >
                 <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
-                    <Input
-                        id="title"
-                        value={data.title}
-                        onChange={(e) => setData('title', e.target.value)}
-                        placeholder="Enter title"
-                        required
-                    />
+                    <Input id="title" value={data.title} onChange={(e) => setData('title', e.target.value)} placeholder="Enter title" required />
                     {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
                 </div>
                 <div className="space-y-2">
@@ -479,12 +469,7 @@ export default function Dashboard({ activeTab: activeTabProp }: { activeTab?: Ta
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="edit-published_at">Publish Date</Label>
-                    <Input
-                        id="edit-published_at"
-                        type="date"
-                        value={data.published_at}
-                        onChange={(e) => setData('published_at', e.target.value)}
-                    />
+                    <Input id="edit-published_at" type="date" value={data.published_at} onChange={(e) => setData('published_at', e.target.value)} />
                     {errors.published_at && <p className="text-sm text-destructive">{errors.published_at}</p>}
                 </div>
             </SheetPanel>

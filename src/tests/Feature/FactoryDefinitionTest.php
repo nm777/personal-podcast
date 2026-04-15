@@ -2,7 +2,7 @@
 
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
-use App\Models\User;
+use App\ProcessingStatusType;
 
 it('MediaFile factory creates valid record with user_id', function () {
     $mediaFile = MediaFile::factory()->create();
@@ -24,7 +24,7 @@ it('LibraryItem factory creates record with processing_status and is_duplicate',
 it('LibraryItem factory defaults to completed processing status', function () {
     $item = LibraryItem::factory()->create();
 
-    expect($item->processing_status)->toBe(\App\ProcessingStatusType::COMPLETED);
+    expect($item->processing_status)->toBe(ProcessingStatusType::COMPLETED);
     expect($item->is_duplicate)->toBeFalse();
 });
 

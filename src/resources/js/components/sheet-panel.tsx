@@ -20,12 +20,8 @@ export default function SheetPanel({ open, onOpenChange, trigger, title, childre
             <div className="border-b px-4 py-3">
                 <SheetTitle className="text-base">{title}</SheetTitle>
             </div>
-            <div className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 py-4">
-                {children}
-            </div>
-            <div className="flex justify-end gap-2 border-t px-4 py-3">
-                {footer}
-            </div>
+            <div className="flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 py-4">{children}</div>
+            <div className="flex justify-end gap-2 border-t px-4 py-3">{footer}</div>
         </div>
     );
 
@@ -35,13 +31,15 @@ export default function SheetPanel({ open, onOpenChange, trigger, title, childre
             <SheetContent
                 side={isMobile ? 'bottom' : 'right'}
                 hideClose
-                className={isMobile ? 'h-svh w-full overflow-x-hidden p-0 rounded-none' : 'w-full sm:max-w-md overflow-x-hidden p-0'}
+                className={isMobile ? 'h-svh w-full overflow-x-hidden rounded-none p-0' : 'w-full overflow-x-hidden p-0 sm:max-w-md'}
             >
                 {onSubmit ? (
                     <form onSubmit={onSubmit} className="flex h-full flex-col">
                         {inner}
                     </form>
-                ) : inner}
+                ) : (
+                    inner
+                )}
             </SheetContent>
         </Sheet>
     );

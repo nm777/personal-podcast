@@ -88,9 +88,7 @@ export class ProcessingStatusHelper implements ProcessingStatusMethods {
             ProcessingStatus.FAILED,
         ];
 
-        const validated = validStatuses.includes(status as ProcessingStatusType)
-            ? (status as ProcessingStatusType)
-            : ProcessingStatus.PENDING;
+        const validated = validStatuses.includes(status as ProcessingStatusType) ? (status as ProcessingStatusType) : ProcessingStatus.PENDING;
 
         return new ProcessingStatusHelper(validated);
     }

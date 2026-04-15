@@ -41,7 +41,7 @@ describe('UnifiedSourceProcessor Edge Cases', function () {
             $validated,
             'url',
             'https://example.com/test.mp3'
-        ))->toThrow(\TypeError::class);
+        ))->toThrow(TypeError::class);
     });
 
     it('creates library item with minimal data (title only)', function () {

@@ -2,4 +2,4 @@
 
 namespace App;
 
-\class_alias(\App\Enums\ProcessingStatusType::class, \App\ProcessingStatusType::class);
+\class_alias(Enums\ProcessingStatusType::class, ProcessingStatusType::class);

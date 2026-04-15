@@ -17,7 +17,7 @@ describe('Small file media validation', function () {
         $downloader = app(MediaDownloader::class);
 
         expect(fn () => $downloader->downloadFromUrl('https://example.com/tiny.mp3'))
-            ->toThrow(\Exception::class);
+            ->toThrow(Exception::class);
     });
 
     it('rejects 1-byte invalid file', function () {
@@ -30,11 +30,11 @@ describe('Small file media validation', function () {
         $downloader = app(MediaDownloader::class);
 
         expect(fn () => $downloader->downloadFromUrl('https://example.com/tiny.mp3'))
-            ->toThrow(\Exception::class);
+            ->toThrow(Exception::class);
     });
 
     it('accepts small files with valid MP3 ID3 signature', function () {
-        $content = "ID3".str_repeat("\x00", 47);
+        $content = 'ID3'.str_repeat("\x00", 47);
 
         Http::fake([
             '*' => Http::response($content, 200, [

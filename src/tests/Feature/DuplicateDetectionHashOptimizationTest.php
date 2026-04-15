@@ -3,6 +3,8 @@
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\ProcessingStatusType;
+use App\Services\DuplicateDetectionService;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -22,7 +24,7 @@ afterEach(function () {
 });
 
 it('analyzeFileUpload returns the computed hash in its result array', function () {
-    $result = \App\Services\DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
+    $result = DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
 
     expect($result['file_hash'])->toBe($this->expectedHash);
 });
@@ -33,7 +35,7 @@ it('analyzeFileUpload identifies global duplicate using the hash', function () {
         'file_hash' => $this->expectedHash,
     ]);
 
-    $result = \App\Services\DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
+    $result = DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
 
     expect($result['is_global_duplicate'])->toBeTrue();
     expect($result['global_duplicate_media_file']->id)->toBe($mediaFile->id);
@@ -49,10 +51,10 @@ it('analyzeFileUpload identifies user duplicate using the hash', function () {
     LibraryItem::factory()->create([
         'user_id' => $this->user->id,
         'media_file_id' => $mediaFile->id,
-        'processing_status' => \App\ProcessingStatusType::COMPLETED,
+        'processing_status' => ProcessingStatusType::COMPLETED,
     ]);
 
-    $result = \App\Services\DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
+    $result = DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
 
     expect($result['is_user_duplicate'])->toBeTrue();
     expect($result['should_link_to_user_duplicate'])->toBeTrue();
@@ -60,7 +62,7 @@ it('analyzeFileUpload identifies user duplicate using the hash', function () {
 });
 
 it('analyzeFileUpload returns correct result when no duplicates exist', function () {
-    $result = \App\Services\DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
+    $result = DuplicateDetectionService::analyzeFileUpload($this->filePath, $this->user->id);
 
     expect($result['is_user_duplicate'])->toBeFalse();
     expect($result['is_global_duplicate'])->toBeFalse();

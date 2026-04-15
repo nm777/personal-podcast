@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Requests\FeedRequest;
+use App\Http\Requests\LibraryItemRequest;
+use App\Http\Requests\UpdateLibraryItemRequest;
+
 it('LibraryItemRequest rules use array format consistently', function () {
-    $request = new \App\Http\Requests\LibraryItemRequest();
+    $request = new LibraryItemRequest;
     $rules = $request->rules();
 
     foreach ($rules as $field => $rule) {
@@ -14,7 +18,7 @@ it('LibraryItemRequest rules use array format consistently', function () {
 });
 
 it('UpdateLibraryItemRequest rules use array format consistently', function () {
-    $request = new \App\Http\Requests\UpdateLibraryItemRequest();
+    $request = new UpdateLibraryItemRequest;
     $rules = $request->rules();
 
     foreach ($rules as $field => $rule) {
@@ -27,7 +31,7 @@ it('UpdateLibraryItemRequest rules use array format consistently', function () {
 });
 
 it('FeedRequest rules use array format consistently', function () {
-    $request = new \App\Http\Requests\FeedRequest();
+    $request = new FeedRequest;
     $rules = $request->rules();
 
     foreach ($rules as $field => $rule) {

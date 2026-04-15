@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\ApprovalStatusType;
+use App\Models\User;
+
 it('ApprovalStatusType enum exists with correct cases', function () {
-    $cases = \App\Enums\ApprovalStatusType::cases();
+    $cases = ApprovalStatusType::cases();
     expect($cases)->toHaveCount(3);
 
     $values = collect($cases)->map->value->all();
@@ -9,28 +12,28 @@ it('ApprovalStatusType enum exists with correct cases', function () {
 });
 
 it('User model uses ApprovalStatusType enum for approval_status', function () {
-    $user = \App\Models\User::factory()->create([
+    $user = User::factory()->create([
         'approval_status' => 'approved',
     ]);
 
-    expect($user->approval_status)->toBeInstanceOf(\App\Enums\ApprovalStatusType::class);
-    expect($user->approval_status)->toBe(\App\Enums\ApprovalStatusType::APPROVED);
+    expect($user->approval_status)->toBeInstanceOf(ApprovalStatusType::class);
+    expect($user->approval_status)->toBe(ApprovalStatusType::APPROVED);
 });
 
 it('User model returns correct enum for pending status', function () {
-    $user = \App\Models\User::factory()->create([
+    $user = User::factory()->create([
         'approval_status' => 'pending',
     ]);
 
-    expect($user->approval_status)->toBe(\App\Enums\ApprovalStatusType::PENDING);
+    expect($user->approval_status)->toBe(ApprovalStatusType::PENDING);
     expect($user->isPending())->toBeTrue();
 });
 
 it('User model returns correct enum for rejected status', function () {
-    $user = \App\Models\User::factory()->create([
+    $user = User::factory()->create([
         'approval_status' => 'rejected',
     ]);
 
-    expect($user->approval_status)->toBe(\App\Enums\ApprovalStatusType::REJECTED);
+    expect($user->approval_status)->toBe(ApprovalStatusType::REJECTED);
     expect($user->isRejected())->toBeTrue();
 });

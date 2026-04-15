@@ -6,6 +6,7 @@ use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
 use App\ProcessingStatusType;
+use App\Services\MediaProcessing\MediaProcessingService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
@@ -67,13 +68,13 @@ it('processes media file from URL correctly', function () {
 
     // Mock HTTP response
     Http::fake([
-        'https://example.com/test-audio.mp3' => Http::response("ID3".str_repeat("\x00", 100)."fake audio content", 200, [
+        'https://example.com/test-audio.mp3' => Http::response('ID3'.str_repeat("\x00", 100).'fake audio content', 200, [
             'Content-Type' => 'audio/mpeg',
         ]),
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/test-audio.mp3', null);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -81,7 +82,7 @@ it('processes media file from URL correctly', function () {
 
     $mediaFile = $libraryItem->mediaFile;
     expect($mediaFile)->not->toBeNull();
-    expect($mediaFile->file_hash)->toBe(hash('sha256', "ID3".str_repeat("\x00", 100)."fake audio content"));
+    expect($mediaFile->file_hash)->toBe(hash('sha256', 'ID3'.str_repeat("\x00", 100).'fake audio content'));
     // MIME type is detected from file extension by the system
     expect($mediaFile->mime_type)->toBe('application/octet-stream'); // New validator returns octet-stream for unknown content
 });
@@ -102,7 +103,7 @@ it('handles URL download failures gracefully', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/not-found.mp3', null);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     // Library item should be marked as failed
     $this->assertDatabaseHas('library_items', [
@@ -133,7 +134,7 @@ it('handles JavaScript redirect pages correctly', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://file-examples.com/wp-content/storage/2017/11/file_example_MP3_700KB.mp3', null);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -163,7 +164,7 @@ it('fails when JavaScript redirect cannot be resolved', function () {
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/redirect.mp3', null);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -194,7 +195,7 @@ it('handles JavaScript redirect with URL substring replacement pattern', functio
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/storage/audio.mp3', null);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -284,13 +285,13 @@ it('stores source URL when downloading new file', function () {
 
     // Mock HTTP response
     Http::fake([
-        'https://example.com/new-audio.mp3' => Http::response("ID3".str_repeat("\x00", 100)."new audio content", 200, [
+        'https://example.com/new-audio.mp3' => Http::response('ID3'.str_repeat("\x00", 100).'new audio content', 200, [
             'Content-Type' => 'audio/mpeg',
         ]),
     ]);
 
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/new-audio.mp3', null);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     $libraryItem->refresh();
 
@@ -385,7 +386,7 @@ it('multiple users can reuse same file from same URL', function () {
 
     // First user downloads the file
     Http::fake([
-        'https://example.com/shared-audio.mp3' => Http::response("ID3".str_repeat("\x00", 100)."shared audio content", 200),
+        'https://example.com/shared-audio.mp3' => Http::response('ID3'.str_repeat("\x00", 100).'shared audio content', 200),
     ]);
 
     $response1 = $this->actingAs($user1)->post('/library', [
@@ -399,7 +400,7 @@ it('multiple users can reuse same file from same URL', function () {
     // Process the job manually to create the media file
     $libraryItem = LibraryItem::where('title', 'User 1 Copy')->first();
     $job = new ProcessMediaFile($libraryItem, 'https://example.com/shared-audio.mp3', null);
-    $job->handle(app(\App\Services\MediaProcessing\MediaProcessingService::class));
+    $job->handle(app(MediaProcessingService::class));
 
     $mediaFile = MediaFile::where('source_url', 'https://example.com/shared-audio.mp3')->first();
     expect($mediaFile)->not->toBeNull();

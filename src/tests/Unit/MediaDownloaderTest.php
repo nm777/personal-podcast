@@ -8,7 +8,7 @@ uses(TestCase::class);
 
 test('downloads media file successfully', function () {
     $url = 'https://example.com/audio.mp3';
-    $content = "ID3".str_repeat("\x00", 100).'audio';
+    $content = 'ID3'.str_repeat("\x00", 100).'audio';
 
     Http::fake([$url => Http::response($content, 200)]);
 
@@ -47,7 +47,7 @@ test('throws exception for html content without redirect', function () {
 test('handles javascript redirect', function () {
     $url = 'https://example.com/download';
     $redirectUrl = 'https://example.com/actual.mp3';
-    $audioContent = "ID3".str_repeat("\x00", 100).'audio';
+    $audioContent = 'ID3'.str_repeat("\x00", 100).'audio';
 
     Http::fake([
         $url => Http::response('<html><script>window.location.replace("'.$redirectUrl.'")</script></html>', 200),
@@ -62,7 +62,7 @@ test('handles javascript redirect', function () {
 test('converts relative redirect url to absolute', function () {
     $url = 'https://example.com/download';
     $absoluteUrl = 'https://example.com/files/audio.mp3';
-    $audioContent = "ID3".str_repeat("\x00", 100).'audio';
+    $audioContent = 'ID3'.str_repeat("\x00", 100).'audio';
 
     Http::fake([
         $url => Http::response('<html><script>window.location.replace("/files/audio.mp3")</script></html>', 200),

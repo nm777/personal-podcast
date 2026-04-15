@@ -1,10 +1,18 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useInitials } from '@/hooks/use-initials';
-import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAppearance } from '@/hooks/use-appearance';
 import { useColorScheme, type ColorScheme } from '@/hooks/use-color-scheme';
+import { useInitials } from '@/hooks/use-initials';
+import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { Link, router, usePage } from '@inertiajs/react';
 import { LogOut, Moon, Palette, Settings, Sun, User, Users } from 'lucide-react';
 
@@ -16,7 +24,9 @@ export default function AppTopbar() {
     const { appearance, updateAppearance } = useAppearance();
     const { colorScheme, updateColorScheme } = useColorScheme();
 
-    const isDark = appearance === 'dark' || (appearance === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    const isDark =
+        appearance === 'dark' ||
+        (appearance === 'system' && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
     const toggleTheme = () => {
         updateAppearance(isDark ? 'light' : 'dark');
@@ -55,11 +65,7 @@ export default function AppTopbar() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                         {schemeOptions.map((option) => (
-                            <DropdownMenuItem
-                                key={option.value}
-                                onClick={() => updateColorScheme(option.value)}
-                                className="flex items-center gap-2"
-                            >
+                            <DropdownMenuItem key={option.value} onClick={() => updateColorScheme(option.value)} className="flex items-center gap-2">
                                 <span className={`inline-block h-3 w-3 rounded-full ${option.color}`} />
                                 {option.label}
                                 {colorScheme === option.value && <span className="ml-auto text-xs">✓</span>}
@@ -82,7 +88,7 @@ export default function AppTopbar() {
                     <DropdownMenuContent className="w-56" align="end" forceMount>
                         <DropdownMenuLabel className="font-normal">
                             <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-medium leading-none">{auth.user.name}</p>
+                                <p className="text-sm leading-none font-medium">{auth.user.name}</p>
                                 <p className="text-xs leading-none text-muted-foreground">{auth.user.email}</p>
                             </div>
                         </DropdownMenuLabel>

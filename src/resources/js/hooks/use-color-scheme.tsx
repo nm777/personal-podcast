@@ -4,8 +4,7 @@ export type ColorScheme = 'default' | 'ocean' | 'forest' | 'ember';
 
 const VALID_SCHEMES: ColorScheme[] = ['default', 'ocean', 'forest', 'ember'];
 
-const isValidScheme = (value: string | null): value is ColorScheme =>
-    value !== null && VALID_SCHEMES.includes(value as ColorScheme);
+const isValidScheme = (value: string | null): value is ColorScheme => value !== null && VALID_SCHEMES.includes(value as ColorScheme);
 
 const getStoredScheme = (): ColorScheme => {
     const stored = localStorage.getItem('color-scheme');

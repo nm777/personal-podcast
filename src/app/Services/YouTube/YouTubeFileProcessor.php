@@ -5,6 +5,7 @@ namespace App\Services\YouTube;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -93,7 +94,7 @@ class YouTubeFileProcessor
             }
 
             if (! $libraryItem->published_at && isset($metadata['upload_date'])) {
-                $libraryItem->published_at = \Carbon\Carbon::createFromFormat('Ymd', $metadata['upload_date'])->startOfDay();
+                $libraryItem->published_at = Carbon::createFromFormat('Ymd', $metadata['upload_date'])->startOfDay();
             }
 
             $libraryItem->save();

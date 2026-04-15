@@ -46,9 +46,7 @@ export default function Welcome() {
                 <main className="flex flex-1 items-center justify-center px-5 py-20">
                     <div className="mx-auto max-w-xl text-center">
                         <h1 className="mb-4 text-4xl font-bold tracking-tight">PodKeep</h1>
-                        <p className="mb-8 text-lg text-muted-foreground">
-                            Build custom podcast feeds from your media files.
-                        </p>
+                        <p className="mb-8 text-lg text-muted-foreground">Build custom podcast feeds from your media files.</p>
                         <div className="flex items-center justify-center gap-3">
                             {auth.user ? (
                                 <Link
@@ -74,9 +72,7 @@ export default function Welcome() {
                                 </>
                             )}
                         </div>
-                        <p className="mt-12 text-sm text-muted-foreground">
-                            Upload your audio, organize into feeds, subscribe in any podcast app.
-                        </p>
+                        <p className="mt-12 text-sm text-muted-foreground">Upload your audio, organize into feeds, subscribe in any podcast app.</p>
                     </div>
                 </main>
             </div>

@@ -1,9 +1,9 @@
+import InputError from '@/components/input-error';
+import SheetPanel from '@/components/sheet-panel';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
-import SheetPanel from '@/components/sheet-panel';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from '@inertiajs/react';
@@ -50,9 +50,7 @@ export default function CreateFeedForm({ renderTrigger }: CreateFeedFormProps) {
         setIsOpen(false);
     };
 
-    const trigger = renderTrigger ? renderTrigger(() => setIsOpen(true)) : (
-        <Button onClick={() => setIsOpen(true)}>+ Feed</Button>
-    );
+    const trigger = renderTrigger ? renderTrigger(() => setIsOpen(true)) : <Button onClick={() => setIsOpen(true)}>+ Feed</Button>;
 
     return (
         <SheetPanel
@@ -98,11 +96,7 @@ export default function CreateFeedForm({ renderTrigger }: CreateFeedFormProps) {
             </div>
 
             <div className="flex items-center space-x-2">
-                <Checkbox
-                    id="is_public"
-                    checked={data.is_public}
-                    onCheckedChange={(checked) => setData('is_public', checked === true)}
-                />
+                <Checkbox id="is_public" checked={data.is_public} onCheckedChange={(checked) => setData('is_public', checked === true)} />
                 <Label htmlFor="is_public">Make this feed public</Label>
             </div>
         </SheetPanel>

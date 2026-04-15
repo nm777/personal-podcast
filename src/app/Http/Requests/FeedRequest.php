@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\LibraryItem;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -28,7 +29,7 @@ class FeedRequest extends FormRequest
             'is_public' => ['boolean'],
             'items' => ['nullable', 'array'],
             'items.*.library_item_id' => ['required', 'integer', 'exists:library_items,id', function ($attribute, $value, $fail) {
-                $item = \App\Models\LibraryItem::find($value);
+                $item = LibraryItem::find($value);
                 if ($item && $item->user_id !== $this->user()->id) {
                     $fail('You can only add your own library items to feeds.');
                 }

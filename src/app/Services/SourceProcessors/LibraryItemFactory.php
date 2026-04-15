@@ -2,9 +2,9 @@
 
 namespace App\Services\SourceProcessors;
 
+use App\Enums\ProcessingStatusType;
 use App\Jobs\AddLibraryItemToFeedsJob;
 use App\Models\LibraryItem;
-use App\Enums\ProcessingStatusType;
 
 class LibraryItemFactory
 {

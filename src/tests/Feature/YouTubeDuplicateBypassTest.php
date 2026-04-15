@@ -1,10 +1,13 @@
 <?php
 
-use App\ProcessingStatusType;
 use App\Models\LibraryItem;
 use App\Models\MediaFile;
 use App\Models\User;
+use App\ProcessingStatusType;
 use App\Services\MediaProcessing\UnifiedDuplicateProcessor;
+use App\Services\YouTube\YouTubeDownloader;
+use App\Services\YouTube\YouTubeFileProcessor;
+use App\Services\YouTube\YouTubeMetadataExtractor;
 use App\Services\YouTube\YouTubeProcessingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -35,9 +38,9 @@ describe('YouTubeProcessingService duplicate handling', function () {
             ]);
 
         $service = new YouTubeProcessingService(
-            downloader: app(\App\Services\YouTube\YouTubeDownloader::class),
-            metadataExtractor: app(\App\Services\YouTube\YouTubeMetadataExtractor::class),
-            fileProcessor: app(\App\Services\YouTube\YouTubeFileProcessor::class),
+            downloader: app(YouTubeDownloader::class),
+            metadataExtractor: app(YouTubeMetadataExtractor::class),
+            fileProcessor: app(YouTubeFileProcessor::class),
             duplicateProcessor: $mockProcessor,
         );
 
